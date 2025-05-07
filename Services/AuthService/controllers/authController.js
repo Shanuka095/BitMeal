@@ -3,19 +3,19 @@ const jwt = require('jsonwebtoken');
 const nodemailer = require('nodemailer');
 const User = require('../models/userModel');
 
-// Nodemailer Setup
-const transporter = nodemailer.createTransport({
-  service: 'gmail',
-  auth: {
-    user: process.env.NODEMAILER_EMAIL,
-    pass: process.env.NODEMAILER_PASS,
-  },
-});
-
 // Register
 const register = async (req, res) => {
   const { email, password, role } = req.body;
   try {
+    // Nodemailer Setup
+    const transporter = nodemailer.createTransport({
+      service: 'gmail',
+      auth: {
+        user: process.env.NODEMAILER_EMAIL,
+        pass: process.env.NODEMAILER_PASS,
+      },
+    });
+
     const hashedPassword = await bcrypt.hash(password, 10);
     const verificationToken = jwt.sign({ email }, process.env.JWT_SECRET, { expiresIn: '1h' });
     const user = new User({ email, password: hashedPassword, role, verificationToken });
@@ -23,15 +23,21 @@ const register = async (req, res) => {
 
     // Send Verification Email
     const mailOptions = {
-      from: process.env.NODEMAILER_EMAIL,
-      to: email,
-      subject: 'Verify Your BitMeal Account',
-      text: `Click this link to verify your email: http://localhost:5173/verify?token=${verificationToken}`,
-    };
+        from: `"BitMeal" <${process.env.NODEMAILER_EMAIL}>`,
+        to: email,
+        subject: 'Verify Your BitMeal Account',
+        html: `
+          <h2>Welcome to BitMeal!</h2>
+          <p>Please verify your email by clicking the link below:</p>
+          <a href="http://192.168.1.100:5173/verify?token=${verificationToken}">Verify Email</a>
+          <p>If the link doesn't work, copy and paste it into your browser.</p>
+        `,
+      };
     await transporter.sendMail(mailOptions);
 
     res.status(201).json({ message: 'User registered. Please verify your email.' });
   } catch (error) {
+    console.error('Register error:', error);
     res.status(500).json({ error: error.message });
   }
 };
