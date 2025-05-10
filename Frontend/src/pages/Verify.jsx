@@ -10,7 +10,6 @@ const Verify = () => {
 
   useEffect(() => {
     const token = searchParams.get('token');
-    console.log('Verification token:', token);
     if (!token) {
       setError('No verification token provided');
       return;
@@ -18,13 +17,10 @@ const Verify = () => {
 
     const verifyEmail = async () => {
       try {
-        console.log('Sending verify request to backend...');
-        const response = await axios.post('http://localhost:3001/api/auth/verify', { token });
-        console.log('Backend response:', response.data);
+        const response = await axios.post('http://localhost:3000/api/auth/verify', { token });
         setMessage(response.data.message);
         setTimeout(() => navigate('/login'), 3000);
       } catch (err) {
-        console.error('Verification error:', err.response?.data || err.message);
         setError(err.response?.data?.error || 'Verification failed');
       }
     };

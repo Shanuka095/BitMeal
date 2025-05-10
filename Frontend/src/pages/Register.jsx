@@ -2,21 +2,20 @@ import { useState } from 'react';
 import axios from 'axios';
 import { useNavigate, Link } from 'react-router-dom';
 
-const Login = () => {
+const Register = () => {
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
+  const [role, setRole] = useState('customer');
   const [error, setError] = useState('');
   const navigate = useNavigate();
 
-  const handleLogin = async (e) => {
+  const handleRegister = async (e) => {
     e.preventDefault();
     try {
-      const response = await axios.post('http://localhost:3001/api/auth/login', { email, password });
-      localStorage.setItem('token', response.data.token);
-      localStorage.setItem('role', response.data.role);
-      navigate('/dashboard');
+      await axios.post('http://localhost:3000/api/auth/register', { email, password, role });
+      navigate('/login', { state: { message: 'Registration successful! Please verify your email.' } });
     } catch (err) {
-      setError(err.response?.data?.error || 'Login failed');
+      setError(err.response?.data?.error || 'Registration failed');
     }
   };
 
@@ -59,8 +58,8 @@ const Login = () => {
           textAlign: 'center',
           marginBottom: '30px',
           letterSpacing: '1px',
-        }}>Login to BitMeal</h2>
-        <form onSubmit={handleLogin}>
+        }}>Register for BitMeal</h2>
+        <form onSubmit={handleRegister}>
           <div style={{ marginBottom: '20px' }}>
             <label style={{
               display: 'block',
@@ -116,6 +115,47 @@ const Login = () => {
               onFocus={(e) => e.target.style.borderColor = '#3B82F6'}
               onBlur={(e) => e.target.style.borderColor = 'rgba(255, 255, 255, 0.3)'}
             />
+            <p style={{
+              color: '#9CA3AF',
+              fontSize: '0.8rem',
+              marginTop: '8px',
+            }}>
+              Password must be at least 8 characters, with uppercase, lowercase, number, and special character.
+            </p>
+          </div>
+          <div style={{ marginBottom: '20px' }}>
+            <label style={{
+              display: 'block',
+              color: '#E5E7EB',
+              marginBottom: '8px',
+              fontSize: '0.9rem',
+            }} htmlFor="role">Role</label>
+            <select
+              id="role"
+              value={role}
+              onChange={(e) => setRole(e.target.value)}
+              style={{
+                width: '100%',
+                padding: '12px',
+                borderRadius: '8px',
+                border: '1px solid rgba(255, 255, 255, 0.3)',
+                background: 'rgba(255, 255, 255, 0.05)',
+                color: '#FFFFFF',
+                fontSize: '1rem',
+                transition: 'border-color 0.3s ease',
+                appearance: 'none',
+                backgroundImage: 'url("data:image/svg+xml;charset=UTF-8,%3csvg xmlns=%27http://www.w3.org/2000/svg%27 viewBox=%270 0 24 24%27 fill=%27none%27 stroke=%27%23ffffff%27 stroke-width=%272%27 stroke-linecap=%27round%27 stroke-linejoin=%27round%27%3e%3cpolyline points=%276 9 12 15 18 9%27%3e%3c/polyline%3e%3c/svg%3e")',
+                backgroundRepeat: 'no-repeat',
+                backgroundPosition: 'right 12px center',
+                backgroundSize: '16px',
+              }}
+              onFocus={(e) => e.target.style.borderColor = '#3B82F6'}
+              onBlur={(e) => e.target.style.borderColor = 'rgba(255, 255, 255, 0.3)'}
+            >
+              <option value="customer" style={{ background: '#1F2937', color: '#FFFFFF' }}>Customer</option>
+              <option value="restaurant_admin" style={{ background: '#1F2937', color: '#FFFFFF' }}>Restaurant Admin</option>
+              <option value="delivery_personnel" style={{ background: '#1F2937', color: '#FFFFFF' }}>Delivery Personnel</option>
+            </select>
           </div>
           {error && <p style={{
             color: '#EF4444',
@@ -140,7 +180,7 @@ const Login = () => {
             onMouseEnter={(e) => e.target.style.transform = 'translateY(-2px)'}
             onMouseLeave={(e) => e.target.style.transform = 'translateY(0)'}
           >
-            Login
+            Register
           </button>
         </form>
         <p style={{
@@ -149,8 +189,8 @@ const Login = () => {
           marginTop: '20px',
           fontSize: '0.9rem',
         }}>
-          Don't have an account?{' '}
-          <Link to="/register" style={{
+          Already have an account?{' '}
+          <Link to="/login" style={{
             color: '#3B82F6',
             textDecoration: 'none',
             fontWeight: 'bold',
@@ -158,7 +198,7 @@ const Login = () => {
           }}
           onMouseEnter={(e) => e.target.style.color = '#1D4ED8'}
           onMouseLeave={(e) => e.target.style.color = '#3B82F6'}>
-            Register
+            Login
           </Link>
         </p>
       </div>
@@ -166,4 +206,4 @@ const Login = () => {
   );
 };
 
-export default Login;
+export default Register;

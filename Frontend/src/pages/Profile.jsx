@@ -1,21 +1,38 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import axios from 'axios';
-import { useNavigate, Link } from 'react-router-dom';
 
-const Register = () => {
-  const [email, setEmail] = useState('');
-  const [password, setPassword] = useState('');
-  const [role, setRole] = useState('customer');
+const Profile = () => {
+  const [profile, setProfile] = useState({ name: '', phone: '', address: '' });
   const [error, setError] = useState('');
-  const navigate = useNavigate();
+  const [message, setMessage] = useState('');
 
-  const handleRegister = async (e) => {
+  useEffect(() => {
+    const fetchProfile = async () => {
+      try {
+        const token = localStorage.getItem('token');
+        const response = await axios.get('http://localhost:3000/api/users/profile', {
+          headers: { Authorization: `Bearer ${token}` },
+        });
+        setProfile(response.data.profile || { name: '', phone: '', address: '' });
+      } catch (err) {
+        setError(err.response?.data?.error || 'Failed to fetch profile');
+      }
+    };
+    fetchProfile();
+  }, []);
+
+  const handleUpdate = async (e) => {
     e.preventDefault();
     try {
-      await axios.post('http://localhost:3001/api/auth/register', { email, password, role });
-      navigate('/login', { state: { message: 'Registration successful! Please verify your email.' } });
+      const token = localStorage.getItem('token');
+      await axios.put('http://localhost:3000/api/users/profile', profile, {
+        headers: { Authorization: `Bearer ${token}` },
+      });
+      setMessage('Profile updated successfully');
+      setError('');
     } catch (err) {
-      setError(err.response?.data?.error || 'Registration failed');
+      setError(err.response?.data?.error || 'Failed to update profile');
+      setMessage('');
     }
   };
 
@@ -58,20 +75,20 @@ const Register = () => {
           textAlign: 'center',
           marginBottom: '30px',
           letterSpacing: '1px',
-        }}>Register for BitMeal</h2>
-        <form onSubmit={handleRegister}>
+        }}>Your Profile</h2>
+        <form onSubmit={handleUpdate}>
           <div style={{ marginBottom: '20px' }}>
             <label style={{
               display: 'block',
               color: '#E5E7EB',
               marginBottom: '8px',
               fontSize: '0.9rem',
-            }} htmlFor="email">Email</label>
+            }} htmlFor="name">Name</label>
             <input
-              type="email"
-              id="email"
-              value={email}
-              onChange={(e) => setEmail(e.target.value)}
+              type="text"
+              id="name"
+              value={profile.name}
+              onChange={(e) => setProfile({ ...profile, name: e.target.value })}
               style={{
                 width: '100%',
                 padding: '12px',
@@ -82,8 +99,7 @@ const Register = () => {
                 fontSize: '1rem',
                 transition: 'border-color 0.3s ease',
               }}
-              placeholder="Enter your email"
-              required
+              placeholder="Enter your name"
               onFocus={(e) => e.target.style.borderColor = '#3B82F6'}
               onBlur={(e) => e.target.style.borderColor = 'rgba(255, 255, 255, 0.3)'}
             />
@@ -94,12 +110,12 @@ const Register = () => {
               color: '#E5E7EB',
               marginBottom: '8px',
               fontSize: '0.9rem',
-            }} htmlFor="password">Password</label>
+            }} htmlFor="phone">Phone</label>
             <input
-              type="password"
-              id="password"
-              value={password}
-              onChange={(e) => setPassword(e.target.value)}
+              type="text"
+              id="phone"
+              value={profile.phone}
+              onChange={(e) => setProfile({ ...profile, phone: e.target.value })}
               style={{
                 width: '100%',
                 padding: '12px',
@@ -110,18 +126,10 @@ const Register = () => {
                 fontSize: '1rem',
                 transition: 'border-color 0.3s ease',
               }}
-              placeholder="Enter your password"
-              required
+              placeholder="Enter your phone"
               onFocus={(e) => e.target.style.borderColor = '#3B82F6'}
               onBlur={(e) => e.target.style.borderColor = 'rgba(255, 255, 255, 0.3)'}
             />
-            <p style={{
-              color: '#9CA3AF',
-              fontSize: '0.8rem',
-              marginTop: '8px',
-            }}>
-              Password must be at least 8 characters, with uppercase, lowercase, number, and special character.
-            </p>
           </div>
           <div style={{ marginBottom: '20px' }}>
             <label style={{
@@ -129,11 +137,12 @@ const Register = () => {
               color: '#E5E7EB',
               marginBottom: '8px',
               fontSize: '0.9rem',
-            }} htmlFor="role">Role</label>
-            <select
-              id="role"
-              value={role}
-              onChange={(e) => setRole(e.target.value)}
+            }} htmlFor="address">Address</label>
+            <input
+              type="text"
+              id="address"
+              value={profile.address}
+              onChange={(e) => setProfile({ ...profile, address: e.target.value })}
               style={{
                 width: '100%',
                 padding: '12px',
@@ -143,20 +152,18 @@ const Register = () => {
                 color: '#FFFFFF',
                 fontSize: '1rem',
                 transition: 'border-color 0.3s ease',
-                appearance: 'none',
-                backgroundImage: 'url("data:image/svg+xml;charset=UTF-8,%3csvg xmlns=%27http://www.w3.org/2000/svg%27 viewBox=%270 0 24 24%27 fill=%27none%27 stroke=%27%23ffffff%27 stroke-width=%272%27 stroke-linecap=%27round%27 stroke-linejoin=%27round%27%3e%3cpolyline points=%276 9 12 15 18 9%27%3e%3c/polyline%3e%3c/svg%3e")',
-                backgroundRepeat: 'no-repeat',
-                backgroundPosition: 'right 12px center',
-                backgroundSize: '16px',
               }}
+              placeholder="Enter your address"
               onFocus={(e) => e.target.style.borderColor = '#3B82F6'}
               onBlur={(e) => e.target.style.borderColor = 'rgba(255, 255, 255, 0.3)'}
-            >
-              <option value="customer" style={{ background: '#1F2937', color: '#FFFFFF' }}>Customer</option>
-              <option value="restaurant_admin" style={{ background: '#1F2937', color: '#FFFFFF' }}>Restaurant Admin</option>
-              <option value="delivery_personnel" style={{ background: '#1F2937', color: '#FFFFFF' }}>Delivery Personnel</option>
-            </select>
+            />
           </div>
+          {message && <p style={{
+            color: '#10B981',
+            marginBottom: '20px',
+            textAlign: 'center',
+            fontSize: '0.9rem',
+          }}>{message}</p>}
           {error && <p style={{
             color: '#EF4444',
             marginBottom: '20px',
@@ -180,30 +187,12 @@ const Register = () => {
             onMouseEnter={(e) => e.target.style.transform = 'translateY(-2px)'}
             onMouseLeave={(e) => e.target.style.transform = 'translateY(0)'}
           >
-            Register
+            Update Profile
           </button>
         </form>
-        <p style={{
-          color: '#D1D5DB',
-          textAlign: 'center',
-          marginTop: '20px',
-          fontSize: '0.9rem',
-        }}>
-          Already have an account?{' '}
-          <Link to="/login" style={{
-            color: '#3B82F6',
-            textDecoration: 'none',
-            fontWeight: 'bold',
-            transition: 'color 0.3s ease',
-          }}
-          onMouseEnter={(e) => e.target.style.color = '#1D4ED8'}
-          onMouseLeave={(e) => e.target.style.color = '#3B82F6'}>
-            Login
-          </Link>
-        </p>
       </div>
     </div>
   );
 };
 
-export default Register;
+export default Profile;

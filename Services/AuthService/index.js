@@ -16,5 +16,5 @@ connectDB();
 app.use('/api/auth', authRoutes);
 
 // Start Server
-const PORT = 3001;
+const PORT = process.env.PORT || 3001;
 app.listen(PORT, () => console.log(`AuthService running on port ${PORT}`));
