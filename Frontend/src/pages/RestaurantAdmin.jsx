@@ -20,7 +20,7 @@ const RestaurantAdmin = () => {
       setMessage(`Restaurant created: ${response.data.restaurant._id}`);
       setError('');
     } catch (err) {
-      setError(err.response?.data?.error || err.message || 'Failed to create restaurant');
+      setError(err.response?.data?.error || err.message || 'Failed to create restaurant. Please try again.');
       setMessage('');
       console.error('Create restaurant error:', err);
     }
