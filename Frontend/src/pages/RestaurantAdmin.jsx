@@ -13,14 +13,14 @@ const RestaurantAdmin = () => {
     e.preventDefault();
     try {
       const token = localStorage.getItem('token');
-      if (!token) throw new Error('No token found. Please log in.');
+      if (!token) throw new Error('Please log in again.');
       const response = await axios.post('http://localhost:3000/api/restaurants', restaurant, {
         headers: { Authorization: `Bearer ${token}` },
       });
       setMessage(`Restaurant created: ${response.data.restaurant._id}`);
       setError('');
     } catch (err) {
-      setError(err.response?.data?.error || err.message || 'Failed to create restaurant. Please try again.');
+      setError(err.response?.data?.error || err.message || 'Failed to create restaurant');
       setMessage('');
       console.error('Create restaurant error:', err);
     }
@@ -30,7 +30,7 @@ const RestaurantAdmin = () => {
     e.preventDefault();
     try {
       const token = localStorage.getItem('token');
-      if (!token) throw new Error('No token found. Please log in.');
+      if (!token) throw new Error('Please log in again.');
       await axios.post(`http://localhost:3000/api/restaurants/${menuItem.restaurantId}/menu`, menuItem, {
         headers: { Authorization: `Bearer ${token}` },
       });

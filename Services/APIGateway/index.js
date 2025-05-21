@@ -15,7 +15,7 @@ app.use(cors({
 
 app.use('/api/auth', proxy('http://localhost:3001', {
     proxyReqPathResolver: (req) => {
-        const newPath = `/api/auth${req.url.replace(/\/+$/, '')}`; // Remove trailing slash
+        const newPath = `/api/auth${req.url.replace(/\/+$/, '')}`;
         console.log(`Proxying ${req.method} request to AuthService: ${newPath}`);
         return newPath;
     },
@@ -31,7 +31,7 @@ app.use('/api/auth', proxy('http://localhost:3001', {
 
 app.use('/api/users', proxy('http://localhost:3002', {
     proxyReqPathResolver: (req) => {
-        const newPath = `/api/users${req.url.replace(/\/+$/, '')}`; // Remove trailing slash
+        const newPath = `/api/users${req.url.replace(/\/+$/, '')}`;
         console.log(`Proxying ${req.method} request to UserService: ${newPath}`);
         return newPath;
     },
@@ -47,7 +47,7 @@ app.use('/api/users', proxy('http://localhost:3002', {
 
 app.use('/api/restaurants', proxy('http://localhost:3003', {
     proxyReqPathResolver: (req) => {
-        const newPath = `/api/restaurants${req.url.replace(/\/+$/, '')}`; // Remove trailing slash
+        const newPath = `/api/restaurants${req.url.replace(/\/+$/, '')}`;
         console.log(`Proxying ${req.method} request to RestaurantService: ${newPath}`);
         return newPath;
     },
