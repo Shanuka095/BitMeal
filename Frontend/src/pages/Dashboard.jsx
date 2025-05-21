@@ -5,13 +5,13 @@ const Dashboard = () => {
 
   return (
     <div style={{
+      width: '100vw',
       minHeight: '100vh',
-      display: 'flex',
-      flexDirection: 'column',
-      alignItems: 'center',
-      justifyContent: 'center',
       backgroundColor: '#2A3335',
       padding: '20px',
+      display: 'flex',
+      justifyContent: 'center',
+      alignItems: 'center',
     }}>
       <div style={{
         backgroundColor: 'rgba(248, 250, 252, 0.1)',
