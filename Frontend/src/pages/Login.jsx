@@ -13,7 +13,7 @@ const Login = () => {
     try {
       const response = await axios.post('http://localhost:3000/api/auth/login', { email, password });
       const { token } = response.data;
-      localStorage.setItem('token', token); // Store token
+      localStorage.setItem('token', token);
       setError('');
       navigate('/dashboard');
     } catch (err) {
@@ -23,9 +23,17 @@ const Login = () => {
   };
 
   return (
-    <div style={{ minHeight: '100vh', backgroundColor: '#2A3335', padding: '20px', color: '#F8FAFC' }}>
-      <h2 style={{ textAlign: 'center', marginBottom: '30px', fontSize: '2rem' }}>Login</h2>
-      <div style={{ maxWidth: '400px', margin: '0 auto' }}>
+    <div style={{
+      width: '100vw',
+      minHeight: '100vh',
+      backgroundColor: '#2A3335',
+      padding: '20px',
+      display: 'flex',
+      justifyContent: 'center',
+      alignItems: 'center',
+    }}>
+      <div style={{ maxWidth: '400px', width: '100%' }}>
+        <h2 style={{ textAlign: 'center', marginBottom: '30px', fontSize: '2rem' }}>Login</h2>
         <form onSubmit={handleLogin}>
           <input
             type="email"
