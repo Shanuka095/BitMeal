@@ -44,9 +44,18 @@ const RestaurantAdmin = () => {
   };
 
   return (
-    <div style={{ minHeight: '100vh', backgroundColor: '#2A3335', padding: '20px', color: '#F8FAFC' }}>
+    <div style={{
+      width: '100vw',
+      minHeight: '100vh',
+      backgroundColor: '#2A3335',
+      padding: '20px',
+      color: '#F8FAFC',
+      display: 'flex',
+      flexDirection: 'column',
+      alignItems: 'center',
+    }}>
       <h2 style={{ textAlign: 'center', marginBottom: '30px', fontSize: '2rem' }}>Restaurant Admin</h2>
-      <div style={{ maxWidth: '600px', margin: '0 auto' }}>
+      <div style={{ maxWidth: '600px', width: '100%' }}>
         <h3>Create Restaurant</h3>
         <form onSubmit={handleCreateRestaurant}>
           <input
