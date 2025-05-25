@@ -1,4 +1,8 @@
-/* Reset default browser styles */
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+/* Global reset to prevent white borders */
 * {
   margin: 0;
   padding: 0;
@@ -10,8 +14,8 @@ html, body {
   height: 100%;
   margin: 0;
   padding: 0;
-  overflow-x: hidden; /* Prevent horizontal scrollbar */
-  background-color: #2A3335; /* Match app background */
+  overflow-x: hidden;
+  background-color: #2A3335;
 }
 
 #root {
@@ -21,10 +25,9 @@ html, body {
   padding: 0;
   display: flex;
   flex-direction: column;
-  background-color: #2A3335; /* Ensure no white background */
+  background-color: #2A3335;
 }
 
-/* Ensure no borders or outlines */
 html, body, #root, div, input, button, select {
   border: none;
   outline: none;
