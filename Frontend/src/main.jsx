@@ -1,6 +1,6 @@
 import { createRoot } from 'react-dom/client';
 import App from './App.jsx';
-import '../index.css';
+import '../index.css'; // Import from Frontend folder
 
 console.log('Starting React render...');
 const rootElement = document.getElementById('root');
