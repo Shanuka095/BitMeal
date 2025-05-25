@@ -14,10 +14,19 @@ const Login = () => {
     setLoading(true);
     try {
       const response = await axios.post('http://localhost:3000/api/auth/login', { email, password });
-      const { token } = response.data;
+      const { token, role } = response.data;
       localStorage.setItem('token', token);
       setError('');
-      navigate('/dashboard');
+      // Navigate based on role
+      if (role === 'customer') {
+        navigate('/dashboard');
+      } else if (role === 'restaurant_admin') {
+        navigate('/restaurant-admin');
+      } else if (role === 'delivery_personnel') {
+        navigate('/delivery');
+      } else {
+        setError('Unknown role');
+      }
     } catch (err) {
       setError(err.response?.data?.error || 'Login failed');
       console.error('Login error:', err);
@@ -32,9 +41,7 @@ const Login = () => {
         <h2 className="text-3xl font-bold text-[#F8FAFC] text-center mb-6">Welcome Back</h2>
         <form onSubmit={handleLogin} className="space-y-4">
           <div>
-            <label htmlFor="email" className="block text-sm font-medium text-[#F8FAFC] mb-1">
-              Email
-            </label>
+            <label htmlFor="email" className="block text-sm font-medium text-[#F8FAFC] mb-1">Email</label>
             <input
               type="email"
               id="email"
@@ -46,9 +53,7 @@ const Login = () => {
             />
           </div>
           <div>
-            <label htmlFor="password" className="block text-sm font-medium text-[#F8FAFC] mb-1">
-              Password
-            </label>
+            <label htmlFor="password" className="block text-sm font-medium text-[#F8FAFC] mb-1">Password</label>
             <input
               type="password"
               id="password"
@@ -63,18 +68,13 @@ const Login = () => {
           <button
             type="submit"
             disabled={loading}
-            className={`w-full py-2 px-4 rounded-lg font-semibold text-[#2A3335] bg-[#EFB036] hover:bg-[#D97706] transition-colors duration-200 ${
-              loading ? 'opacity-50 cursor-not-allowed' : ''
-            }`}
+            className={`w-full py-2 px-4 rounded-lg font-semibold text-[#2A3335] bg-[#EFB036] hover:bg-[#D97706] transition-colors duration-200 ${loading ? 'opacity-50 cursor-not-allowed' : ''}`}
           >
             {loading ? 'Logging in...' : 'Login'}
           </button>
         </form>
         <p className="text-[#F8FAFC] text-sm text-center mt-4">
-          Don’t have an account?{' '}
-          <Link to="/register" className="text-[#EFB036] hover:underline font-medium">
-            Register
-          </Link>
+          Don’t have an account? <Link to="/register" className="text-[#EFB036] hover:underline font-medium">Register</Link>
         </p>
       </div>
     </div>
