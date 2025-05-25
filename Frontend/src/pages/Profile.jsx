@@ -5,6 +5,7 @@ const Profile = () => {
   const [profile, setProfile] = useState({ name: '', phone: '', address: '' });
   const [error, setError] = useState('');
   const [message, setMessage] = useState('');
+  const [loading, setLoading] = useState(false);
 
   useEffect(() => {
     const fetchProfile = async () => {
@@ -23,6 +24,7 @@ const Profile = () => {
 
   const handleUpdate = async (e) => {
     e.preventDefault();
+    setLoading(true);
     try {
       const token = localStorage.getItem('token');
       await axios.put('http://localhost:3000/api/users/profile', profile, {
@@ -33,6 +35,8 @@ const Profile = () => {
     } catch (err) {
       setError(err.response?.data?.error || 'Failed to update profile');
       setMessage('');
+    } finally {
+      setLoading(false);
     }
   };
 
@@ -121,19 +125,20 @@ const Profile = () => {
           {error && <p style={{ color: '#EF4444', textAlign: 'center', fontSize: '0.9rem', marginBottom: '20px' }}>{error}</p>}
           <button
             type="submit"
+            disabled={loading}
             style={{
               width: '100%',
               padding: '12px',
               borderRadius: '8px',
-              backgroundColor: '#EFB036',
-              color: '#2A3335',
+              backgroundColor: loading ? '#6B7280' : '#EFB036',
+              color: loading ? '#F8FAFC' : '#2A3335',
               fontSize: '1rem',
               fontWeight: 'bold',
               border: 'none',
-              cursor: 'pointer',
+              cursor: loading ? 'not-allowed' : 'pointer',
             }}
           >
-            Update Profile
+            {loading ? 'Updating...' : 'Update Profile'}
           </button>
         </form>
       </div>
