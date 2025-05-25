@@ -2,7 +2,6 @@
 @tailwind components;
 @tailwind utilities;
 
-/* Global reset to prevent white borders */
 * {
   margin: 0;
   padding: 0;
