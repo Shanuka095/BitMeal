@@ -1,63 +1,68 @@
 import { useState, useEffect } from 'react';
+import { useParams, useNavigate } from 'react-router-dom';
 import axios from 'axios';
 
-const Restaurants = () => {
-  const [restaurants, setRestaurants] = useState([]);
+const Restaurant = () => {
+  const { id } = useParams();
+  const [restaurant, setRestaurant] = useState(null);
+  const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');
+  const navigate = useNavigate();
 
   useEffect(() => {
-    const fetchRestaurants = async () => {
+    const fetchRestaurant = async () => {
       try {
-        const response = await axios.get('http://localhost:3000/api/restaurants');
-        setRestaurants(response.data.restaurants || []);
-        setError('');
+        const token = localStorage.getItem('token');
+        const response = await axios.get(`http://localhost:3000/api/restaurants/${id}`, {
+          headers: { Authorization: `Bearer ${token}` }
+        });
+        setRestaurant(response.data);
+        setLoading(false);
       } catch (err) {
-        setError(err.response?.data?.error || 'Failed to fetch restaurants');
-        console.error('Fetch restaurants error:', err);
+        setError('Failed to load restaurant');
+        setLoading(false);
+        if (err.response?.status === 401) {
+          localStorage.removeItem('token');
+          navigate('/login');
+        }
       }
     };
-    fetchRestaurants();
-  }, []);
+    fetchRestaurant();
+  }, [id, navigate]);
 
   return (
-    <div style={{
-      width: '100vw',
-      minHeight: '100vh',
-      backgroundColor: '#2A3335',
-      margin: 0,
-      padding: 0,
-      display: 'flex',
-      flexDirection: 'column',
-      alignItems: 'center',
-      justifyContent: 'center',
-      border: 'none',
-    }}>
-      <div style={{ maxWidth: '1200px', width: '100%', padding: '20px' }}>
-        <h2 style={{ textAlign: 'center', marginBottom: '30px', fontSize: '2.5rem', color: '#F8FAFC' }}>Explore Restaurants</h2>
-        {error && <p style={{ color: '#EF4444', textAlign: 'center' }}>{error}</p>}
-        {restaurants.length === 0 && !error && <p style={{ color: '#F8FAFC', textAlign: 'center' }}>No restaurants found.</p>}
-        <div style={{
-          display: 'grid',
-          gridTemplateColumns: 'repeat(auto-fill, minmax(300px, 1fr))',
-          gap: '20px',
-        }}>
-          {restaurants.map((restaurant) => (
-            <div key={restaurant._id} style={{
-              backgroundColor: 'rgba(248, 250, 252, 0.1)',
-              borderRadius: '12px',
-              padding: '20px',
-              boxShadow: '0 4px 12px rgba(0, 0, 0, 0.2)',
-              border: 'none',
-            }}>
-              <h3 style={{ fontSize: '1.5rem', color: '#F8FAFC', marginBottom: '10px' }}>{restaurant.name}</h3>
-              <p style={{ color: '#F8FAFC', marginBottom: '5px' }}>Address: {restaurant.address}</p>
-              <p style={{ color: '#F8FAFC', marginBottom: '5px' }}>Cuisine: {restaurant.cuisine}</p>
-            </div>
-          ))}
-        </div>
+    <div className="w-screen min-h-screen bg-[#2A3335] p-4">
+      <div className="max-w-7xl mx-auto">
+        {loading ? (
+          <p className="text-[#F8FAFC] text-center">Loading...</p>
+        ) : error ? (
+          <p className="text-[#EF4444] text-center">{error}</p>
+        ) : (
+          <>
+            <h1 className="text-3xl font-bold text-[#F8FAFC] mb-4">{restaurant.name}</h1>
+            <p className="text-[#A1A1AA] mb-2">{restaurant.address}</p>
+            <p className="text-[#A1A1AA] mb-4">{restaurant.cuisine}</p>
+            <h2 className="text-2xl font-semibold text-[#F8FAFC] mb-4">Menu</h2>
+            {restaurant.menu.length === 0 ? (
+              <p className="text-[#F8FAFC] text-center">No menu items available</p>
+            ) : (
+              <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
+                {restaurant.menu.map(item => (
+                  <div key={item._id} className="bg-[rgba(248,250,252,0.1)] backdrop-blur-lg rounded-2xl p-4 border border-[rgba(248,250,252,0.1)]">
+                    <h3 className="text-lg font-semibold text-[#F8FAFC]">{item.name}</h3>
+                    <p className="text-[#A1A1AA] mt-1">{item.description || 'No description'}</p>
+                    <p className="text-[#EFB036] mt-2">${item.price.toFixed(2)}</p>
+                    <p className="text-[#A1A1AA] mt-1">Category: {item.category}</p>
+                    <p className="text-[#A1A1AA] mt-1">Available: {item.available ? 'Yes' : 'No'}</p>
+                  </div>
+                ))}
+              </div>
+            )}
+          </>
+        )}
       </div>
     </div>
   );
 };
 
-export default Restaurants;
+export default Restaurant;
