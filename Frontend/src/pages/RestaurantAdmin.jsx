@@ -48,22 +48,24 @@ const RestaurantAdmin = () => {
       width: '100vw',
       minHeight: '100vh',
       backgroundColor: '#2A3335',
-      padding: '20px',
-      color: '#F8FAFC',
+      margin: 0,
+      padding: 0,
       display: 'flex',
       flexDirection: 'column',
       alignItems: 'center',
+      justifyContent: 'center',
+      border: 'none',
     }}>
-      <h2 style={{ textAlign: 'center', marginBottom: '30px', fontSize: '2rem' }}>Restaurant Admin</h2>
-      <div style={{ maxWidth: '600px', width: '100%' }}>
-        <h3>Create Restaurant</h3>
+      <div style={{ maxWidth: '600px', width: '100%', padding: '20px' }}>
+        <h2 style={{ textAlign: 'center', marginBottom: '30px', fontSize: '2rem', color: '#F8FAFC' }}>Restaurant Admin</h2>
+        <h3 style={{ color: '#F8FAFC' }}>Create Restaurant</h3>
         <form onSubmit={handleCreateRestaurant}>
           <input
             type="text"
             placeholder="Name"
             value={restaurant.name}
             onChange={(e) => setRestaurant({ ...restaurant, name: e.target.value })}
-            style={{ width: '100%', padding: '12px', marginBottom: '10px', borderRadius: '8px', backgroundColor: 'rgba(248, 250, 252, 0.05)', color: '#F8FAFC' }}
+            style={{ width: '100%', padding: '12px', marginBottom: '10px', borderRadius: '8px', backgroundColor: 'rgba(248, 250, 252, 0.05)', color: '#F8FAFC', border: 'none' }}
             required
           />
           <input
@@ -71,7 +73,7 @@ const RestaurantAdmin = () => {
             placeholder="Address"
             value={restaurant.address}
             onChange={(e) => setRestaurant({ ...restaurant, address: e.target.value })}
-            style={{ width: '100%', padding: '12px', marginBottom: '10px', borderRadius: '8px', backgroundColor: 'rgba(248, 250, 252, 0.05)', color: '#F8FAFC' }}
+            style={{ width: '100%', padding: '12px', marginBottom: '10px', borderRadius: '8px', backgroundColor: 'rgba(248, 250, 252, 0.05)', color: '#F8FAFC', border: 'none' }}
             required
           />
           <input
@@ -79,23 +81,23 @@ const RestaurantAdmin = () => {
             placeholder="Cuisine"
             value={restaurant.cuisine}
             onChange={(e) => setRestaurant({ ...restaurant, cuisine: e.target.value })}
-            style={{ width: '100%', padding: '12px', marginBottom: '10px', borderRadius: '8px', backgroundColor: 'rgba(248, 250, 252, 0.05)', color: '#F8FAFC' }}
+            style={{ width: '100%', padding: '12px', marginBottom: '10px', borderRadius: '8px', backgroundColor: 'rgba(248, 250, 252, 0.05)', color: '#F8FAFC', border: 'none' }}
             required
           />
           {error && <p style={{ color: '#EF4444' }}>{error}</p>}
           {message && <p style={{ color: '#EFB036' }}>{message}</p>}
-          <button type="submit" style={{ width: '100%', padding: '12px', backgroundColor: '#EFB036', color: '#2A3335', borderRadius: '8px' }}>
+          <button type="submit" style={{ width: '100%', padding: '12px', backgroundColor: '#EFB036', color: '#2A3335', borderRadius: '8px', border: 'none' }}>
             Create Restaurant
           </button>
         </form>
-        <h3 style={{ marginTop: '30px' }}>Add Menu Item</h3>
+        <h3 style={{ marginTop: '30px', color: '#F8FAFC' }}>Add Menu Item</h3>
         <form onSubmit={handleAddMenuItem}>
           <input
             type="text"
             placeholder="Restaurant ID"
             value={menuItem.restaurantId}
             onChange={(e) => setMenuItem({ ...menuItem, restaurantId: e.target.value })}
-            style={{ width: '100%', padding: '12px', marginBottom: '10px', borderRadius: '8px', backgroundColor: 'rgba(248, 250, 252, 0.05)', color: '#F8FAFC' }}
+            style={{ width: '100%', padding: '12px', marginBottom: '10px', borderRadius: '8px', backgroundColor: 'rgba(248, 250, 252, 0.05)', color: '#F8FAFC', border: 'none' }}
             required
           />
           <input
@@ -103,7 +105,7 @@ const RestaurantAdmin = () => {
             placeholder="Item Name"
             value={menuItem.name}
             onChange={(e) => setMenuItem({ ...menuItem, name: e.target.value })}
-            style={{ width: '100%', padding: '12px', marginBottom: '10px', borderRadius: '8px', backgroundColor: 'rgba(248, 250, 252, 0.05)', color: '#F8FAFC' }}
+            style={{ width: '100%', padding: '12px', marginBottom: '10px', borderRadius: '8px', backgroundColor: 'rgba(248, 250, 252, 0.05)', color: '#F8FAFC', border: 'none' }}
             required
           />
           <input
@@ -111,14 +113,14 @@ const RestaurantAdmin = () => {
             placeholder="Description"
             value={menuItem.description}
             onChange={(e) => setMenuItem({ ...menuItem, description: e.target.value })}
-            style={{ width: '100%', padding: '12px', marginBottom: '10px', borderRadius: '8px', backgroundColor: 'rgba(248, 250, 252, 0.05)', color: '#F8FAFC' }}
+            style={{ width: '100%', padding: '12px', marginBottom: '10px', borderRadius: '8px', backgroundColor: 'rgba(248, 250, 252, 0.05)', color: '#F8FAFC', border: 'none' }}
           />
           <input
             type="number"
             placeholder="Price"
             value={menuItem.price}
             onChange={(e) => setMenuItem({ ...menuItem, price: e.target.value })}
-            style={{ width: '100%', padding: '12px', marginBottom: '10px', borderRadius: '8px', backgroundColor: 'rgba(248, 250, 252, 0.05)', color: '#F8FAFC' }}
+            style={{ width: '100%', padding: '12px', marginBottom: '10px', borderRadius: '8px', backgroundColor: 'rgba(248, 250, 252, 0.05)', color: '#F8FAFC', border: 'none' }}
             required
           />
           <input
@@ -126,12 +128,12 @@ const RestaurantAdmin = () => {
             placeholder="Category"
             value={menuItem.category}
             onChange={(e) => setMenuItem({ ...menuItem, category: e.target.value })}
-            style={{ width: '100%', padding: '12px', marginBottom: '10px', borderRadius: '8px', backgroundColor: 'rgba(248, 250, 252, 0.05)', color: '#F8FAFC' }}
+            style={{ width: '100%', padding: '12px', marginBottom: '10px', borderRadius: '8px', backgroundColor: 'rgba(248, 250, 252, 0.05)', color: '#F8FAFC', border: 'none' }}
             required
           />
           {error && <p style={{ color: '#EF4444' }}>{error}</p>}
           {message && <p style={{ color: '#EFB036' }}>{message}</p>}
-          <button type="submit" style={{ width: '100%', padding: '12px', backgroundColor: '#EFB036', color: '#2A3335', borderRadius: '8px' }}>
+          <button type="submit" style={{ width: '100%', padding: '12px', backgroundColor: '#EFB036', color: '#2A3335', borderRadius: '8px', border: 'none' }}>
             Add Menu Item
           </button>
         </form>
