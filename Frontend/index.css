@@ -1,0 +1,31 @@
+/* Reset default browser styles */
+* {
+  margin: 0;
+  padding: 0;
+  box-sizing: border-box;
+}
+
+html, body {
+  width: 100%;
+  height: 100%;
+  margin: 0;
+  padding: 0;
+  overflow-x: hidden; /* Prevent horizontal scrollbar */
+  background-color: #2A3335; /* Match app background */
+}
+
+#root {
+  width: 100%;
+  height: 100%;
+  margin: 0;
+  padding: 0;
+  display: flex;
+  flex-direction: column;
+  background-color: #2A3335; /* Ensure no white background */
+}
+
+/* Ensure no borders or outlines */
+html, body, #root, div, input, button, select {
+  border: none;
+  outline: none;
+}
