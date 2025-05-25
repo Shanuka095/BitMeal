@@ -27,20 +27,22 @@ const Login = () => {
       width: '100vw',
       minHeight: '100vh',
       backgroundColor: '#2A3335',
-      padding: '20px',
+      margin: 0,
+      padding: 0,
       display: 'flex',
       justifyContent: 'center',
       alignItems: 'center',
+      border: 'none',
     }}>
-      <div style={{ maxWidth: '400px', width: '100%' }}>
-        <h2 style={{ textAlign: 'center', marginBottom: '30px', fontSize: '2rem' }}>Login</h2>
+      <div style={{ maxWidth: '400px', width: '100%', padding: '20px' }}>
+        <h2 style={{ textAlign: 'center', marginBottom: '30px', fontSize: '2rem', color: '#F8FAFC' }}>Login</h2>
         <form onSubmit={handleLogin}>
           <input
             type="email"
             placeholder="Email"
             value={email}
             onChange={(e) => setEmail(e.target.value)}
-            style={{ width: '100%', padding: '12px', marginBottom: '10px', borderRadius: '8px', backgroundColor: 'rgba(248, 250, 252, 0.05)', color: '#F8FAFC' }}
+            style={{ width: '100%', padding: '12px', marginBottom: '10px', borderRadius: '8px', backgroundColor: 'rgba(248, 250, 252, 0.05)', color: '#F8FAFC', border: 'none' }}
             required
           />
           <input
@@ -48,11 +50,11 @@ const Login = () => {
             placeholder="Password"
             value={password}
             onChange={(e) => setPassword(e.target.value)}
-            style={{ width: '100%', padding: '12px', marginBottom: '10px', borderRadius: '8px', backgroundColor: 'rgba(248, 250, 252, 0.05)', color: '#F8FAFC' }}
+            style={{ width: '100%', padding: '12px', marginBottom: '10px', borderRadius: '8px', backgroundColor: 'rgba(248, 250, 252, 0.05)', color: '#F8FAFC', border: 'none' }}
             required
           />
           {error && <p style={{ color: '#EF4444' }}>{error}</p>}
-          <button type="submit" style={{ width: '100%', padding: '12px', backgroundColor: '#EFB036', color: '#2A3335', borderRadius: '8px' }}>
+          <button type="submit" style={{ width: '100%', padding: '12px', backgroundColor: '#EFB036', color: '#2A3335', borderRadius: '8px', border: 'none' }}>
             Login
           </button>
         </form>
