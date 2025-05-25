@@ -3,9 +3,12 @@ import react from '@vitejs/plugin-react';
 
 export default defineConfig({
   plugins: [react()],
+  root: '.', // Use Frontend as root (contains index.html)
+  publicDir: 'public', // Optional: for static assets
   build: {
     sourcemap: false,
   },
-  root: '.', // Ensure Vite uses Frontend as root
-  publicDir: 'public', // Optional: if you have a public folder
+  server: {
+    port: 5173,
+  },
 });
