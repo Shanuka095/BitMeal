@@ -5,6 +5,7 @@ import VerifyOTP from './pages/VerifyOTP';
 import Dashboard from './pages/Dashboard';
 import Profile from './pages/Profile';
 import RestaurantAdmin from './pages/RestaurantAdmin';
+import Restaurants from './pages/Restaurants.jsx';
 
 function App() {
   return (
@@ -16,6 +17,7 @@ function App() {
         <Route path="/dashboard" element={<Dashboard />} />
         <Route path="/profile" element={<Profile />} />
         <Route path="/restaurant-admin" element={<RestaurantAdmin />} />
+        <Route path="/restaurants" element={<Restaurants />} />
         <Route path="/" element={<Login />} />
       </Routes>
     </BrowserRouter>
