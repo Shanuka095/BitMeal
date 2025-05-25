@@ -51,8 +51,23 @@ const Dashboard = () => {
             fontSize: '1rem',
             fontWeight: 'bold',
             textDecoration: 'none',
+            marginRight: '10px',
           }}>
             Manage Restaurant
+          </Link>
+        )}
+        {role === 'customer' && (
+          <Link to="/restaurants" style={{
+            display: 'inline-block',
+            padding: '12px 24px',
+            borderRadius: '8px',
+            backgroundColor: '#EFB036',
+            color: '#2A3335',
+            fontSize: '1rem',
+            fontWeight: 'bold',
+            textDecoration: 'none',
+          }}>
+            View Restaurants
           </Link>
         )}
       </div>
