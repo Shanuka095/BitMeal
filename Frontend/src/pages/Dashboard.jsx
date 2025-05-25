@@ -8,10 +8,12 @@ const Dashboard = () => {
       width: '100vw',
       minHeight: '100vh',
       backgroundColor: '#2A3335',
-      padding: '20px',
+      margin: 0,
+      padding: 0,
       display: 'flex',
       justifyContent: 'center',
       alignItems: 'center',
+      border: 'none',
     }}>
       <div style={{
         backgroundColor: 'rgba(248, 250, 252, 0.1)',
@@ -21,7 +23,7 @@ const Dashboard = () => {
         width: '100%',
         maxWidth: '600px',
         boxShadow: '0 8px 32px rgba(0, 0, 0, 0.2)',
-        border: '1px solid rgba(248, 250, 252, 0.2)',
+        border: 'none',
         textAlign: 'center',
       }}>
         <h2 style={{ color: '#F8FAFC', marginBottom: '20px', fontSize: '2.5rem', fontWeight: 'bold' }}>Welcome to BitMeal</h2>
