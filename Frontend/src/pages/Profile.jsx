@@ -41,10 +41,12 @@ const Profile = () => {
       width: '100vw',
       minHeight: '100vh',
       backgroundColor: '#2A3335',
-      padding: '20px',
+      margin: 0,
+      padding: 0,
       display: 'flex',
       justifyContent: 'center',
       alignItems: 'center',
+      border: 'none',
     }}>
       <div style={{
         backgroundColor: 'rgba(248, 250, 252, 0.1)',
@@ -54,7 +56,7 @@ const Profile = () => {
         width: '100%',
         maxWidth: '400px',
         boxShadow: '0 8px 32px rgba(0, 0, 0, 0.2)',
-        border: '1px solid rgba(248, 250, 252, 0.2)',
+        border: 'none',
       }}>
         <h2 style={{ color: '#F8FAFC', textAlign: 'center', marginBottom: '30px', fontSize: '2rem' }}>Your Profile</h2>
         <form onSubmit={handleUpdate}>
@@ -69,10 +71,10 @@ const Profile = () => {
                 width: '100%',
                 padding: '12px',
                 borderRadius: '8px',
-                border: '1px solid rgba(248, 250, 252, 0.3)',
                 backgroundColor: 'rgba(248, 250, 252, 0.05)',
                 color: '#F8FAFC',
                 fontSize: '1rem',
+                border: 'none',
               }}
               placeholder="Enter your name"
             />
@@ -88,10 +90,10 @@ const Profile = () => {
                 width: '100%',
                 padding: '12px',
                 borderRadius: '8px',
-                border: '1px solid rgba(248, 250, 252, 0.3)',
                 backgroundColor: 'rgba(248, 250, 252, 0.05)',
                 color: '#F8FAFC',
                 fontSize: '1rem',
+                border: 'none',
               }}
               placeholder="Enter your phone"
             />
@@ -107,10 +109,10 @@ const Profile = () => {
                 width: '100%',
                 padding: '12px',
                 borderRadius: '8px',
-                border: '1px solid rgba(248, 250, 252, 0.3)',
                 backgroundColor: 'rgba(248, 250, 252, 0.05)',
                 color: '#F8FAFC',
                 fontSize: '1rem',
+                border: 'none',
               }}
               placeholder="Enter your address"
             />
