@@ -7,123 +7,86 @@ const Register = () => {
   const [password, setPassword] = useState('');
   const [role, setRole] = useState('customer');
   const [error, setError] = useState('');
+  const [loading, setLoading] = useState(false);
   const navigate = useNavigate();
 
   const handleRegister = async (e) => {
     e.preventDefault();
+    setLoading(true);
     try {
       const response = await axios.post('http://localhost:3000/api/auth/register', { email, password, role });
       navigate('/verify-otp', { state: { email, otpToken: response.data.otpToken, message: 'Please check your email for the OTP code.' } });
     } catch (err) {
       setError(err.response?.data?.error || 'Registration failed');
+    } finally {
+      setLoading(false);
     }
   };
 
   return (
-    <div style={{
-      width: '100vw',
-      minHeight: '100vh',
-      backgroundColor: '#2A3335',
-      margin: 0,
-      padding: 0,
-      display: 'flex',
-      justifyContent: 'center',
-      alignItems: 'center',
-      border: 'none',
-    }}>
-      <div style={{
-        backgroundColor: 'rgba(248, 250, 252, 0.1)',
-        backdropFilter: 'blur(10px)',
-        borderRadius: '20px',
-        padding: '40px',
-        width: '100%',
-        maxWidth: '400px',
-        boxShadow: '0 8px 32px rgba(0, 0, 0, 0.2)',
-        border: 'none',
-      }}>
-        <h2 style={{ color: '#F8FAFC', textAlign: 'center', marginBottom: '30px', fontSize: '2rem' }}>Register for BitMeal</h2>
-        <form onSubmit={handleRegister}>
-          <div style={{ marginBottom: '20px' }}>
-            <label style={{ color: '#F8FAFC', display: 'block', marginBottom: '8px', fontSize: '0.9rem' }} htmlFor="email">Email</label>
+    <div className="w-screen min-h-screen bg-[#2A3335] flex items-center justify-center p-4">
+      <div className="w-full max-w-md bg-[rgba(248,250,252,0.1)] backdrop-blur-lg rounded-2xl shadow-xl p-8 border border-[rgba(248,250,252,0.1)]">
+        <h2 className="text-3xl font-bold text-[#F8FAFC] text-center mb-6">Join BitMeal</h2>
+        <form onSubmit={handleRegister} className="space-y-4">
+          <div>
+            <label htmlFor="email" className="block text-sm font-medium text-[#F8FAFC] mb-1">
+              Email
+            </label>
             <input
               type="email"
               id="email"
               value={email}
               onChange={(e) => setEmail(e.target.value)}
-              style={{
-                width: '100%',
-                padding: '12px',
-                borderRadius: '8px',
-                backgroundColor: 'rgba(248, 250, 252, 0.05)',
-                color: '#F8FAFC',
-                fontSize: '1rem',
-                border: 'none',
-              }}
+              className="w-full px-4 py-2 bg-[rgba(248,250,252,0.05)] text-[#F8FAFC] rounded-lg border-none focus:ring-2 focus:ring-[#EFB036] placeholder-[#A1A1AA]"
               placeholder="Enter your email"
               required
             />
           </div>
-          <div style={{ marginBottom: '20px' }}>
-            <label style={{ color: '#F8FAFC', display: 'block', marginBottom: '8px', fontSize: '0.9rem' }} htmlFor="password">Password</label>
+          <div>
+            <label htmlFor="password" className="block text-sm font-medium text-[#F8FAFC] mb-1">
+              Password
+            </label>
             <input
               type="password"
               id="password"
               value={password}
               onChange={(e) => setPassword(e.target.value)}
-              style={{
-                width: '100%',
-                padding: '12px',
-                borderRadius: '8px',
-                backgroundColor: 'rgba(248, 250, 252, 0.05)',
-                color: '#F8FAFC',
-                fontSize: '1rem',
-                border: 'none',
-              }}
+              className="w-full px-4 py-2 bg-[rgba(248,250,252,0.05)] text-[#F8FAFC] rounded-lg border-none focus:ring-2 focus:ring-[#EFB036] placeholder-[#A1A1AA]"
               placeholder="Enter your password"
               required
             />
           </div>
-          <div style={{ marginBottom: '20px' }}>
-            <label style={{ color: '#F8FAFC', display: 'block', marginBottom: '8px', fontSize: '0.9rem' }} htmlFor="role">Role</label>
+          <div>
+            <label htmlFor="role" className="block text-sm font-medium text-[#F8FAFC] mb-1">
+              Role
+            </label>
             <select
               id="role"
               value={role}
               onChange={(e) => setRole(e.target.value)}
-              style={{
-                width: '100%',
-                padding: '12px',
-                borderRadius: '8px',
-                backgroundColor: 'rgba(248, 250, 252, 0.05)',
-                color: '#F8FAFC',
-                fontSize: '1rem',
-                border: 'none',
-              }}
+              className="w-full px-4 py-2 bg-[rgba(248,250,252,0.05)] text-[#F8FAFC] rounded-lg border-none focus:ring-2 focus:ring-[#EFB036]"
             >
               <option value="customer">Customer</option>
               <option value="restaurant_admin">Restaurant Admin</option>
               <option value="delivery_personnel">Delivery Personnel</option>
             </select>
           </div>
-          {error && <p style={{ color: '#EF4444', textAlign: 'center', fontSize: '0.9rem', marginBottom: '20px' }}>{error}</p>}
+          {error && <p className="text-[#EF4444] text-sm text-center">{error}</p>}
           <button
             type="submit"
-            style={{
-              width: '100%',
-              padding: '12px',
-              borderRadius: '8px',
-              backgroundColor: '#EFB036',
-              color: '#2A3335',
-              fontSize: '1rem',
-              fontWeight: 'bold',
-              border: 'none',
-              cursor: 'pointer',
-            }}
+            disabled={loading}
+            className={`w-full py-2 px-4 rounded-lg font-semibold text-[#2A3335] bg-[#EFB036] hover:bg-[#D97706] transition-colors duration-200 ${
+              loading ? 'opacity-50 cursor-not-allowed' : ''
+            }`}
           >
-            Register
+            {loading ? 'Registering...' : 'Register'}
           </button>
         </form>
-        <p style={{ color: '#F8FAFC', textAlign: 'center', marginTop: '20px', fontSize: '0.9rem' }}>
-          Already have an account? <Link to="/login" style={{ color: '#EFB036', textDecoration: 'none', fontWeight: 'bold' }}>Login</Link>
+        <p className="text-[#F8FAFC] text-sm text-center mt-4">
+          Already have an account?{' '}
+          <Link to="/login" className="text-[#EFB036] hover:underline font-medium">
+            Login
+          </Link>
         </p>
       </div>
     </div>
