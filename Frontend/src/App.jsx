@@ -7,6 +7,7 @@ import Dashboard from './pages/Dashboard.jsx';
 import RestaurantAdmin from './pages/RestaurantAdmin.jsx';
 import Profile from './pages/Profile.jsx';
 import VerifyOTP from './pages/VerifyOTP.jsx';
+import Restaurants from './pages/Restaurants.jsx';
 
 const ProtectedRoute = ({ children, allowedRoles }) => {
   const [role, setRole] = useState(null);
@@ -43,15 +44,10 @@ function App() {
         <Route path="/login" element={<Login />} />
         <Route path="/register" element={<Register />} />
         <Route path="/verify-otp" element={<VerifyOTP />} />
-        <Route path="/dashboard" element={<ProtectedRoute allowedRoles={['customer']}>
-          <Dashboard />
-        </ProtectedRoute>} />
-        <Route path="/restaurant-admin" element={<ProtectedRoute allowedRoles={['restaurant_admin']}>
-          <RestaurantAdmin />
-        </ProtectedRoute>} />
-        <Route path="/profile" element={<ProtectedRoute allowedRoles={['customer', 'restaurant_admin', 'delivery_personnel']}>
-          <Profile />
-        </ProtectedRoute>} />
+        <Route path="/dashboard" element={<ProtectedRoute allowedRoles={['customer']}><Dashboard /></ProtectedRoute>} />
+        <Route path="/restaurant-admin" element={<ProtectedRoute allowedRoles={['restaurant_admin']}><RestaurantAdmin /></ProtectedRoute>} />
+        <Route path="/profile" element={<ProtectedRoute allowedRoles={['customer', 'restaurant_admin', 'delivery_personnel']}><Profile /></ProtectedRoute>} />
+        <Route path="/restaurants/:id" element={<ProtectedRoute allowedRoles={['customer']}><Restaurants /></ProtectedRoute>} />
         <Route path="/" element={<Navigate to="/login" />} />
       </Routes>
     </Router>
