@@ -20,7 +20,7 @@ const RestaurantAdmin = () => {
         const response = await axios.get('http://localhost:3000/api/restaurants', {
           headers: { Authorization: `Bearer ${token}` },
         });
-        setRestaurants(response.data.restaurants || []);
+        setRestaurants(response.data || []);
       } catch (err) {
         console.error('Fetch restaurants error:', err);
       }
@@ -120,219 +120,187 @@ const RestaurantAdmin = () => {
   };
 
   return (
-    <div style={{
-      width: '100vw',
-      minHeight: '100vh',
-      backgroundColor: '#2A3335',
-      margin: 0,
-      padding: 0,
-      display: 'flex',
-      flexDirection: 'column',
-      alignItems: 'center',
-      justifyContent: 'center',
-      border: 'none',
-    }}>
-      <div style={{ maxWidth: '600px', width: '100%', padding: '20px' }}>
-        <h2 style={{ textAlign: 'center', marginBottom: '30px', fontSize: '2rem', color: '#F8FAFC' }}>Restaurant Admin</h2>
-        {error && <p style={{ color: '#EF4444', textAlign: 'center' }}>{error}</p>}
-        {message && <p style={{ color: '#EFB036', textAlign: 'center' }}>{message}</p>}
+    <div className="w-screen min-h-screen bg-[#2A3335] flex flex-col items-center p-6">
+      <div className="w-full max-w-3xl space-y-8">
+        <h2 className="text-4xl font-bold text-[#F8FAFC] text-center mb-8">Restaurant Admin Panel</h2>
+        {error && <p className="text-[#EF4444] text-center text-sm">{error}</p>}
+        {message && <p className="text-[#EFB036] text-center text-sm">{message}</p>}
 
         {/* Create Restaurant */}
-        <h3 style={{ color: '#F8FAFC', marginBottom: '10px' }}>Create Restaurant</h3>
-        <form onSubmit={handleCreateRestaurant}>
-          <input
-            type="text"
-            placeholder="Name"
-            value={restaurant.name}
-            onChange={(e) => setRestaurant({ ...restaurant, name: e.target.value })}
-            style={{ width: '100%', padding: '12px', marginBottom: '10px', borderRadius: '8px', backgroundColor: 'rgba(248, 250, 252, 0.05)', color: '#F8FAFC', border: 'none' }}
-            required
-          />
-          <input
-            type="text"
-            placeholder="Address"
-            value={restaurant.address}
-            onChange={(e) => setRestaurant({ ...restaurant, address: e.target.value })}
-            style={{ width: '100%', padding: '12px', marginBottom: '10px', borderRadius: '8px', backgroundColor: 'rgba(248, 250, 252, 0.05)', color: '#F8FAFC', border: 'none' }}
-            required
-          />
-          <input
-            type="text"
-            placeholder="Cuisine"
-            value={restaurant.cuisine}
-            onChange={(e) => setRestaurant({ ...restaurant, cuisine: e.target.value })}
-            style={{ width: '100%', padding: '12px', marginBottom: '10px', borderRadius: '8px', backgroundColor: 'rgba(248, 250, 252, 0.05)', color: '#F8FAFC', border: 'none' }}
-            required
-          />
-          <button
-            type="submit"
-            disabled={loading.create}
-            style={{
-              width: '100%',
-              padding: '12px',
-              backgroundColor: loading.create ? '#6B7280' : '#EFB036',
-              color: loading.create ? '#F8FAFC' : '#2A3335',
-              borderRadius: '8px',
-              border: 'none',
-              cursor: loading.create ? 'not-allowed' : 'pointer',
-            }}
-          >
-            {loading.create ? 'Creating...' : 'Create Restaurant'}
-          </button>
-        </form>
+        <div className="bg-[rgba(248,250,252,0.1)] backdrop-blur-lg rounded-2xl p-6 border border-[rgba(248,250,252,0.1)]">
+          <h3 className="text-2xl font-semibold text-[#F8FAFC] mb-4">Create Restaurant</h3>
+          <form onSubmit={handleCreateRestaurant} className="space-y-4">
+            <input
+              type="text"
+              placeholder="Name"
+              value={restaurant.name}
+              onChange={(e) => setRestaurant({ ...restaurant, name: e.target.value })}
+              className="w-full px-4 py-2 bg-[rgba(248,250,252,0.05)] text-[#F8FAFC] rounded-lg border-none focus:ring-2 focus:ring-[#EFB036] placeholder-[#A1A1AA]"
+              required
+            />
+            <input
+              type="text"
+              placeholder="Address"
+              value={restaurant.address}
+              onChange={(e) => setRestaurant({ ...restaurant, address: e.target.value })}
+              className="w-full px-4 py-2 bg-[rgba(248,250,252,0.05)] text-[#F8FAFC] rounded-lg border-none focus:ring-2 focus:ring-[#EFB036] placeholder-[#A1A1AA]"
+              required
+            />
+            <input
+              type="text"
+              placeholder="Cuisine"
+              value={restaurant.cuisine}
+              onChange={(e) => setRestaurant({ ...restaurant, cuisine: e.target.value })}
+              className="w-full px-4 py-2 bg-[rgba(248,250,252,0.05)] text-[#F8FAFC] rounded-lg border-none focus:ring-2 focus:ring-[#EFB036] placeholder-[#A1A1AA]"
+              required
+            />
+            <button
+              type="submit"
+              disabled={loading.create}
+              className={`w-full py-2 px-4 rounded-lg font-semibold text-[#2A3335] bg-[#EFB036] hover:bg-[#D97706] transition-colors ${loading.create ? 'opacity-50 cursor-not-allowed' : ''}`}
+            >
+              {loading.create ? 'Creating...' : 'Create Restaurant'}
+            </button>
+          </form>
+        </div>
 
         {/* Update Restaurant */}
-        <h3 style={{ marginTop: '30px', color: '#F8FAFC', marginBottom: '10px' }}>Update Restaurant</h3>
-        <form onSubmit={handleUpdateRestaurant}>
-          <select
-            value={updateRestaurant.id}
-            onChange={(e) => {
-              const selected = restaurants.find(r => r._id === e.target.value);
-              setUpdateRestaurant({
-                id: e.target.value,
-                name: selected?.name || '',
-                address: selected?.address || '',
-                cuisine: selected?.cuisine || '',
-              });
-            }}
-            style={{ width: '100%', padding: '12px', marginBottom: '10px', borderRadius: '8px', backgroundColor: 'rgba(248, 250, 252, 0.05)', color: '#F8FAFC', border: 'none' }}
-            required
-          >
-            <option value="">Select Restaurant</option>
-            {restaurants.map(r => (
-              <option key={r._id} value={r._id}>{r.name}</option>
-            ))}
-          </select>
-          <input
-            type="text"
-            placeholder="Name"
-            value={updateRestaurant.name}
-            onChange={(e) => setUpdateRestaurant({ ...updateRestaurant, name: e.target.value })}
-            style={{ width: '100%', padding: '12px', marginBottom: '10px', borderRadius: '8px', backgroundColor: 'rgba(248, 250, 252, 0.05)', color: '#F8FAFC', border: 'none' }}
-            required
-          />
-          <input
-            type="text"
-            placeholder="Address"
-            value={updateRestaurant.address}
-            onChange={(e) => setUpdateRestaurant({ ...updateRestaurant, address: e.target.value })}
-            style={{ width: '100%', padding: '12px', marginBottom: '10px', borderRadius: '8px', backgroundColor: 'rgba(248, 250, 252, 0.05)', color: '#F8FAFC', border: 'none' }}
-            required
-          />
-          <input
-            type="text"
-            placeholder="Cuisine"
-            value={updateRestaurant.cuisine}
-            onChange={(e) => setUpdateRestaurant({ ...updateRestaurant, cuisine: e.target.value })}
-            style={{ width: '100%', padding: '12px', marginBottom: '10px', borderRadius: '8px', backgroundColor: 'rgba(248, 250, 252, 0.05)', color: '#F8FAFC', border: 'none' }}
-            required
-          />
-          <button
-            type="submit"
-            disabled={loading.update}
-            style={{
-              width: '100%',
-              padding: '12px',
-              backgroundColor: loading.update ? '#6B7280' : '#EFB036',
-              color: loading.update ? '#F8FAFC' : '#2A3335',
-              borderRadius: '8px',
-              border: 'none',
-              cursor: loading.update ? 'not-allowed' : 'pointer',
-            }}
-          >
-            {loading.update ? 'Updating...' : 'Update Restaurant'}
-          </button>
-        </form>
+        <div className="bg-[rgba(248,250,252,0.1)] backdrop-blur-lg rounded-2xl p-6 border border-[rgba(248,250,252,0.1)]">
+          <h3 className="text-2xl font-semibold text-[#F8FAFC] mb-4">Update Restaurant</h3>
+          <form onSubmit={handleUpdateRestaurant} className="space-y-4">
+            <select
+              value={updateRestaurant.id}
+              onChange={(e) => {
+                const selected = restaurants.find(r => r._id === e.target.value);
+                setUpdateRestaurant({
+                  id: e.target.value,
+                  name: selected?.name || '',
+                  address: selected?.address || '',
+                  cuisine: selected?.cuisine || '',
+                });
+              }}
+              className="w-full px-4 py-2 bg-[rgba(248,250,252,0.05)] text-[#F8FAFC] rounded-lg border-none focus:ring-2 focus:ring-[#EFB036]"
+              required
+            >
+              <option value="">Select Restaurant</option>
+              {restaurants.map(r => (
+                <option key={r._id} value={r._id}>{r.name}</option>
+              ))}
+            </select>
+            <input
+              type="text"
+              placeholder="Name"
+              value={updateRestaurant.name}
+              onChange={(e) => setUpdateRestaurant({ ...updateRestaurant, name: e.target.value })}
+              className="w-full px-4 py-2 bg-[rgba(248,250,252,0.05)] text-[#F8FAFC] rounded-lg border-none focus:ring-2 focus:ring-[#EFB036]"
+              required
+            />
+            <input
+              type="text"
+              placeholder="Address"
+              value={updateRestaurant.address}
+              onChange={(e) => setUpdateRestaurant({ ...updateRestaurant, address: e.target.value })}
+              className="w-full px-4 py-2 bg-[rgba(248,250,252,0.05)] text-[#F8FAFC] rounded-lg border-none focus:ring-2 focus:ring-[#EFB036]"
+              required
+            />
+            <input
+              type="text"
+              placeholder="Cuisine"
+              value={updateRestaurant.cuisine}
+              onChange={(e) => setUpdateRestaurant({ ...updateRestaurant, cuisine: e.target.value })}
+              className="w-full px-4 py-2 bg-[rgba(248,250,252,0.05)] text-[#F8FAFC] rounded-lg border-none focus:ring-2 focus:ring-[#EFB036]"
+              required
+            />
+            <button
+              type="submit"
+              disabled={loading.update}
+              className={`w-full py-2 px-4 rounded-lg font-semibold text-white bg-blue-600 hover:bg-blue-700 transition-colors ${loading.update ? 'opacity-50 cursor-not-allowed' : ''}`}
+            >
+              {loading.update ? 'Updating...' : 'Update Restaurant'}
+            </button>
+          </form>
+        </div>
 
         {/* Delete Restaurant */}
-        <h3 style={{ marginTop: '30px', color: '#F8FAFC', marginBottom: '10px' }}>Delete Restaurant</h3>
-        <form onSubmit={handleDeleteRestaurant}>
-          <select
-            value={deleteRestaurantId}
-            onChange={(e) => setDeleteRestaurantId(e.target.value)}
-            style={{ width: '100%', padding: '12px', marginBottom: '10px', borderRadius: '8px', backgroundColor: 'rgba(248, 250, 252, 0.05)', color: '#F8FAFC', border: 'none' }}
-            required
-          >
-            <option value="">Select Restaurant</option>
-            {restaurants.map(r => (
-              <option key={r._id} value={r._id}>{r.name}</option>
-            ))}
-          </select>
-          <button
-            type="submit"
-            disabled={loading.delete}
-            style={{
-              width: '100%',
-              padding: '12px',
-              backgroundColor: loading.delete ? '#6B7280' : '#EF4444',
-              color: '#F8FAFC',
-              borderRadius: '8px',
-              border: 'none',
-              cursor: loading.delete ? 'not-allowed' : 'pointer',
-            }}
-          >
-            {loading.delete ? 'Deleting...' : 'Delete Restaurant'}
-          </button>
-        </form>
+        <div className="bg-[rgba(248,250,252,0.1)] backdrop-blur-lg rounded-2xl p-6 border border-[rgba(248,250,252,0.1)]">
+          <h3 className="text-2xl font-semibold text-[#F8FAFC] mb-4">Delete Restaurant</h3>
+          <form onSubmit={handleDeleteRestaurant} className="space-y-4">
+            <select
+              value={deleteRestaurantId}
+              onChange={(e) => setDeleteRestaurantId(e.target.value)}
+              className="w-full px-4 py-2 bg-[rgba(248,250,252,0.05)] text-[#F8FAFC] rounded-lg border-none focus:ring-2 focus:ring-[#EFB036]"
+              required
+            >
+              <option value="">Select Restaurant</option>
+              {restaurants.map(r => (
+                <option key={r._id} value={r._id}>{r.name}</option>
+              ))}
+            </select>
+            <button
+              type="submit"
+              disabled={loading.delete}
+              className={`w-full py-2 px-4 rounded-lg font-semibold text-white bg-[#EF4444] hover:bg-[#DC2626] transition-colors ${loading.delete ? 'opacity-50 cursor-not-allowed' : ''}`}
+            >
+              {loading.delete ? 'Deleting...' : 'Delete Restaurant'}
+            </button>
+          </form>
+        </div>
 
         {/* Add Menu Item */}
-        <h3 style={{ marginTop: '30px', color: '#F8FAFC', marginBottom: '10px' }}>Add Menu Item</h3>
-        <form onSubmit={handleAddMenuItem}>
-          <input
-            type="text"
-            placeholder="Restaurant ID"
-            value={menuItem.restaurantId}
-            onChange={(e) => setMenuItem({ ...menuItem, restaurantId: e.target.value })}
-            style={{ width: '100%', padding: '12px', marginBottom: '10px', borderRadius: '8px', backgroundColor: 'rgba(248, 250, 252, 0.05)', color: '#F8FAFC', border: 'none' }}
-            required
-          />
-          <input
-            type="text"
-            placeholder="Item Name"
-            value={menuItem.name}
-            onChange={(e) => setMenuItem({ ...menuItem, name: e.target.value })}
-            style={{ width: '100%', padding: '12px', marginBottom: '10px', borderRadius: '8px', backgroundColor: 'rgba(248, 250, 252, 0.05)', color: '#F8FAFC', border: 'none' }}
-            required
-          />
-          <input
-            type="text"
-            placeholder="Description"
-            value={menuItem.description}
-            onChange={(e) => setMenuItem({ ...menuItem, description: e.target.value })}
-            style={{ width: '100%', padding: '12px', marginBottom: '10px', borderRadius: '8px', backgroundColor: 'rgba(248, 250, 252, 0.05)', color: '#F8FAFC', border: 'none' }}
-          />
-          <input
-            type="number"
-            placeholder="Price"
-            value={menuItem.price}
-            onChange={(e) => setMenuItem({ ...menuItem, price: e.target.value })}
-            style={{ width: '100%', padding: '12px', marginBottom: '10px', borderRadius: '8px', backgroundColor: 'rgba(248, 250, 252, 0.05)', color: '#F8FAFC', border: 'none' }}
-            required
-          />
-          <input
-            type="text"
-            placeholder="Category"
-            value={menuItem.category}
-            onChange={(e) => setMenuItem({ ...menuItem, category: e.target.value })}
-            style={{ width: '100%', padding: '12px', marginBottom: '10px', borderRadius: '8px', backgroundColor: 'rgba(248, 250, 252, 0.05)', color: '#F8FAFC', border: 'none' }}
-            required
-          />
-          <button
-            type="submit"
-            disabled={loading.menu}
-            style={{
-              width: '100%',
-              padding: '12px',
-              backgroundColor: loading.menu ? '#6B7280' : '#EFB036',
-              color: loading.menu ? '#F8FAFC' : '#2A3335',
-              borderRadius: '8px',
-              border: 'none',
-              cursor: loading.menu ? 'not-allowed' : 'pointer',
-            }}
-          >
-            {loading.menu ? 'Adding...' : 'Add Menu Item'}
-          </button>
-        </form>
+        <div className="bg-[rgba(248,250,252,0.1)] backdrop-blur-lg rounded-2xl p-6 border border-[rgba(248,250,252,0.1)]">
+          <h3 className="text-2xl font-semibold text-[#F8FAFC] mb-4">Add Menu Item</h3>
+          <form onSubmit={handleAddMenuItem} className="space-y-4">
+            <select
+              value={menuItem.restaurantId}
+              onChange={(e) => setMenuItem({ ...menuItem, restaurantId: e.target.value })}
+              className="w-full px-4 py-2 bg-[rgba(248,250,252,0.05)] text-[#F8FAFC] rounded-lg border-none focus:ring-2 focus:ring-[#EFB036]"
+              required
+            >
+              <option value="">Select Restaurant</option>
+              {restaurants.map(r => (
+                <option key={r._id} value={r._id}>{r.name}</option>
+              ))}
+            </select>
+            <input
+              type="text"
+              placeholder="Item Name"
+              value={menuItem.name}
+              onChange={(e) => setMenuItem({ ...menuItem, name: e.target.value })}
+              className="w-full px-4 py-2 bg-[rgba(248,250,252,0.05)] text-[#F8FAFC] rounded-lg border-none focus:ring-2 focus:ring-[#EFB036]"
+              required
+            />
+            <input
+              type="text"
+              placeholder="Description"
+              value={menuItem.description}
+              onChange={(e) => setMenuItem({ ...menuItem, description: e.target.value })}
+              className="w-full px-4 py-2 bg-[rgba(248,250,252,0.05)] text-[#F8FAFC] rounded-lg border-none focus:ring-2 focus:ring-[#EFB036]"
+            />
+            <input
+              type="number"
+              placeholder="Price"
+              value={menuItem.price}
+              onChange={(e) => setMenuItem({ ...menuItem, price: e.target.value })}
+              className="w-full px-4 py-2 bg-[rgba(248,250,252,0.05)] text-[#F8FAFC] rounded-lg border-none focus:ring-2 focus:ring-[#EFB036]"
+              required
+            />
+            <input
+              type="text"
+              placeholder="Category"
+              value={menuItem.category}
+              onChange={(e) => setMenuItem({ ...menuItem, category: e.target.value })}
+              className="w-full px-4 py-2 bg-[rgba(248,250,252,0.05)] text-[#F8FAFC] rounded-lg border-none focus:ring-2 focus:ring-[#EFB036]"
+              required
+            />
+            <button
+              type="submit"
+              disabled={loading.menu}
+              className={`w-full py-2 px-4 rounded-lg font-semibold text-[#2A3335] bg-[#EFB036] hover:bg-[#D97706] transition-colors ${loading.menu ? 'opacity-50 cursor-not-allowed' : ''}`}
+            >
+              {loading.menu ? 'Adding...' : 'Add Menu Item'}
+            </button>
+          </form>
+        </div>
       </div>
     </div>
   );
