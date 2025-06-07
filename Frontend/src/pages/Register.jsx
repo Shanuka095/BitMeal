@@ -24,12 +24,12 @@ const Register = () => {
   };
 
   return (
-    <div className="w-screen min-h-screen bg-[#2A3335] flex items-center justify-center p-4">
-      <div className="w-full max-w-md bg-[rgba(248,250,252,0.1)] backdrop-blur-lg rounded-2xl shadow-xl p-8 border border-[rgba(248,250,252,0.1)]">
-        <h2 className="text-3xl font-bold text-[#F8FAFC] text-center mb-6">Join BitMeal</h2>
+    <div className="w-screen min-h-screen bg-[#fffada] flex items-center justify-center p-4">
+      <div className="w-full max-w-md bg-white/30 backdrop-blur-lg rounded-2xl shadow-xl p-8">
+        <h2 className="text-3xl font-bold text-[#1F2937] text-center mb-6">Join BitMeal</h2>
         <form onSubmit={handleRegister} className="space-y-4">
           <div>
-            <label htmlFor="email" className="block text-sm font-medium text-[#F8FAFC] mb-1">
+            <label htmlFor="email" className="block text-sm font-medium text-[#1F2937] mb-1">
               Email
             </label>
             <input
@@ -37,13 +37,13 @@ const Register = () => {
               id="email"
               value={email}
               onChange={(e) => setEmail(e.target.value)}
-              className="w-full px-4 py-2 bg-[rgba(248,250,252,0.05)] text-[#F8FAFC] rounded-lg border-none focus:ring-2 focus:ring-[#EFB036] placeholder-[#A1A1AA]"
+              className="w-full px-4 py-2 bg-white/10 text-[#1F2937] rounded-lg border-none focus:ring-2 focus:ring-[#d1b700] placeholder-[#6B7280]"
               placeholder="Enter your email"
               required
             />
           </div>
           <div>
-            <label htmlFor="password" className="block text-sm font-medium text-[#F8FAFC] mb-1">
+            <label htmlFor="password" className="block text-sm font-medium text-[#1F2937] mb-1">
               Password
             </label>
             <input
@@ -51,20 +51,20 @@ const Register = () => {
               id="password"
               value={password}
               onChange={(e) => setPassword(e.target.value)}
-              className="w-full px-4 py-2 bg-[rgba(248,250,252,0.05)] text-[#F8FAFC] rounded-lg border-none focus:ring-2 focus:ring-[#EFB036] placeholder-[#A1A1AA]"
+              className="w-full px-4 py-2 bg-white/10 text-[#1F2937] rounded-lg border-none focus:ring-2 focus:ring-[#d1b700] placeholder-[#6B7280]"
               placeholder="Enter your password"
               required
             />
           </div>
           <div>
-            <label htmlFor="role" className="block text-sm font-medium text-[#F8FAFC] mb-1">
+            <label htmlFor="role" className="block text-sm font-medium text-[#1F2937] mb-1">
               Role
             </label>
             <select
               id="role"
               value={role}
               onChange={(e) => setRole(e.target.value)}
-              className="w-full px-4 py-2 bg-[rgba(248,250,252,0.05)] text-[#F8FAFC] rounded-lg border-none focus:ring-2 focus:ring-[#EFB036]"
+              className="w-full px-4 py-2 bg-white/10 text-[#1F2937] rounded-lg border-none focus:ring-2 focus:ring-[#d1b700]"
             >
               <option value="customer">Customer</option>
               <option value="restaurant_admin">Restaurant Admin</option>
@@ -75,18 +75,13 @@ const Register = () => {
           <button
             type="submit"
             disabled={loading}
-            className={`w-full py-2 px-4 rounded-lg font-semibold text-[#2A3335] bg-[#EFB036] hover:bg-[#D97706] transition-colors duration-200 ${
-              loading ? 'opacity-50 cursor-not-allowed' : ''
-            }`}
+            className={`w-full py-2 px-4 rounded-lg font-semibold text-[#1F2937] bg-[#d1b700] hover:bg-[#b89f00] transition-colors duration-200 ${loading ? 'opacity-50 cursor-not-allowed' : ''}`}
           >
             {loading ? 'Registering...' : 'Register'}
           </button>
         </form>
-        <p className="text-[#F8FAFC] text-sm text-center mt-4">
-          Already have an account?{' '}
-          <Link to="/login" className="text-[#EFB036] hover:underline font-medium">
-            Login
-          </Link>
+        <p className="text-[#1F2937] text-sm text-center mt-4">
+          Already have an account? <Link to="/login" className="text-[#d1b700] hover:underline font-medium">Login</Link>
         </p>
       </div>
     </div>
