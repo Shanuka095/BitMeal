@@ -44,7 +44,7 @@ const Profile = () => {
     <div style={{
       width: '100vw',
       minHeight: '100vh',
-      backgroundColor: '#2A3335',
+      backgroundColor: '#fffada',
       margin: 0,
       padding: 0,
       display: 'flex',
@@ -53,7 +53,7 @@ const Profile = () => {
       border: 'none',
     }}>
       <div style={{
-        backgroundColor: 'rgba(248, 250, 252, 0.1)',
+        backgroundColor: 'rgba(255, 255, 255, 0.3)',
         backdropFilter: 'blur(10px)',
         borderRadius: '20px',
         padding: '40px',
@@ -62,10 +62,10 @@ const Profile = () => {
         boxShadow: '0 8px 32px rgba(0, 0, 0, 0.2)',
         border: 'none',
       }}>
-        <h2 style={{ color: '#F8FAFC', textAlign: 'center', marginBottom: '30px', fontSize: '2rem' }}>Your Profile</h2>
+        <h2 style={{ color: '#1F2937', textAlign: 'center', marginBottom: '30px', fontSize: '2rem' }}>Your Profile</h2>
         <form onSubmit={handleUpdate}>
           <div style={{ marginBottom: '20px' }}>
-            <label style={{ color: '#F8FAFC', display: 'block', marginBottom: '8px', fontSize: '0.9rem' }} htmlFor="name">Name</label>
+            <label style={{ color: '#1F2937', display: 'block', marginBottom: '8px', fontSize: '0.9rem' }} htmlFor="name">Name</label>
             <input
               type="text"
               id="name"
@@ -75,8 +75,8 @@ const Profile = () => {
                 width: '100%',
                 padding: '12px',
                 borderRadius: '8px',
-                backgroundColor: 'rgba(248, 250, 252, 0.05)',
-                color: '#F8FAFC',
+                backgroundColor: 'rgba(255, 255, 255, 0.1)',
+                color: '#1F2937',
                 fontSize: '1rem',
                 border: 'none',
               }}
@@ -84,7 +84,7 @@ const Profile = () => {
             />
           </div>
           <div style={{ marginBottom: '20px' }}>
-            <label style={{ color: '#F8FAFC', display: 'block', marginBottom: '8px', fontSize: '0.9rem' }} htmlFor="phone">Phone</label>
+            <label style={{ color: '#1F2937', display: 'block', marginBottom: '8px', fontSize: '0.9rem' }} htmlFor="phone">Phone</label>
             <input
               type="text"
               id="phone"
@@ -94,8 +94,8 @@ const Profile = () => {
                 width: '100%',
                 padding: '12px',
                 borderRadius: '8px',
-                backgroundColor: 'rgba(248, 250, 252, 0.05)',
-                color: '#F8FAFC',
+                backgroundColor: 'rgba(255, 255, 255, 0.1)',
+                color: '#1F2937',
                 fontSize: '1rem',
                 border: 'none',
               }}
@@ -103,7 +103,7 @@ const Profile = () => {
             />
           </div>
           <div style={{ marginBottom: '20px' }}>
-            <label style={{ color: '#F8FAFC', display: 'block', marginBottom: '8px', fontSize: '0.9rem' }} htmlFor="address">Address</label>
+            <label style={{ color: '#1F2937', display: 'block', marginBottom: '8px', fontSize: '0.9rem' }} htmlFor="address">Address</label>
             <input
               type="text"
               id="address"
@@ -113,15 +113,15 @@ const Profile = () => {
                 width: '100%',
                 padding: '12px',
                 borderRadius: '8px',
-                backgroundColor: 'rgba(248, 250, 252, 0.05)',
-                color: '#F8FAFC',
+                backgroundColor: 'rgba(255, 255, 255, 0.1)',
+                color: '#1F2937',
                 fontSize: '1rem',
                 border: 'none',
               }}
               placeholder="Enter your address"
             />
           </div>
-          {message && <p style={{ color: '#EFB036', textAlign: 'center', fontSize: '0.9rem', marginBottom: '20px' }}>{message}</p>}
+          {message && <p style={{ color: '#d1b700', textAlign: 'center', fontSize: '0.9rem', marginBottom: '20px' }}>{message}</p>}
           {error && <p style={{ color: '#EF4444', textAlign: 'center', fontSize: '0.9rem', marginBottom: '20px' }}>{error}</p>}
           <button
             type="submit"
@@ -130,8 +130,8 @@ const Profile = () => {
               width: '100%',
               padding: '12px',
               borderRadius: '8px',
-              backgroundColor: loading ? '#6B7280' : '#EFB036',
-              color: loading ? '#F8FAFC' : '#2A3335',
+              backgroundColor: loading ? '#6B7280' : '#d1b700',
+              color: loading ? '#1F2937' : '#1F2937',
               fontSize: '1rem',
               fontWeight: 'bold',
               border: 'none',
