@@ -13,7 +13,7 @@ const Dashboard = () => {
       try {
         const token = localStorage.getItem('token');
         const response = await axios.get('http://localhost:3000/api/restaurants', {
-          headers: { Authorization: `Bearer ${token}` }
+          headers: { Authorization: `Bearer ${token}` },
         });
         setRestaurants(response.data);
         setLoading(false);
@@ -30,28 +30,42 @@ const Dashboard = () => {
   }, [navigate]);
 
   return (
-    <div className="w-screen min-h-screen bg-[#2A3335] p-4">
-      <div className="max-w-7xl mx-auto">
-        <h1 className="text-3xl font-bold text-[#F8FAFC] mb-6">Welcome to BitMeal</h1>
+    <div className="w-screen min-h-screen bg-[#fffada] font-sans">
+      {/* Hero Section */}
+      <div className="relative bg-gradient-to-r from-[#d1b700]/20 to-[#fffada] py-16 md:py-24">
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 text-center">
+          <h1 className="text-4xl sm:text-5xl font-extrabold text-[#1F2937] mb-4 animate-fade-in">
+            Welcome to BitMeal
+          </h1>
+          <p className="text-lg sm:text-xl text-[#6B7280] max-w-2xl mx-auto">
+            Discover delicious cuisines from top restaurants in your area.
+          </p>
+        </div>
+      </div>
+
+      {/* Restaurants Section */}
+      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-12">
         {loading ? (
-          <p className="text-[#F8FAFC] text-center">Loading restaurants...</p>
+          <div className="text-center">
+            <div className="inline-block animate-spin rounded-full h-8 w-8 border-t-2 border-b-2 border-[#d1b700]"></div>
+            <p className="text-[#1F2937] mt-2">Loading restaurants...</p>
+          </div>
         ) : error ? (
-          <p className="text-[#EF4444] text-center">{error}</p>
+          <p className="text-[#EF4444] text-center text-lg">{error}</p>
         ) : restaurants.length === 0 ? (
-          <p className="text-[#F8FAFC] text-center">No restaurants available</p>
+          <p className="text-[#1F2937] text-center text-lg">No restaurants available</p>
         ) : (
           <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
-            {restaurants.map(restaurant => (
-              <div key={restaurant._id} className="bg-[rgba(248,250,252,0.1)] backdrop-blur-lg rounded-2xl p-4 border border-[rgba(248,250,252,0.1)]">
-                <h2 className="text-xl font-semibold text-[#F8FAFC]">{restaurant.name}</h2>
-                <p className="text-[#A1A1AA] mt-1">{restaurant.address}</p>
-                <p className="text-[#A1A1AA] mt-1">{restaurant.cuisine}</p>
-                <button
-                  onClick={() => navigate(`/restaurant/${restaurant._id}`)}
-                  className="mt-4 w-full py-2 px-4 rounded-lg font-semibold text-[#2A3335] bg-[#EFB036] hover:bg-[#D97706]"
-                >
-                  View Menu
-                </button>
+            {restaurants.map((restaurant, index) => (
+              <div
+                key={restaurant._id}
+                className="bg-white/30 backdrop-blur-lg rounded-2xl p-6 shadow-lg cursor-pointer hover:shadow-xl hover:scale-105 transition-all duration-300 transform animate-[fadeInUp_0.5s_ease-out] delay-100"
+                style={{ animationDelay: `${index * 100}ms` }}
+                onClick={() => navigate(`/restaurants/${restaurant._id}`)}
+              >
+                <h3 className="text-xl font-bold text-[#1F2937] mb-2">{restaurant.name}</h3>
+                <p className="text-[#6B7280] text-sm mb-1">{restaurant.address}</p>
+                <p className="text-[#d1b700] text-sm font-semibold">{restaurant.cuisine}</p>
               </div>
             ))}
           </div>
