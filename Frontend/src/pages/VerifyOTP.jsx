@@ -8,30 +8,36 @@ const VerifyOTP = () => {
   const [otp, setOTP] = useState('');
   const [error, setError] = useState('');
   const [message, setMessage] = useState('');
+  const [loading, setLoading] = useState(false);
   const navigate = useNavigate();
   const location = useLocation();
   const otpToken = location.state?.otpToken || '';
+  const email = location.state?.email || '';
 
   useEffect(() => {
-    if (!otpToken) {
+    if (!otpToken || !email) {
       setError('No OTP session provided. Please register again.');
       setTimeout(() => navigate('/register'), 2000);
     }
     if (location.state?.message) {
       setMessage(location.state.message);
     }
-  }, [otpToken, location.state, navigate]);
+  }, [otpToken, email, location.state, navigate]);
 
   const handleVerifyOTP = async (e) => {
     e.preventDefault();
+    setLoading(true);
     try {
-      const response = await axios.post('http://localhost:3003/api/auth/verify-otp', { otp, otpToken });
+      const response = await axios.post('http://localhost:3000/api/auth/verify-otp', { otp, otpToken });
       setMessage(response.data.message);
       setError('');
       setTimeout(() => navigate('/login'), 2000);
     } catch (err) {
       setError(err.response?.data?.error || 'OTP verification failed');
       setMessage('');
+      console.error('OTP verification error:', err);
+    } finally {
+      setLoading(false);
     }
   };
 
@@ -57,9 +63,10 @@ const VerifyOTP = () => {
             {message && <p className="text-[#e4b401] text-sm text-center font-medium">{message}</p>}
             <button
               type="submit"
-              className="w-full py-3 px-4 rounded-lg font-semibold text-[#1F2937] bg-[#e4b401] hover:bg-[#c99e01] transition-all duration-200 hover:shadow-lg"
+              disabled={loading}
+              className={`w-full py-3 px-4 rounded-lg font-semibold text-[#1F2937] bg-[#e4b401] hover:bg-[#c99e01] transition-all duration-200 ${loading ? 'opacity-50 cursor-not-allowed' : 'hover:shadow-lg'}`}
             >
-              Verify OTP
+              {loading ? 'Verifying...' : 'Verify OTP'}
             </button>
           </form>
         </div>
