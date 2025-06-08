@@ -6,7 +6,6 @@ import { FaUserCircle, FaBars, FaTimes, FaShoppingCart } from 'react-icons/fa';
 const Navbar = () => {
   const [isMenuOpen, setIsMenuOpen] = useState(false);
   const [isProfileOpen, setIsProfileOpen] = useState(false);
-  const [isLogoutOpen, setIsLogoutOpen] = useState(false);
   const navigate = useNavigate();
 
   const handleLogout = () => {
@@ -71,7 +70,7 @@ const Navbar = () => {
                 </Link>
                 <button
                   onClick={() => {
-                    setIsLogoutOpen(true);
+                    handleLogout();
                     setIsProfileOpen(false);
                   }}
                   className="w-full text-left px-4 py-2 text-[#4f4f4f] hover:bg-[#ffaa00]/10 hover:text-[#ffaa00] transition-colors duration-200"
@@ -141,39 +140,13 @@ const Navbar = () => {
           </Link>
           <button
             onClick={() => {
-              setIsLogoutOpen(true);
+              handleLogout();
               setIsMenuOpen(false);
             }}
             className="block w-full text-left py-2 text-[#4f4f4f] hover:text-[#ffaa00] font-medium transition-colors duration-200"
           >
             Logout
           </button>
-        </div>
-      )}
-
-      {/* Logout Confirmation Modal */}
-      {isLogoutOpen && (
-        <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50">
-          <div className="bg-white/95 rounded-lg p-6 shadow-xl border border-[#ffaa00]/20 max-w-sm w-full">
-            <h3 className="text-lg font-semibold text-[#4f4f4f] mb-4">Are you sure you want to log out?</h3>
-            <div className="flex justify-end space-x-4">
-              <button
-                onClick={() => setIsLogoutOpen(false)}
-                className="px-4 py-2 text-[#4f4f4f] bg-[#e3e3e3] rounded-lg hover:bg-[#d0d0d0] transition-colors duration-200"
-              >
-                Cancel
-              </button>
-              <button
-                onClick={() => {
-                  handleLogout();
-                  setIsLogoutOpen(false);
-                }}
-                className="px-4 py-2 text-[#4f4f4f] bg-[#ffaa00] rounded-lg hover:bg-[#cc8800] transition-colors duration-200"
-              >
-                Logout
-              </button>
-            </div>
-          </div>
         </div>
       )}
     </nav>
