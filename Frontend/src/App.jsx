@@ -18,10 +18,11 @@ const ProtectedRoute = ({ children, allowedRoles }) => {
   useEffect(() => {
     const token = localStorage.getItem('token');
     if (token) {
-      axios.get('http://localhost:3003/api/auth/verify-token', {
-        headers: { Authorization: `Bearer ${token}` },
-      })
-        .then(res => {
+      axios
+        .get('http://localhost:3000/api/auth/verify-token', {
+          headers: { Authorization: `Bearer ${token}` },
+        })
+        .then((res) => {
           setRole(res.data.role);
           setLoading(false);
         })
@@ -34,7 +35,8 @@ const ProtectedRoute = ({ children, allowedRoles }) => {
     }
   }, []);
 
-  if (loading) return <div className="w-screen h-screen bg-[#fffce5] flex items-center justify-center text-[#1F2937]">Loading...</div>;
+  if (loading)
+    return <div className="w-screen h-screen bg-[#fffce5] flex items-center justify-center text-[#1F2937]">Loading...</div>;
   if (!role || !allowedRoles.includes(role)) return <Navigate to="/login" />;
   return children;
 };
