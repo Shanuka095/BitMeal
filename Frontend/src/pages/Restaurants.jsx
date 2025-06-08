@@ -2,8 +2,6 @@
 import { useState, useEffect } from 'react';
 import axios from 'axios';
 import { useNavigate, useLocation } from 'react-router-dom';
-import Navbar from '../components/Navbar';
-import Footer from '../components/Footer';
 
 const Restaurants = ({ standalone = true }) => {
   const [restaurants, setRestaurants] = useState([]);
@@ -17,14 +15,22 @@ const Restaurants = ({ standalone = true }) => {
 
   useEffect(() => {
     const fetchRestaurants = async () => {
+      console.log('Fetching restaurants, token:', localStorage.getItem('token'));
       try {
         const token = localStorage.getItem('token');
+        if (!token) {
+          console.warn('No token found, redirecting to login');
+          navigate('/login');
+          return;
+        }
         const response = await axios.get('http://localhost:3003/api/restaurants', {
           headers: { Authorization: `Bearer ${token}` },
         });
-        setRestaurants(response.data);
+        console.log('API response:', response.data);
+        setRestaurants(Array.isArray(response.data) ? response.data : []);
         setLoading(false);
       } catch (err) {
+        console.error('Fetch restaurants error:', err.response?.data || err.message);
         setError('Failed to load restaurants');
         setLoading(false);
         if (err.response?.status === 401) {
@@ -51,9 +57,8 @@ const Restaurants = ({ standalone = true }) => {
     });
 
   return (
-    <div className="w-screen min-h-screen bg-[#e3e3e3] font-sans text-[#4f4f4f] flex flex-col overflow-x-hidden">
-      {standalone && <Navbar />}
-      <div className={`${standalone ? 'flex-grow pt-20' : 'pt-0'}`}>
+    <div className={`${standalone ? 'w-screen min-h-screen bg-[#e3e3e3] font-sans text-[#4f4f4f] flex flex-col' : ''}`}>
+      <div className="flex-grow pt-20">
         {/* Parallax Hero Section */}
         <div className="relative bg-[url('https://images.unsplash.com/photo-1414235077428-338989a2e8c0?ixlib=rb-4.0.3&auto=format&fit=crop&w=1350&q=80')] bg-fixed bg-center bg-cover py-24 md:py-32"
              style={{ backgroundAttachment: 'fixed', backgroundSize: 'cover', minHeight: '400px' }}>
@@ -131,7 +136,6 @@ const Restaurants = ({ standalone = true }) => {
           )}
         </div>
       </div>
-      {standalone && <Footer />}
     </div>
   );
 };
