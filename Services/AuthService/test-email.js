@@ -1,16 +1,17 @@
+// AuthService/test-email.js
 const nodemailer = require('nodemailer');
 require('dotenv').config();
 
 const transporter = nodemailer.createTransport({
   service: 'gmail',
   auth: {
-    user: process.env.NODEMAILER_EMAIL,
-    pass: process.env.NODEMAILER_PASS,
+    user: process.env.EMAIL_USER,
+    pass: process.env.EMAIL_PASS,
   },
 });
 
 const mailOptions = {
-  from: process.env.NODEMAILER_EMAIL,
+  from: process.env.EMAIL_USER,
   to: 'madurapperumaseetha@gmail.com',
   subject: 'Test Email from BitMeal',
   text: 'This is a test email to verify Nodemailer configuration.',
