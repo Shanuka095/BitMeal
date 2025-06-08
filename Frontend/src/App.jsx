@@ -1,60 +1,58 @@
 // src/App.jsx
-import { BrowserRouter as Router, Routes, Route, Navigate } from 'react-router-dom';
-import { useEffect, useState } from 'react';
-import axios from 'axios';
-import Login from './pages/Login';
-import Register from './pages/Register';
+import { BrowserRouter as Router, Route, Routes, useLocation, Navigate } from 'react-router-dom';
+import { useEffect } from 'react';
+import Navbar from './components/Navbar';
+import Footer from './components/Footer';
 import Dashboard from './pages/Dashboard';
-import RestaurantAdmin from './pages/RestaurantAdmin';
-import Profile from './pages/Profile';
-import VerifyOTP from './pages/VerifyOTP';
 import Restaurants from './pages/Restaurants';
 import RestaurantDetails from './pages/RestaurantDetails';
+import RestaurantAdmin from './pages/RestaurantAdmin';
+import CreateRestaurant from './pages/CreateRestaurant';
+import UpdateRestaurant from './pages/UpdateRestaurant';
+import AddMenuItem from './pages/AddMenuItem';
+import ProtectedRoute from './components/ProtectedRoute';
+import Login from './pages/Login';
+import Register from './pages/Register';
+import Profile from './pages/Profile';
+import Home from './pages/Home';
 
-const ProtectedRoute = ({ children, allowedRoles }) => {
-  const [role, setRole] = useState(null);
-  const [loading, setLoading] = useState(true);
+const AppContent = () => {
+  const location = useLocation();
+  const token = localStorage.getItem('token');
 
   useEffect(() => {
-    const token = localStorage.getItem('token');
-    if (token) {
-      axios
-        .get('http://localhost:3000/api/auth/verify-token', {
-          headers: { Authorization: `Bearer ${token}` },
-        })
-        .then((res) => {
-          setRole(res.data.role);
-          setLoading(false);
-        })
-        .catch(() => {
-          setLoading(false);
-          localStorage.removeItem('token');
-        });
-    } else {
-      setLoading(false);
+    if (!token && location.pathname !== '/login' && location.pathname !== '/register' && location.pathname !== '/') {
+      Navigate({ to: '/', replace: true });
     }
-  }, []);
+  }, [token, location.pathname]);
 
-  if (loading)
-    return <div className="w-screen h-screen bg-[#fffce5] flex items-center justify-center text-[#1F2937]">Loading...</div>;
-  if (!role || !allowedRoles.includes(role)) return <Navigate to="/login" />;
-  return children;
+  return (
+    <div className="flex flex-col min-h-screen">
+      <Navbar />
+      <div className="flex-grow">
+        <Routes>
+          <Route path="/" element={<Home />} />
+          <Route path="/login" element={<Login />} />
+          <Route path="/register" element={<Register />} />
+          <Route path="/dashboard" element={<ProtectedRoute><Dashboard /></ProtectedRoute>} />
+          <Route path="/restaurants" element={<ProtectedRoute><Restaurants standalone={true} /></ProtectedRoute>} />
+          <Route path="/restaurant/:id" element={<ProtectedRoute><RestaurantDetails /></ProtectedRoute>} />
+          <Route path="/profile" element={<ProtectedRoute><Profile /></ProtectedRoute>} />
+          <Route path="/admin" element={<ProtectedRoute><RestaurantAdmin /></ProtectedRoute>} />
+          <Route path="/admin/create-restaurant" element={<ProtectedRoute><CreateRestaurant /></ProtectedRoute>} />
+          <Route path="/admin/update-restaurant" element={<ProtectedRoute><UpdateRestaurant /></ProtectedRoute>} />
+          <Route path="/admin/add-menu-item" element={<ProtectedRoute><AddMenuItem /></ProtectedRoute>} />
+        </Routes>
+      </div>
+      <Footer />
+    </div>
+  );
 };
 
 function App() {
   return (
     <Router>
-      <Routes>
-        <Route path="/login" element={<Login />} />
-        <Route path="/register" element={<Register />} />
-        <Route path="/verify-otp" element={<VerifyOTP />} />
-        <Route path="/dashboard" element={<ProtectedRoute allowedRoles={['customer']}><Dashboard /></ProtectedRoute>} />
-        <Route path="/restaurant-admin" element={<ProtectedRoute allowedRoles={['restaurant_admin']}><RestaurantAdmin /></ProtectedRoute>} />
-        <Route path="/profile" element={<ProtectedRoute allowedRoles={['customer', 'restaurant_admin', 'delivery_personnel']}><Profile /></ProtectedRoute>} />
-        <Route path="/restaurants" element={<ProtectedRoute allowedRoles={['customer']}><Restaurants /></ProtectedRoute>} />
-        <Route path="/restaurant/:id" element={<ProtectedRoute allowedRoles={['customer']}><RestaurantDetails /></ProtectedRoute>} />
-        <Route path="/" element={<Navigate to="/login" />} />
-      </Routes>
+      <AppContent />
     </Router>
   );
 }
