@@ -13,14 +13,14 @@ const Register = () => {
   const navigate = useNavigate();
 
   const handleRegister = async (e) => {
-    e.preventDefault();
-    setLoading(true);
-    try {
-      const response = await axios.post('http://localhost:3003/api/auth/register', { email, password, role });
-      navigate('/verify-otp', { state: { email, otpToken: response.data.otpToken, message: 'Please check your email for the OTP code.' } });
-    } catch (err) {
-      setError(err.response?.data?.error || 'Registration failed');
-    } finally {
+  e.preventDefault();
+  setLoading(true);
+  try {
+    const response = await axios.post('http://localhost:3000/api/auth/register', { email, password, role });
+    navigate('/verify-otp', { state: { email, otpToken: response.data.otpToken, message: 'Please check your email for the OTP code.' } });
+  } catch (err) {
+    setError(err.response?.data?.error || 'Registration failed');
+  } finally {
       setLoading(false);
     }
   };
