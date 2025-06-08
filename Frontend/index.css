@@ -14,7 +14,7 @@ html, body {
   margin: 0;
   padding: 0;
   overflow-x: hidden;
-  background-color: #fffce5;
+  background-color: #e3e3e3;
 }
 
 #root {
@@ -22,9 +22,9 @@ html, body {
   height: 100%;
   margin: 0;
   padding: 0;
-  display: 'flex';
+  display: flex;
   flex-direction: column;
-  background-color: #fffce5;
+  background-color: #e3e3e3;
 }
 
 html, body, #root, div, input, button, select {
