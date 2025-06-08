@@ -44,114 +44,51 @@ const Profile = () => {
   };
 
   return (
-    <div style={{
-      width: '100vw',
-      minHeight: '100vh',
-      backgroundColor: '#fffce5',
-      margin: 0,
-      padding: 0,
-      display: 'flex',
-      flexDirection: 'column',
-      border: 'none',
-    }}>
+    <div className="w-screen min-h-screen bg-[#fffce5] flex flex-col">
       <Navbar />
-      <div style={{ flexGrow: 1, paddingTop: '64px', display: 'flex', justifyContent: 'center', alignItems: 'center' }}>
-        <div style={{
-          backgroundColor: 'rgba(255, 255, 255, 0.95)',
-          borderRadius: '20px',
-          padding: '40px',
-          width: '100%',
-          maxWidth: '400px',
-          boxShadow: '0 10px 40px rgba(0, 0, 0, 0.15)',
-          border: '1px solid rgba(228, 180, 1, 0.2)',
-        }}>
-          <h2 style={{ color: '#1F2937', textAlign: 'center', marginBottom: '30px', fontSize: '2rem', fontWeight: 800, letterSpacing: '-0.025em' }}>Your Profile</h2>
-          <form onSubmit={handleUpdate}>
-            <div style={{ marginBottom: '20px' }}>
-              <label style={{ color: '#1F2937', display: 'block', marginBottom: '8px', fontSize: '0.9rem', fontWeight: 500 }} htmlFor="name">Name</label>
+      <div className="flex-grow pt-20 flex justify-center items-center">
+        <div className="bg-white/95 rounded-2xl p-10 max-w-md w-full shadow-2xl border border-[#e4b401]/20">
+          <h2 className="text-4xl font-extrabold text-[#1F2937] text-center mb-8 tracking-tight">Your Profile</h2>
+          <form onSubmit={handleUpdate} className="space-y-6">
+            <div>
+              <label htmlFor="name" className="block text-sm font-medium text-[#1F2937] mb-2">Name</label>
               <input
                 type="text"
                 id="name"
                 value={profile.name}
                 onChange={(e) => setProfile({ ...profile, name: e.target.value })}
-                style={{
-                  width: '100%',
-                  padding: '12px',
-                  borderRadius: '8px',
-                  backgroundColor: '#F9FAFB',
-                  color: '#1F2937',
-                  fontSize: '1rem',
-                  border: '1px solid #E5E7EB',
-                  transition: 'all 0.2s',
-                }}
+                className="w-full px-4 py-3 bg-[#F9FAFB] text-[#1F2937] rounded-lg border border-[#E5E7EB] focus:ring-2 focus:ring-[#e4b401] focus:border-transparent placeholder-[#6B7280] transition-all duration-200"
                 placeholder="Enter your name"
-                onFocus={(e) => e.target.style.borderColor = '#e4b401'}
-                onBlur={(e) => e.target.style.borderColor = '#E5E7EB'}
               />
             </div>
-            <div style={{ marginBottom: '20px' }}>
-              <label style={{ color: '#1F2937', display: 'block', marginBottom: '8px', fontSize: '0.9rem', fontWeight: 500 }} htmlFor="phone">Phone</label>
+            <div>
+              <label htmlFor="phone" className="block text-sm font-medium text-[#1F2937] mb-2">Phone</label>
               <input
                 type="text"
                 id="phone"
                 value={profile.phone}
                 onChange={(e) => setProfile({ ...profile, phone: e.target.value })}
-                style={{
-                  width: '100%',
-                  padding: '12px',
-                  borderRadius: '8px',
-                  backgroundColor: '#F9FAFB',
-                  color: '#1F2937',
-                  fontSize: '1rem',
-                  border: '1px solid #E5E7EB',
-                  transition: 'all 0.2s',
-                }}
+                className="w-full px-4 py-3 bg-[#F9FAFB] text-[#1F2937] rounded-lg border border-[#E5E7EB] focus:ring-2 focus:ring-[#e4b401] focus:border-transparent placeholder-[#6B7280] transition-all duration-200"
                 placeholder="Enter your phone"
-                onFocus={(e) => e.target.style.borderColor = '#e4b401'}
-                onBlur={(e) => e.target.style.borderColor = '#E5E7EB'}
               />
             </div>
-            <div style={{ marginBottom: '20px' }}>
-              <label style={{ color: '#1F2937', display: 'block', marginBottom: '8px', fontSize: '0.9rem', fontWeight: 500 }} htmlFor="address">Address</label>
+            <div>
+              <label htmlFor="address" className="block text-sm font-medium text-[#1F2937] mb-2">Address</label>
               <input
                 type="text"
                 id="address"
                 value={profile.address}
                 onChange={(e) => setProfile({ ...profile, address: e.target.value })}
-                style={{
-                  width: '100%',
-                  padding: '12px',
-                  borderRadius: '8px',
-                  backgroundColor: '#F9FAFB',
-                  color: '#1F2937',
-                  fontSize: '1rem',
-                  border: '1px solid #E5E7EB',
-                  transition: 'all 0.2s',
-                }}
+                className="w-full px-4 py-3 bg-[#F9FAFB] text-[#1F2937] rounded-lg border border-[#E5E7EB] focus:ring-2 focus:ring-[#e4b401] focus:border-transparent placeholder-[#6B7280] transition-all duration-200"
                 placeholder="Enter your address"
-                onFocus={(e) => e.target.style.borderColor = '#e4b401'}
-                onBlur={(e) => e.target.style.borderColor = '#E5E7EB'}
               />
             </div>
-            {message && <p style={{ color: '#e4b401', textAlign: 'center', fontSize: '0.9rem', marginBottom: '20px', fontWeight: 500 }}>{message}</p>}
-            {error && <p style={{ color: '#EF4444', textAlign: 'center', fontSize: '0.9rem', marginBottom: '20px', fontWeight: 500 }}>{error}</p>}
+            {message && <p className="text-[#e4b401] text-center text-sm font-medium">{message}</p>}
+            {error && <p className="text-[#EF4444] text-center text-sm font-medium">{error}</p>}
             <button
               type="submit"
               disabled={loading}
-              style={{
-                width: '100%',
-                padding: '12px',
-                borderRadius: '8px',
-                backgroundColor: loading ? '#6B7280' : '#e4b401',
-                color: '#1F2937',
-                fontSize: '1rem',
-                fontWeight: 600,
-                border: 'none',
-                cursor: loading ? 'not-allowed' : 'pointer',
-                transition: 'all 0.2s',
-              }}
-              onMouseEnter={(e) => !loading && (e.target.style.backgroundColor = '#c99e01')}
-              onMouseLeave={(e) => !loading && (e.target.style.backgroundColor = '#e4b401')}
+              className={`w-full py-3 px-4 rounded-lg font-semibold text-[#1F2937] bg-[#e4b401] hover:bg-[#c99e01] transition-all duration-200 ${loading ? 'opacity-50 cursor-not-allowed' : 'hover:shadow-lg'}`}
             >
               {loading ? 'Updating...' : 'Update Profile'}
             </button>
