@@ -11,6 +11,7 @@ import RestaurantAdmin from './pages/RestaurantAdmin';
 import CreateRestaurant from './pages/CreateRestaurant';
 import UpdateRestaurant from './pages/UpdateRestaurant';
 import AddMenuItem from './pages/AddMenuItem';
+import AdminRestaurantDetails from './pages/AdminRestaurantDetails'; // New import
 import ProtectedRoute from './components/ProtectedRoute';
 import Login from './pages/Login';
 import Register from './pages/Register';
@@ -20,6 +21,7 @@ import Home from './pages/Home';
 const AppContent = () => {
   const location = useLocation();
   const token = localStorage.getItem('token');
+  const isAdminRoute = location.pathname.startsWith('/admin');
 
   useEffect(() => {
     if (!token && location.pathname !== '/login' && location.pathname !== '/register' && location.pathname !== '/') {
@@ -29,7 +31,7 @@ const AppContent = () => {
 
   return (
     <div className="flex flex-col min-h-screen bg-gray-50 text-gray-800 font-sans">
-      <Navbar />
+      {!isAdminRoute && <Navbar />}
       <div className="flex-grow">
         <Routes>
           <Route path="/" element={<Home />} />
@@ -43,9 +45,10 @@ const AppContent = () => {
           <Route path="/admin/create-restaurant" element={<ProtectedRoute><CreateRestaurant /></ProtectedRoute>} />
           <Route path="/admin/update-restaurant" element={<ProtectedRoute><UpdateRestaurant /></ProtectedRoute>} />
           <Route path="/admin/add-menu-item" element={<ProtectedRoute><AddMenuItem /></ProtectedRoute>} />
+          <Route path="/admin/restaurant/:id" element={<ProtectedRoute><AdminRestaurantDetails /></ProtectedRoute>} /> {/* New route */}
         </Routes>
       </div>
-      <Footer />
+      {!isAdminRoute && <Footer />}
     </div>
   );
 };
