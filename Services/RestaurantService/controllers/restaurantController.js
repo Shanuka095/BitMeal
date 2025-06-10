@@ -13,6 +13,7 @@ const menuItemSchema = Joi.object({
   description: Joi.string().max(500).allow(''),
   price: Joi.number().positive().required(),
   category: Joi.string().min(3).max(50).required(),
+  available: Joi.boolean().default(true), // Added to allow 'available' field
 }).unknown(false); // Reject unexpected fields
 
 // Validation middleware
@@ -87,6 +88,7 @@ const addMenuItem = async (req, res) => {
       description: req.body.description,
       price: req.body.price,
       category: req.body.category,
+      available: req.body.available !== undefined ? req.body.available : true,
     });
     await restaurant.save();
     res.status(201).json({ message: 'Menu item added', menu: restaurant.menu });
@@ -102,7 +104,7 @@ const updateMenuItem = async (req, res) => {
   console.log('User:', req.user); // Debug user details
   try {
     const { restaurantId, menuId } = req.params;
-    const { name, description, price, category } = req.body;
+    const { name, description, price, category, available } = req.body;
 
     const restaurant = await Restaurant.findOne({ _id: restaurantId, owner: req.user.userId });
     if (!restaurant) return res.status(404).json({ error: 'Restaurant not found or unauthorized' });
@@ -110,7 +112,7 @@ const updateMenuItem = async (req, res) => {
     const menuItem = restaurant.menu.id(menuId); // Use MongoDB .id() for ObjectId
     if (!menuItem) return res.status(404).json({ error: 'Menu item not found' });
 
-    menuItem.set({ name, description, price, category });
+    menuItem.set({ name, description, price, category, available });
     await restaurant.save();
 
     res.json({ message: 'Menu item updated', menu: restaurant.menu });
