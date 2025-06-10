@@ -1,8 +1,7 @@
-// src/controllers/restaurantController.js
 const Restaurant = require('../models/restaurantModel');
 const Joi = require('joi');
 
-// Existing validation schemas...
+// Validation schemas
 const restaurantSchema = Joi.object({
   name: Joi.string().min(3).max(100).required(),
   address: Joi.string().min(5).max(200).required(),
@@ -14,9 +13,9 @@ const menuItemSchema = Joi.object({
   description: Joi.string().max(500).allow(''),
   price: Joi.number().positive().required(),
   category: Joi.string().min(3).max(50).required(),
-}).unknown(false);
+}).unknown(false); // Reject unexpected fields
 
-// Existing validation middleware...
+// Validation middleware
 const validateRestaurant = (req, res, next) => {
   const { error } = restaurantSchema.validate(req.body);
   if (error) return res.status(400).json({ error: error.details[0].message });
@@ -55,7 +54,6 @@ const updateRestaurant = async (req, res) => {
     if (!restaurant) {
       return res.status(403).json({ error: 'Access denied: You do not own this restaurant' });
     }
-
     restaurant.name = req.body.name || restaurant.name;
     restaurant.address = req.body.address || restaurant.address;
     restaurant.cuisine = req.body.cuisine || restaurant.cuisine;
@@ -101,6 +99,7 @@ const addMenuItem = async (req, res) => {
 const updateMenuItem = async (req, res) => {
   console.log('Params:', req.params); // Debug
   console.log('Body:', req.body); // Debug
+  console.log('User:', req.user); // Debug user details
   try {
     const { restaurantId, menuId } = req.params;
     const { name, description, price, category } = req.body;
@@ -146,7 +145,7 @@ module.exports = {
   updateRestaurant,
   removeRestaurant,
   addMenuItem,
-  updateMenuItem, // Add this export
+  updateMenuItem,
   getRestaurants,
   getRestaurantById,
   validateRestaurant,
