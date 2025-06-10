@@ -27,7 +27,7 @@ const AppContent = () => {
   }, [token, location.pathname]);
 
   return (
-    <div className="flex flex-col min-h-screen">
+    <div className="flex flex-col min-h-screen bg-gray-50 text-gray-800 font-sans">
       <Navbar />
       <div className="flex-grow">
         <Routes>
