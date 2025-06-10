@@ -40,18 +40,26 @@ const AdminRestaurantDetails = () => {
 
   const handleUpdateMenuItem = async (e) => {
     e.preventDefault();
+    // Validate name length
+    if (editMenuItem.name.length < 3) {
+      setError('Name must be at least 3 characters long');
+      return;
+    }
     try {
       const token = localStorage.getItem('token');
       console.log('Updating menu item:', { restaurantId: id, menuId: editMenuItem._id, data: editMenuItem });
-      const response = await axios.put(`http://localhost:3003/api/restaurants/${id}/menu/${editMenuItem._id}`, editMenuItem, {
+      // Create a new object without _id
+      const { _id, ...updateData } = editMenuItem; // Destructure to exclude _id
+      const response = await axios.put(`http://localhost:3003/api/restaurants/${id}/menu/${editMenuItem._id}`, updateData, {
         headers: { Authorization: `Bearer ${token}` },
       });
       setRestaurant({
         ...restaurant,
-        menu: restaurant.menu.map(item => item._id === editMenuItem._id ? editMenuItem : item)
+        menu: restaurant.menu.map(item => item._id === editMenuItem._id ? { ...item, ...updateData } : item)
       });
       setEditMenuItem(null);
       setShowUpdateForm(false);
+      setError(''); // Clear error on success
     } catch (err) {
       setError('Failed to update menu item');
       console.error('Update error:', err.response ? err.response.data : err.message);
@@ -247,6 +255,15 @@ const AdminRestaurantDetails = () => {
                     required
                   />
                 </div>
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-1">Available</label>
+                  <input
+                    type="checkbox"
+                    checked={editMenuItem.available || false}
+                    onChange={(e) => setEditMenuItem({ ...editMenuItem, available: e.target.checked })}
+                    className="w-5 h-5 text-yellow-500 focus:ring-yellow-500 border-gray-300 rounded"
+                  />
+                </div>
                 <div className="flex justify-end space-x-4">
                   <button
                     type="button"
@@ -262,6 +279,7 @@ const AdminRestaurantDetails = () => {
                     Save
                   </button>
                 </div>
+                {error && <p className="text-red-600 text-sm text-center mt-2">{error}</p>} {/* Display validation error */}
               </form>
             </div>
           </div>
