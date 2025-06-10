@@ -42,7 +42,7 @@ const AdminRestaurantDetails = () => {
     e.preventDefault();
     try {
       const token = localStorage.getItem('token');
-      console.log('Updating menu item:', { restaurantId: id, menuId: editMenuItem._id, data: editMenuItem }); // Debug log
+      console.log('Updating menu item:', { restaurantId: id, menuId: editMenuItem._id, data: editMenuItem });
       const response = await axios.put(`http://localhost:3003/api/restaurants/${id}/menu/${editMenuItem._id}`, editMenuItem, {
         headers: { Authorization: `Bearer ${token}` },
       });
@@ -54,7 +54,7 @@ const AdminRestaurantDetails = () => {
       setShowUpdateForm(false);
     } catch (err) {
       setError('Failed to update menu item');
-      console.error('Update error:', err);
+      console.error('Update error:', err.response ? err.response.data : err.message);
     }
   };
 
@@ -203,8 +203,8 @@ const AdminRestaurantDetails = () => {
         </div>
 
         {showUpdateForm && editMenuItem && (
-          <div className="fixed inset-0 bg-blue-600 flex items-center justify-center z-50">
-            <div className="bg-white p-6 rounded-xl shadow-2xl w-full max-w-md transform transition-all duration-300">
+          <div className="fixed inset-0 bg-black bg-opacity-50 backdrop-blur-md flex items-center justify-center z-50">
+            <div className="bg-white p-6 rounded-xl shadow-2xl w-full max-w-md transform transition-all duration-300 border-t-4 border-yellow-500">
               <h3 className="text-2xl font-bold text-gray-900 mb-6 border-b-2 border-gray-200 pb-2">Update Menu Item</h3>
               <form onSubmit={handleUpdateMenuItem} className="space-y-6">
                 <div>
@@ -213,7 +213,7 @@ const AdminRestaurantDetails = () => {
                     type="text"
                     value={editMenuItem.name}
                     onChange={(e) => setEditMenuItem({ ...editMenuItem, name: e.target.value })}
-                    className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all duration-200"
+                    className="w-full px-4 py-2 border border-yellow-300 rounded-lg focus:ring-2 focus:ring-yellow-500 focus:border-transparent transition-all duration-200 bg-gray-50 text-gray-900"
                     required
                   />
                 </div>
@@ -223,7 +223,7 @@ const AdminRestaurantDetails = () => {
                     type="text"
                     value={editMenuItem.description}
                     onChange={(e) => setEditMenuItem({ ...editMenuItem, description: e.target.value })}
-                    className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all duration-200"
+                    className="w-full px-4 py-2 border border-yellow-300 rounded-lg focus:ring-2 focus:ring-yellow-500 focus:border-transparent transition-all duration-200 bg-gray-50 text-gray-900"
                   />
                 </div>
                 <div>
@@ -233,7 +233,7 @@ const AdminRestaurantDetails = () => {
                     step="0.01"
                     value={editMenuItem.price}
                     onChange={(e) => setEditMenuItem({ ...editMenuItem, price: e.target.value })}
-                    className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all duration-200"
+                    className="w-full px-4 py-2 border border-yellow-300 rounded-lg focus:ring-2 focus:ring-yellow-500 focus:border-transparent transition-all duration-200 bg-gray-50 text-gray-900"
                     required
                   />
                 </div>
@@ -243,7 +243,7 @@ const AdminRestaurantDetails = () => {
                     type="text"
                     value={editMenuItem.category}
                     onChange={(e) => setEditMenuItem({ ...editMenuItem, category: e.target.value })}
-                    className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all duration-200"
+                    className="w-full px-4 py-2 border border-yellow-300 rounded-lg focus:ring-2 focus:ring-yellow-500 focus:border-transparent transition-all duration-200 bg-gray-50 text-gray-900"
                     required
                   />
                 </div>
@@ -251,13 +251,13 @@ const AdminRestaurantDetails = () => {
                   <button
                     type="button"
                     onClick={() => { setEditMenuItem(null); setShowUpdateForm(false); }}
-                    className="px-6 py-2 bg-gray-500 text-white rounded-lg hover:bg-gray-600 transition-colors duration-200"
+                    className="px-6 py-2 bg-gray-500 text-white rounded-lg hover:bg-gray-600 transition-colors duration-200 font-semibold"
                   >
                     Cancel
                   </button>
                   <button
                     type="submit"
-                    className="px-6 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors duration-200"
+                    className="px-6 py-2 bg-yellow-600 text-white rounded-lg hover:bg-yellow-700 transition-colors duration-200 font-semibold shadow-md hover:shadow-lg"
                   >
                     Save
                   </button>
