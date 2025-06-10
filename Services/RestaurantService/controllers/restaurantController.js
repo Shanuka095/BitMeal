@@ -2,22 +2,21 @@
 const Restaurant = require('../models/restaurantModel');
 const Joi = require('joi');
 
-// Validation schemas
+// Existing validation schemas...
 const restaurantSchema = Joi.object({
   name: Joi.string().min(3).max(100).required(),
   address: Joi.string().min(5).max(200).required(),
   cuisine: Joi.string().min(3).max(50).required(),
 });
 
-// src/controllers/restaurantController.js
 const menuItemSchema = Joi.object({
   name: Joi.string().min(3).max(100).required(),
   description: Joi.string().max(500).allow(''),
   price: Joi.number().positive().required(),
   category: Joi.string().min(3).max(50).required(),
-}).unknown(false); // Reject unexpected fields
+}).unknown(false);
 
-// Validation middleware
+// Existing validation middleware...
 const validateRestaurant = (req, res, next) => {
   const { error } = restaurantSchema.validate(req.body);
   if (error) return res.status(400).json({ error: error.details[0].message });
@@ -61,7 +60,7 @@ const updateRestaurant = async (req, res) => {
     restaurant.address = req.body.address || restaurant.address;
     restaurant.cuisine = req.body.cuisine || restaurant.cuisine;
     await restaurant.save();
-    res.json({ message: 'Restaurant created', restaurant });
+    res.json({ message: 'Restaurant updated', restaurant });
   } catch (error) {
     console.error('Update error:', error);
     res.status(500).json({ error: error.message });
@@ -99,6 +98,29 @@ const addMenuItem = async (req, res) => {
   }
 };
 
+const updateMenuItem = async (req, res) => {
+  console.log('Params:', req.params); // Debug
+  console.log('Body:', req.body); // Debug
+  try {
+    const { restaurantId, menuId } = req.params;
+    const { name, description, price, category } = req.body;
+
+    const restaurant = await Restaurant.findOne({ _id: restaurantId, owner: req.user.userId });
+    if (!restaurant) return res.status(404).json({ error: 'Restaurant not found or unauthorized' });
+
+    const menuItem = restaurant.menu.id(menuId); // Use MongoDB .id() for ObjectId
+    if (!menuItem) return res.status(404).json({ error: 'Menu item not found' });
+
+    menuItem.set({ name, description, price, category });
+    await restaurant.save();
+
+    res.json({ message: 'Menu item updated', menu: restaurant.menu });
+  } catch (error) {
+    console.error('Update menu item error:', error);
+    res.status(500).json({ error: error.message });
+  }
+};
+
 const getRestaurants = async (req, res) => {
   try {
     const restaurants = await Restaurant.find().select('name address cuisine menu');
@@ -124,6 +146,7 @@ module.exports = {
   updateRestaurant,
   removeRestaurant,
   addMenuItem,
+  updateMenuItem, // Add this export
   getRestaurants,
   getRestaurantById,
   validateRestaurant,
