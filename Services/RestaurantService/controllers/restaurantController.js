@@ -1,3 +1,4 @@
+// src/controllers/restaurantController.js
 const Restaurant = require('../models/restaurantModel');
 const Joi = require('joi');
 
@@ -8,13 +9,13 @@ const restaurantSchema = Joi.object({
   cuisine: Joi.string().min(3).max(50).required(),
 });
 
+// Explicitly ensure restaurantId is not required in menuItemSchema
 const menuItemSchema = Joi.object({
-  restaurantId: Joi.string().hex().length(24).required(),
   name: Joi.string().min(3).max(100).required(),
   description: Joi.string().max(500).allow(''),
   price: Joi.number().positive().required(),
   category: Joi.string().min(3).max(50).required(),
-});
+}).unknown(false); // Prevent validation of unexpected fields
 
 // Validation middleware
 const validateRestaurant = (req, res, next) => {
@@ -24,8 +25,12 @@ const validateRestaurant = (req, res, next) => {
 };
 
 const validateMenuItem = (req, res, next) => {
+  console.log('Validating menu item body:', req.body); // Debug log
   const { error } = menuItemSchema.validate(req.body);
-  if (error) return res.status(400).json({ error: error.details[0].message });
+  if (error) {
+    console.log('Validation error:', error.details); // Debug log
+    return res.status(400).json({ error: error.details[0].message });
+  }
   next();
 };
 
@@ -48,7 +53,9 @@ const updateRestaurant = async (req, res) => {
   const { id } = req.params;
   try {
     const restaurant = await Restaurant.findOne({ _id: id, owner: req.user.userId });
-    if (!restaurant) return res.status(404).json({ error: 'Restaurant not found or unauthorized' });
+    if (!restaurant) {
+      return res.status(403).json({ error: 'Access denied: You do not own this restaurant' });
+    }
 
     restaurant.name = req.body.name || restaurant.name;
     restaurant.address = req.body.address || restaurant.address;
@@ -56,6 +63,7 @@ const updateRestaurant = async (req, res) => {
     await restaurant.save();
     res.json({ message: 'Restaurant updated', restaurant });
   } catch (error) {
+    console.error('Update error:', error);
     res.status(500).json({ error: error.message });
   }
 };
@@ -72,8 +80,10 @@ const removeRestaurant = async (req, res) => {
 };
 
 const addMenuItem = async (req, res) => {
+  console.log('Received params:', req.params); // Debug log
+  console.log('Received body:', req.body); // Debug log
   try {
-    const restaurant = await Restaurant.findOne({ _id: req.body.restaurantId, owner: req.user.userId });
+    const restaurant = await Restaurant.findOne({ _id: req.params.restaurantId, owner: req.user.userId });
     if (!restaurant) return res.status(404).json({ error: 'Restaurant not found or unauthorized' });
 
     restaurant.menu.push({
@@ -85,6 +95,7 @@ const addMenuItem = async (req, res) => {
     await restaurant.save();
     res.status(201).json({ message: 'Menu item added', menu: restaurant.menu });
   } catch (error) {
+    console.error('Add menu item error:', error);
     res.status(500).json({ error: error.message });
   }
 };
