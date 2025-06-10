@@ -1,3 +1,4 @@
+// Services/RestaurantService/index.js
 const express = require('express');
 const dotenv = require('dotenv');
 const cors = require('cors');
@@ -7,7 +8,10 @@ const connectDB = require('./config/db');
 dotenv.config();
 
 const app = express();
-app.use(cors());
+app.use(cors({
+  origin: 'http://localhost:5173', // Match your frontend URL
+  credentials: true,
+}));
 app.use(express.json());
 
 app.use('/api', restaurantRoutes);
