@@ -1,4 +1,5 @@
 // src/App.jsx
+import { unstable_createRoot as createRoot } from 'react-dom/client'; // For startTransition
 import { BrowserRouter as Router, Route, Routes, useLocation, Navigate } from 'react-router-dom';
 import { useEffect } from 'react';
 import Navbar from './components/Navbar';
@@ -51,7 +52,7 @@ const AppContent = () => {
 
 function App() {
   return (
-    <Router>
+    <Router future={{ v7_startTransition: true, v7_relativeSplatPath: true }}>
       <AppContent />
     </Router>
   );
