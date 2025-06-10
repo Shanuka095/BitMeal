@@ -1,3 +1,4 @@
+// src/middleware/restrictAccess.js
 const jwt = require('jsonwebtoken');
 
 const authenticate = (req, res, next) => {
@@ -5,6 +6,7 @@ const authenticate = (req, res, next) => {
   if (!token) return res.status(401).json({ error: 'No token provided' });
   try {
     const decoded = jwt.verify(token, process.env.JWT_SECRET);
+    console.log('Decoded token in authenticate:', decoded); // Debug log
     req.user = decoded;
     next();
   } catch (error) {
@@ -13,7 +15,8 @@ const authenticate = (req, res, next) => {
 };
 
 const restrictTo = (...roles) => (req, res, next) => {
-  if (!roles.includes(req.user.role)) {
+  console.log('User role check:', req.user); // Debug log
+  if (!req.user || !roles.includes(req.user.role)) {
     return res.status(403).json({ error: 'Access denied' });
   }
   next();
