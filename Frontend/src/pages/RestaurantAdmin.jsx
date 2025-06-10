@@ -15,13 +15,22 @@ const RestaurantAdmin = () => {
     const fetchRestaurants = async () => {
       try {
         const token = localStorage.getItem('token');
+        if (!token) {
+          setError('No authentication token found. Please log in.');
+          return;
+        }
+        console.log('Fetching restaurants with token:', token.substring(0, 10) + '...'); // Log partial token for debug
         const response = await axios.get('http://localhost:3003/api/restaurants', {
           headers: { Authorization: `Bearer ${token}` },
         });
         setRestaurants(response.data || []);
+        if (response.data.length === 0) {
+          console.log('No restaurants found for the user');
+        }
       } catch (err) {
-        setError('Failed to load restaurants');
-        console.error('Fetch error:', err);
+        const errorMsg = err.response?.data?.error || 'Failed to load restaurants';
+        setError(errorMsg);
+        console.error('Fetch error:', err.response ? err.response.data : err.message);
       } finally {
         setLoading(false);
       }
