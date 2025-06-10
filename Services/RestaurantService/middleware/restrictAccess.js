@@ -18,13 +18,10 @@ const restrictTo = (...roles) => (req, res, next) => {
   if (!req.user) {
     return res.status(403).json({ error: 'Access denied' });
   }
-  // Temporarily allow all authenticated users for testing
+  if (!roles.includes(req.user.role)) {
+    return res.status(403).json({ error: 'Access denied: Insufficient role' });
+  }
   next();
-  // Uncomment below for production with role check
-  // if (!req.user || !roles.includes(req.user.role)) {
-  //   return res.status(403).json({ error: 'Access denied' });
-  // }
-  // next();
 };
 
 module.exports = { authenticate, restrictTo };
