@@ -14,9 +14,9 @@ const Dashboard = () => {
   }, [navigate]);
 
   return (
-    <div className="w-screen min-h-screen bg-[#e3e3e3] font-sans text-[#4f4f4f] flex flex-col">
+    <div className="w-screen min-h-screen bg-gradient-to-br from-gray-100 to-gray-200 flex flex-col">
       <div className="flex-grow pt-20">
-        <h1 className="text-4xl font-bold text-center mb-8">Customer Dashboard</h1>
+        <h1 className="text-5xl font-extrabold text-gray-800 text-center mb-12 tracking-wide">Customer Dashboard</h1>
         <Restaurants standalone={false} />
       </div>
     </div>
