@@ -6,6 +6,7 @@ const {
   updateRestaurant,
   removeRestaurant,
   addMenuItem,
+  updateMenuItem, // Import the new function
   getRestaurants,
   getRestaurantById,
   validateRestaurant,
@@ -16,7 +17,8 @@ const { authenticate, restrictTo } = require('../middleware/restrictAccess');
 router.post('/restaurants', authenticate, restrictTo('restaurant_admin'), validateRestaurant, createRestaurant);
 router.put('/restaurants/:id', authenticate, restrictTo('restaurant_admin'), validateRestaurant, updateRestaurant);
 router.delete('/restaurants/:id', authenticate, restrictTo('restaurant_admin'), removeRestaurant);
-router.post('/restaurants/:restaurantId/menu', authenticate, restrictTo('restaurant_admin'), validateMenuItem, addMenuItem); // Ensure correct order
+router.post('/restaurants/:restaurantId/menu', authenticate, restrictTo('restaurant_admin'), validateMenuItem, addMenuItem);
+router.put('/restaurants/:restaurantId/menu/:menuId', authenticate, restrictTo('restaurant_admin'), validateMenuItem, updateMenuItem); // New route
 router.get('/restaurants', getRestaurants);
 router.get('/restaurants/:id', getRestaurantById);
 
