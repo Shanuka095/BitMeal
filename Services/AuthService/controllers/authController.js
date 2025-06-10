@@ -80,7 +80,7 @@ const verifyOTP = async (req, res) => {
   }
 };
 
-// Login
+// Login (Updated to use the user's registered role)
 const login = async (req, res) => {
   const { email, password } = req.body;
   try {
