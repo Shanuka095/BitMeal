@@ -15,6 +15,7 @@ const VerifyOTP = () => {
   const email = location.state?.email || '';
 
   useEffect(() => {
+    console.log('Location state:', location.state); // Debug log
     if (!otpToken || !email) {
       setError('No OTP session provided. Please register again.');
       setTimeout(() => navigate('/register'), 2000);
@@ -28,7 +29,7 @@ const VerifyOTP = () => {
     e.preventDefault();
     setLoading(true);
     try {
-      const response = await axios.post('http://localhost:3000/api/auth/verify-otp', { otp, otpToken });
+      const response = await axios.post('http://localhost:3001/api/auth/verify-otp', { otp, otpToken });
       setMessage(response.data.message);
       setError('');
       setTimeout(() => navigate('/login'), 2000);
