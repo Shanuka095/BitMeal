@@ -17,6 +17,7 @@ import Login from './pages/Login';
 import Register from './pages/Register';
 import Profile from './pages/Profile';
 import Home from './pages/Home';
+import VerifyOTP from './pages/VerifyOTP'; // Ensure this import is present
 
 const AppContent = () => {
   const location = useLocation();
@@ -24,7 +25,7 @@ const AppContent = () => {
   const isAdminRoute = location.pathname.startsWith('/admin');
 
   useEffect(() => {
-    if (!token && location.pathname !== '/login' && location.pathname !== '/register' && location.pathname !== '/') {
+    if (!token && location.pathname !== '/login' && location.pathname !== '/register' && location.pathname !== '/' && location.pathname !== '/verify-otp') {
       Navigate({ to: '/', replace: true });
     }
   }, [token, location.pathname]);
@@ -37,6 +38,7 @@ const AppContent = () => {
           <Route path="/" element={<Home />} />
           <Route path="/login" element={<Login />} />
           <Route path="/register" element={<Register />} />
+          <Route path="/verify-otp" element={<VerifyOTP />} /> {/* Ensure this route exists */}
           <Route path="/dashboard" element={<ProtectedRoute><Dashboard /></ProtectedRoute>} />
           <Route path="/restaurants" element={<ProtectedRoute><Restaurants standalone={true} /></ProtectedRoute>} />
           <Route path="/restaurant/:id" element={<ProtectedRoute><RestaurantDetails /></ProtectedRoute>} />
@@ -45,7 +47,7 @@ const AppContent = () => {
           <Route path="/admin/create-restaurant" element={<ProtectedRoute><CreateRestaurant /></ProtectedRoute>} />
           <Route path="/admin/update-restaurant" element={<ProtectedRoute><UpdateRestaurant /></ProtectedRoute>} />
           <Route path="/admin/add-menu-item" element={<ProtectedRoute><AddMenuItem /></ProtectedRoute>} />
-          <Route path="/admin/restaurant/:id" element={<ProtectedRoute><AdminRestaurantDetails /></ProtectedRoute>} /> {/* New route */}
+          <Route path="/admin/restaurant/:id" element={<ProtectedRoute><AdminRestaurantDetails /></ProtectedRoute>} />
         </Routes>
       </div>
       {!isAdminRoute && <Footer />}
