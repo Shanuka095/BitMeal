@@ -37,7 +37,7 @@ const AddMenuItem = () => {
       await axios.post(`http://localhost:3003/api/restaurants/${menuItem.restaurantId}/menu`, {
         name: menuItem.name,
         description: menuItem.description,
-        price: parseFloat(menuItem.price),
+        price: parseFloat(menuItem.price) || 0, // Ensure price is a number
         category: menuItem.category,
       }, {
         headers: { Authorization: `Bearer ${token}` },
