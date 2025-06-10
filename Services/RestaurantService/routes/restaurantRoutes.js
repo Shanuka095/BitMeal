@@ -1,24 +1,16 @@
+// Services/RestaurantService/routes/restaurantRoutes.js
 const express = require('express');
 const router = express.Router();
-const {
-  createRestaurant,
-  updateRestaurant,
-  removeRestaurant,
-  addMenuItem,
-  updateMenuItem,
-  getRestaurants,
-  getRestaurantById,
-  validateRestaurant,
-  validateMenuItem,
-} = require('../controllers/restaurantController');
+const { getRestaurants, getRestaurantById, createRestaurant, updateRestaurant, deleteRestaurant, addMenuItem, updateMenuItem, deleteMenuItem } = require('../controllers/restaurantController');
 const { authenticate, restrictTo } = require('../middleware/restrictAccess');
 
-router.post('/restaurants', authenticate, restrictTo('restaurant_admin'), validateRestaurant, createRestaurant);
-router.put('/restaurants/:id', authenticate, restrictTo('restaurant_admin'), validateRestaurant, updateRestaurant);
-router.delete('/restaurants/:id', authenticate, restrictTo('restaurant_admin'), removeRestaurant);
-router.post('/restaurants/:restaurantId/menu', authenticate, restrictTo('restaurant_admin'), validateMenuItem, addMenuItem);
-router.put('/restaurants/:restaurantId/menu/:menuId', authenticate, restrictTo('restaurant_admin'), validateMenuItem, updateMenuItem);
-router.get('/restaurants', getRestaurants);
-router.get('/restaurants/:id', getRestaurantById);
+router.get('/', authenticate, restrictTo('restaurant_admin'), getRestaurants); // List all restaurants for the user
+router.get('/:id', authenticate, restrictTo('restaurant_admin'), getRestaurantById); // Get specific restaurant by ID
+router.post('/', authenticate, restrictTo('restaurant_admin'), createRestaurant);
+router.put('/:id', authenticate, restrictTo('restaurant_admin'), updateRestaurant);
+router.delete('/:id', authenticate, restrictTo('restaurant_admin'), deleteRestaurant);
+router.post('/:id/menu', authenticate, restrictTo('restaurant_admin'), addMenuItem);
+router.put('/:id/menu/:menuId', authenticate, restrictTo('restaurant_admin'), updateMenuItem);
+router.delete('/:id/menu/:menuId', authenticate, restrictTo('restaurant_admin'), deleteMenuItem);
 
 module.exports = router;
