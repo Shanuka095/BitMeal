@@ -17,7 +17,7 @@ router.post('/restaurants', authenticate, restrictTo('restaurant_admin'), valida
 router.put('/restaurants/:id', authenticate, restrictTo('restaurant_admin'), validateRestaurant, updateRestaurant);
 router.delete('/restaurants/:id', authenticate, restrictTo('restaurant_admin'), removeRestaurant);
 router.post('/restaurants/:restaurantId/menu', authenticate, restrictTo('restaurant_admin'), validateMenuItem, addMenuItem);
-router.put('/restaurants/:restaurantId/menu/:menuId', authenticate, restrictTo('restaurant_admin'), validateMenuItem, updateMenuItem); // Updated route
+router.put('/restaurants/:restaurantId/menu/:menuId', authenticate, restrictTo('restaurant_admin'), validateMenuItem, updateMenuItem);
 router.get('/restaurants', getRestaurants);
 router.get('/restaurants/:id', getRestaurantById);
 
