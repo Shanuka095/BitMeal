@@ -47,15 +47,14 @@ const AdminRestaurantDetails = () => {
     }
     try {
       const token = localStorage.getItem('token');
-      console.log('Updating menu item:', { restaurantId: id, menuId: editMenuItem._id, data: editMenuItem });
-      // Create a new object without _id
       const { _id, ...updateData } = editMenuItem; // Destructure to exclude _id
-      const response = await axios.put(`http://localhost:3003/api/restaurants/${id}/menu/${editMenuItem._id}`, updateData, {
+      console.log('Updating menu item with data:', updateData); // Log only the sent data
+      const response = await axios.put(`http://localhost:3003/api/restaurants/${id}/menu/${_id}`, updateData, {
         headers: { Authorization: `Bearer ${token}` },
       });
       setRestaurant({
         ...restaurant,
-        menu: restaurant.menu.map(item => item._id === editMenuItem._id ? { ...item, ...updateData } : item)
+        menu: restaurant.menu.map(item => item._id === _id ? { ...item, ...updateData } : item)
       });
       setEditMenuItem(null);
       setShowUpdateForm(false);
@@ -279,7 +278,7 @@ const AdminRestaurantDetails = () => {
                     Save
                   </button>
                 </div>
-                {error && <p className="text-red-600 text-sm text-center mt-2">{error}</p>} {/* Display validation error */}
+                {error && <p className="text-red-600 text-sm text-center mt-2">{error}</p>}
               </form>
             </div>
           </div>
