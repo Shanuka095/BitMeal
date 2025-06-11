@@ -1,12 +1,24 @@
-// Services/RestaurantService/routes/restaurantRoutes.js
 const express = require('express');
 const router = express.Router();
-const { getRestaurants, getRestaurantById, createRestaurant, updateRestaurant, deleteRestaurant, addMenuItem, updateMenuItem, deleteMenuItem, getPublicRestaurants } = require('../controllers/restaurantController');
+const {
+  getPublicRestaurants,
+  getAdminRestaurants,
+  createRestaurant,
+  updateRestaurant,
+  deleteRestaurant,
+  addMenuItem,
+  getRestaurantDetails,
+  updateMenuItem,
+  deleteMenuItem,
+} = require('../controllers/restaurantController');
 const { authenticate, restrictTo } = require('../middleware/restrictAccess');
 
-router.get('/public', getPublicRestaurants); // Public endpoint for all restaurants
-router.get('/', authenticate, restrictTo('restaurant_admin'), getRestaurants); // Admin-only endpoint for owned restaurants
-router.get('/:id', authenticate, restrictTo('restaurant_admin'), getRestaurantById); // Restrict to admin only
+// Customer: Public access
+router.get('/public', getPublicRestaurants);
+
+// Admin: Protected routes
+router.get('/', authenticate, restrictTo('restaurant_admin'), getAdminRestaurants);
+router.get('/:id', authenticate, restrictTo('restaurant_admin'), getRestaurantDetails);
 router.post('/', authenticate, restrictTo('restaurant_admin'), createRestaurant);
 router.put('/:id', authenticate, restrictTo('restaurant_admin'), updateRestaurant);
 router.delete('/:id', authenticate, restrictTo('restaurant_admin'), deleteRestaurant);
