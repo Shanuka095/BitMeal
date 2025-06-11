@@ -19,6 +19,18 @@ const restaurantSchema = Joi.object({
   menu: Joi.array().items(menuItemSchema).default([]),
 }).unknown(false);
 
+const getPublicRestaurants = async (req, res) => {
+  try {
+    console.log('Fetching public restaurants'); // Debug log
+    const restaurants = await Restaurant.find().lean(); // Fetch all restaurants
+    console.log('Public restaurants found:', restaurants); // Debug log
+    res.json(restaurants || []);
+  } catch (err) {
+    console.error('Get public restaurants error:', err.message, err.stack);
+    res.status(500).json({ error: 'Failed to fetch public restaurants', details: err.message });
+  }
+};
+
 const getRestaurants = async (req, res) => {
   try {
     console.log('Fetching restaurants for user:', req.user); // Debug log
@@ -177,4 +189,4 @@ const deleteMenuItem = async (req, res) => {
   }
 };
 
-module.exports = { getRestaurants, getRestaurantById, createRestaurant, updateRestaurant, deleteRestaurant, addMenuItem, updateMenuItem, deleteMenuItem };
+module.exports = { getPublicRestaurants, getRestaurants, getRestaurantById, createRestaurant, updateRestaurant, deleteRestaurant, addMenuItem, updateMenuItem, deleteMenuItem };
