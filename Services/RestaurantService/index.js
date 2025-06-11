@@ -1,4 +1,3 @@
-// Services/RestaurantService/index.js
 const express = require('express');
 const dotenv = require('dotenv');
 const cors = require('cors');
@@ -14,8 +13,7 @@ app.use(cors({
 }));
 app.use(express.json());
 
-app.use('/api', restaurantRoutes);
-console.log('Routes loaded:', restaurantRoutes.stack); // Debug log
+app.use('/api/restaurants', restaurantRoutes);
 
 connectDB();
 
