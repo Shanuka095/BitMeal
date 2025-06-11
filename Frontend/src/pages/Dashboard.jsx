@@ -1,4 +1,3 @@
-// src/pages/Dashboard.jsx
 import { useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import Restaurants from './Restaurants';
@@ -8,17 +7,17 @@ const Dashboard = () => {
 
   useEffect(() => {
     const token = localStorage.getItem('token');
-    if (!token) {
-      navigate('/login');
-    }
+    if (!token) navigate('/login');
   }, [navigate]);
 
   return (
-    <div className="w-screen min-h-screen bg-gradient-to-br from-gray-100 to-gray-200 flex flex-col">
-      <div className="flex-grow pt-20">
-        <h1 className="text-5xl font-extrabold text-gray-800 text-center mb-12 tracking-wide">Customer Dashboard</h1>
+    <div className="min-h-screen bg-gradient-to-br from-gray-100 to-gray-300 font-sans">
+      <header className="bg-white shadow-md p-6">
+        <h1 className="text-4xl font-extrabold text-gray-900 text-center">Customer Dashboard</h1>
+      </header>
+      <main className="p-6">
         <Restaurants standalone={false} />
-      </div>
+      </main>
     </div>
   );
 };
