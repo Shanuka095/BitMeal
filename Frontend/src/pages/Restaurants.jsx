@@ -15,28 +15,20 @@ const Restaurants = ({ standalone = true }) => {
 
   useEffect(() => {
     const fetchRestaurants = async () => {
-      console.log('Fetching restaurants, token:', localStorage.getItem('token'));
+      const token = localStorage.getItem('token');
+      console.log('Fetching restaurants, token:', token ? token.substring(0, 10) + '...' : 'No token');
       try {
-        const token = localStorage.getItem('token');
-        if (!token) {
-          console.warn('No token found, redirecting to login');
-          navigate('/login');
-          return;
-        }
-        const response = await axios.get('http://localhost:3003/api/restaurants', {
-          headers: { Authorization: `Bearer ${token}` },
+        const response = await axios.get('http://localhost:3003/api/restaurants/public', {
+          headers: token ? { Authorization: `Bearer ${token}` } : {},
         });
         console.log('API response:', response.data);
         setRestaurants(Array.isArray(response.data) ? response.data : []);
-        setLoading(false);
       } catch (err) {
+        const errorMsg = err.response?.data?.error || 'Failed to load restaurants';
         console.error('Fetch restaurants error:', err.response?.data || err.message);
-        setError('Failed to load restaurants');
+        setError(errorMsg);
+      } finally {
         setLoading(false);
-        if (err.response?.status === 401) {
-          localStorage.removeItem('token');
-          navigate('/login');
-        }
       }
     };
     fetchRestaurants();
