@@ -16,7 +16,7 @@ const RestaurantDetails = () => {
       try {
         const token = localStorage.getItem('token');
         const response = await axios.get(`http://localhost:3003/api/restaurants/${id}`, {
-          headers: { Authorization: `Bearer ${token}` },
+          headers: token ? { Authorization: `Bearer ${token}` } : {},
         });
         setRestaurant(response.data);
         setLoading(false);
