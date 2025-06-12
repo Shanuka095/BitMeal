@@ -5,7 +5,7 @@ const Joi = require('joi');
 const restaurantSchema = Joi.object({
   name: Joi.string().min(3).max(100).required(),
   address: Joi.string().min(5).max(200).required(),
-  owner: Joi.string().required(),
+  // owner is determined by the authenticated user, not directly from the request body for security
 });
 
 const menuItemSchema = Joi.object({
@@ -14,27 +14,37 @@ const menuItemSchema = Joi.object({
   category: Joi.string().min(2).max(50).required(),
 });
 
-// Customer: Get all restaurants
+// Customer: Get all restaurants (Public access)
 const getPublicRestaurants = async (req, res) => {
   try {
+    console.log('getPublicRestaurants: Fetching all restaurants (public access)');
     const restaurants = await Restaurant.find().lean();
     if (!restaurants.length) {
       return res.json({ message: 'No restaurants available', data: [] });
     }
     res.json(restaurants);
   } catch (err) {
+    console.error('Error in getPublicRestaurants:', err); // Added error logging
     res.status(500).json({ error: 'Failed to fetch restaurants' });
   }
 };
 
+// Admin: Get restaurants owned by the logged-in admin
 const getAdminRestaurants = async (req, res) => {
   try {
+    console.log('getAdminRestaurants - req.user:', req.user); // DEBUG LOG: What's in req.user here?
+    if (!req.user || !req.user.userId) {
+      console.warn('getAdminRestaurants called without req.user.userId. Token decode issue or missing user.');
+      return res.status(401).json({ error: 'Unauthorized: User ID not found in token payload' });
+    }
+    console.log('Fetching restaurants for userId:', req.user.userId); // Debug log
     const restaurants = await Restaurant.find({ owner: req.user.userId }).lean();
     if (!restaurants.length) {
       return res.json({ message: 'No restaurants found for this admin', data: [] });
     }
     res.json(restaurants);
   } catch (err) {
+    console.error('Error in getAdminRestaurants:', err); // Added error logging
     res.status(500).json({ error: 'Failed to fetch restaurants' });
   }
 };
@@ -42,16 +52,29 @@ const getAdminRestaurants = async (req, res) => {
 // Admin: Create a restaurant
 const createRestaurant = async (req, res) => {
   try {
-    const { error } = restaurantSchema.validate(req.body);
-    if (error) return res.status(400).json({ error: error.details[0].message });
+    // Only validate name and address from request body
+    const { name, address } = req.body;
+    const { error } = restaurantSchema.validate({ name, address });
+    if (error) {
+      console.error('CreateRestaurant validation error:', error.details[0].message);
+      return res.status(400).json({ error: error.details[0].message });
+    }
+
+    if (!req.user || !req.user.userId) {
+      console.warn('CreateRestaurant called without req.user.userId. Token decode issue or missing user.');
+      return res.status(401).json({ error: 'Unauthorized: User ID not found in token payload' });
+    }
 
     const restaurant = new Restaurant({
-      ...req.body,
-      owner: req.user.userId,
+      name,
+      address,
+      owner: req.user.userId, // Owner comes from the authenticated user
     });
     await restaurant.save();
+    console.log('Restaurant created:', restaurant.name, 'by owner:', req.user.userId);
     res.status(201).json(restaurant);
   } catch (err) {
+    console.error('Error in createRestaurant:', err); // Added error logging
     res.status(500).json({ error: 'Failed to create restaurant' });
   }
 };
@@ -59,17 +82,28 @@ const createRestaurant = async (req, res) => {
 // Admin: Update a restaurant
 const updateRestaurant = async (req, res) => {
   try {
-    const { error } = restaurantSchema.validate(req.body, { stripUnknown: true });
-    if (error) return res.status(400).json({ error: error.details[0].message });
+    const { name, address } = req.body; // Only allow updating name and address
+    const { error } = restaurantSchema.validate({ name, address }, { stripUnknown: true });
+    if (error) {
+      console.error('UpdateRestaurant validation error:', error.details[0].message);
+      return res.status(400).json({ error: error.details[0].message });
+    }
+
+    if (!req.user || !req.user.userId) {
+      console.warn('UpdateRestaurant called without req.user.userId. Token decode issue or missing user.');
+      return res.status(401).json({ error: 'Unauthorized: User ID not found in token payload' });
+    }
 
     const restaurant = await Restaurant.findOneAndUpdate(
       { _id: req.params.id, owner: req.user.userId },
-      req.body,
+      { name, address },
       { new: true, runValidators: true }
     );
-    if (!restaurant) return res.status(404).json({ error: 'Restaurant not found' });
+    if (!restaurant) return res.status(404).json({ error: 'Restaurant not found or not owned by user' });
+    console.log('Restaurant updated:', restaurant._id);
     res.json(restaurant);
   } catch (err) {
+    console.error('Error in updateRestaurant:', err); // Added error logging
     res.status(500).json({ error: 'Failed to update restaurant' });
   }
 };
@@ -77,10 +111,16 @@ const updateRestaurant = async (req, res) => {
 // Admin: Delete a restaurant
 const deleteRestaurant = async (req, res) => {
   try {
+    if (!req.user || !req.user.userId) {
+      console.warn('DeleteRestaurant called without req.user.userId. Token decode issue or missing user.');
+      return res.status(401).json({ error: 'Unauthorized: User ID not found in token payload' });
+    }
     const restaurant = await Restaurant.findOneAndDelete({ _id: req.params.id, owner: req.user.userId });
-    if (!restaurant) return res.status(404).json({ error: 'Restaurant not found' });
+    if (!restaurant) return res.status(404).json({ error: 'Restaurant not found or not owned by user' });
+    console.log('Restaurant deleted:', restaurant._id);
     res.json({ message: 'Restaurant deleted' });
   } catch (err) {
+    console.error('Error in deleteRestaurant:', err); // Added error logging
     res.status(500).json({ error: 'Failed to delete restaurant' });
   }
 };
@@ -89,15 +129,25 @@ const deleteRestaurant = async (req, res) => {
 const addMenuItem = async (req, res) => {
   try {
     const { error } = menuItemSchema.validate(req.body);
-    if (error) return res.status(400).json({ error: error.details[0].message });
+    if (error) {
+      console.error('AddMenuItem validation error:', error.details[0].message);
+      return res.status(400).json({ error: error.details[0].message });
+    }
+
+    if (!req.user || !req.user.userId) {
+      console.warn('AddMenuItem called without req.user.userId. Token decode issue or missing user.');
+      return res.status(401).json({ error: 'Unauthorized: User ID not found in token payload' });
+    }
 
     const restaurant = await Restaurant.findOne({ _id: req.params.id, owner: req.user.userId });
-    if (!restaurant) return res.status(404).json({ error: 'Restaurant not found' });
+    if (!restaurant) return res.status(404).json({ error: 'Restaurant not found or not owned by user' });
 
     restaurant.menu.push(req.body);
     await restaurant.save();
+    console.log('Menu item added to restaurant:', restaurant._id);
     res.status(201).json(restaurant.menu[restaurant.menu.length - 1]);
   } catch (err) {
+    console.error('Error in addMenuItem:', err); // Added error logging
     res.status(500).json({ error: 'Failed to add menu item' });
   }
 };
@@ -105,10 +155,16 @@ const addMenuItem = async (req, res) => {
 // Admin: Get restaurant details (including menu)
 const getRestaurantDetails = async (req, res) => {
   try {
+    if (!req.user || !req.user.userId) {
+      console.warn('getRestaurantDetails called without req.user.userId. Token decode issue or missing user.');
+      return res.status(401).json({ error: 'Unauthorized: User ID not found in token payload' });
+    }
     const restaurant = await Restaurant.findOne({ _id: req.params.id, owner: req.user.userId }).lean();
-    if (!restaurant) return res.status(404).json({ error: 'Restaurant not found' });
+    if (!restaurant) return res.status(404).json({ error: 'Restaurant not found or not owned by user' });
+    console.log('Fetched details for restaurant:', restaurant._id);
     res.json(restaurant);
   } catch (err) {
+    console.error('Error in getRestaurantDetails:', err); // Added error logging
     res.status(500).json({ error: 'Failed to fetch restaurant details' });
   }
 };
@@ -117,18 +173,28 @@ const getRestaurantDetails = async (req, res) => {
 const updateMenuItem = async (req, res) => {
   try {
     const { error } = menuItemSchema.validate(req.body);
-    if (error) return res.status(400).json({ error: error.details[0].message });
+    if (error) {
+      console.error('UpdateMenuItem validation error:', error.details[0].message);
+      return res.status(400).json({ error: error.details[0].message });
+    }
+
+    if (!req.user || !req.user.userId) {
+      console.warn('UpdateMenuItem called without req.user.userId. Token decode issue or missing user.');
+      return res.status(401).json({ error: 'Unauthorized: User ID not found in token payload' });
+    }
 
     const restaurant = await Restaurant.findOne({ _id: req.params.id, owner: req.user.userId });
-    if (!restaurant) return res.status(404).json({ error: 'Restaurant not found' });
+    if (!restaurant) return res.status(404).json({ error: 'Restaurant not found or not owned by user' });
 
     const menuItem = restaurant.menu.id(req.params.menuId);
     if (!menuItem) return res.status(404).json({ error: 'Menu item not found' });
 
     Object.assign(menuItem, req.body);
     await restaurant.save();
+    console.log('Menu item updated:', req.params.menuId, 'for restaurant:', restaurant._id);
     res.json(menuItem);
   } catch (err) {
+    console.error('Error in updateMenuItem:', err); // Added error logging
     res.status(500).json({ error: 'Failed to update menu item' });
   }
 };
@@ -136,13 +202,23 @@ const updateMenuItem = async (req, res) => {
 // Admin: Delete a menu item
 const deleteMenuItem = async (req, res) => {
   try {
-    const restaurant = await Restaurant.findOne({ _id: req.params.id, owner: req.user.userId });
-    if (!restaurant) return res.status(404).json({ error: 'Restaurant not found' });
+    if (!req.user || !req.user.userId) {
+      console.warn('DeleteMenuItem called without req.user.userId. Token decode issue or missing user.');
+      return res.status(401).json({ error: 'Unauthorized: User ID not found in token payload' });
+    }
 
-    restaurant.menu.id(req.params.menuId).remove();
+    const restaurant = await Restaurant.findOne({ _id: req.params.id, owner: req.user.userId });
+    if (!restaurant) return res.status(404).json({ error: 'Restaurant not found or not owned by user' });
+
+    const menuItem = restaurant.menu.id(req.params.menuId);
+    if (!menuItem) return res.status(404).json({ error: 'Menu item not found' });
+
+    menuItem.deleteOne(); // Use .deleteOne() for Mongoose 5.x+ subdocuments
     await restaurant.save();
+    console.log('Menu item deleted:', req.params.menuId, 'from restaurant:', restaurant._id);
     res.json({ message: 'Menu item deleted' });
   } catch (err) {
+    console.error('Error in deleteMenuItem:', err); // Added error logging
     res.status(500).json({ error: 'Failed to delete menu item' });
   }
 };
