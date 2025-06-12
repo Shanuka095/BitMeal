@@ -17,12 +17,14 @@ const Login = () => {
     try {
       const response = await axios.post('http://localhost:3000/api/auth/login', { email, password });
       const { token, role } = response.data;
-      localStorage.setItem('token', token);
+      // Use sessionStorage with a unique key based on tab (e.g., timestamp)
+      const sessionKey = `token_${Date.now()}`;
+      sessionStorage.setItem(sessionKey, token);
       setError('');
       if (role === 'customer') {
-        navigate('/dashboard');
+        navigate('/dashboard', { state: { sessionKey } });
       } else if (role === 'restaurant_admin') {
-        navigate('/admin');
+        navigate('/admin', { state: { sessionKey } });
       } else {
         setError('Unknown role');
       }
