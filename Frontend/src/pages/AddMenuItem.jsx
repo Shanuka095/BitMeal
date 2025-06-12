@@ -7,31 +7,79 @@ const AddMenuItem = () => {
   const navigate = useNavigate();
   const [form, setForm] = useState({ name: '', price: '', category: '' });
   const [error, setError] = useState('');
+  const [loading, setLoading] = useState(false);
 
   const handleSubmit = async (e) => {
     e.preventDefault();
+    setLoading(true);
+    setError('');
     try {
       const token = localStorage.getItem('token');
+      if (!token) throw new Error('No authentication token');
       await axios.post(`http://localhost:3003/api/restaurants/${id}/menu`, form, {
         headers: { Authorization: `Bearer ${token}` },
       });
-      navigate('/admin');
+      console.log('Frontend (AddMenuItem) - Menu item added successfully for restaurant ID:', id);
+      navigate(`/admin/restaurant/${id}`); // Navigate back to restaurant details
     } catch (err) {
       setError(err.response?.data?.error || 'Failed to add menu item');
+      console.error('Frontend (AddMenuItem) - Error:', err.response ? err.response.data : err);
+    } finally {
+      setLoading(false);
     }
   };
 
   return (
-    <div>
-      <h1>Add Menu Item</h1>
-      <form onSubmit={handleSubmit}>
-        <input value={form.name} onChange={e => setForm({ ...form, name: e.target.value })} placeholder="Name" />
-        <input value={form.price} onChange={e => setForm({ ...form, price: e.target.value })} placeholder="Price" />
-        <input value={form.category} onChange={e => setForm({ ...form, category: e.target.value })} placeholder="Category" />
-        <button type="submit">Add</button>
-        {error && <p>{error}</p>}
+    <section className="max-w-md mx-auto bg-white p-6 rounded-lg shadow-md">
+      <h2 className="text-2xl font-bold text-gray-800 mb-4 border-b pb-2">Add Menu Item</h2>
+      {error && <p className="text-red-600 mb-4 font-semibold">{error}</p>}
+      <form onSubmit={handleSubmit} className="space-y-4">
+        <div>
+          <label htmlFor="name" className="block text-sm font-medium text-gray-700 mb-1">Name</label>
+          <input
+            type="text"
+            id="name"
+            value={form.name}
+            onChange={(e) => setForm({ ...form, name: e.target.value })}
+            placeholder="Enter item name"
+            className="w-full p-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-[#ffaa00]"
+            required
+          />
+        </div>
+        <div>
+          <label htmlFor="price" className="block text-sm font-medium text-gray-700 mb-1">Price</label>
+          <input
+            type="number"
+            id="price"
+            value={form.price}
+            onChange={(e) => setForm({ ...form, price: e.target.value })}
+            placeholder="Enter price"
+            className="w-full p-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-[#ffaa00]"
+            step="0.01"
+            required
+          />
+        </div>
+        <div>
+          <label htmlFor="category" className="block text-sm font-medium text-gray-700 mb-1">Category</label>
+          <input
+            type="text"
+            id="category"
+            value={form.category}
+            onChange={(e) => setForm({ ...form, category: e.target.value })}
+            placeholder="Enter category"
+            className="w-full p-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-[#ffaa00]"
+            required
+          />
+        </div>
+        <button
+          type="submit"
+          className="w-full bg-[#ffaa00] text-white p-2 rounded-lg hover:bg-[#e59400] transition disabled:opacity-50 disabled:cursor-not-allowed"
+          disabled={loading}
+        >
+          {loading ? 'Adding...' : 'Add Menu Item'}
+        </button>
       </form>
-    </div>
+    </section>
   );
 };
 
