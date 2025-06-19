@@ -1,4 +1,3 @@
-// src/pages/Login.jsx
 import { useState } from 'react';
 import axios from 'axios';
 import { useNavigate, Link } from 'react-router-dom';
@@ -17,9 +16,9 @@ const Login = () => {
     try {
       const response = await axios.post('http://localhost:3000/api/auth/login', { email, password });
       const { token, role } = response.data;
-      // Use sessionStorage with a unique key based on tab (e.g., timestamp)
       const sessionKey = `token_${Date.now()}`;
-      sessionStorage.setItem(sessionKey, token);
+      sessionStorage.setItem(sessionKey, token); // Store in sessionStorage
+      localStorage.setItem('token', token); // Add to localStorage as fallback
       setError('');
       if (role === 'customer') {
         navigate('/dashboard', { state: { sessionKey } });

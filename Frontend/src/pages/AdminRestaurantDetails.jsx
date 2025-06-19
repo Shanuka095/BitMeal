@@ -1,80 +1,83 @@
-import { useParams } from 'react-router-dom';
 import { useState, useEffect } from 'react';
+import { useParams, useNavigate } from 'react-router-dom';
 import axios from 'axios';
+import { FaPlus } from 'react-icons/fa';
+import jwtDecode from 'jwt-decode';
 
 const AdminRestaurantDetails = () => {
   const { id } = useParams();
+  const navigate = useNavigate();
   const [restaurant, setRestaurant] = useState(null);
-  const [error, setError] = useState('');
   const [loading, setLoading] = useState(true);
+  const [error, setError] = useState('');
 
   useEffect(() => {
-    const fetchDetails = async () => {
+    const fetchRestaurantDetails = async () => {
       setLoading(true);
       setError('');
+      const sessionKey = Object.keys(sessionStorage).find(key => key.startsWith('token_'));
+      const token = sessionKey ? sessionStorage.getItem(sessionKey) : localStorage.getItem('token');
+
+      if (!token) {
+        console.error('Frontend (AdminRestaurantDetails) - No authentication token found.');
+        setError('No authentication token');
+        setLoading(false);
+        return;
+      }
+
       try {
-        const token = localStorage.getItem('token');
-        if (!token) {
-          throw new Error('No authentication token found.');
-        }
         const response = await axios.get(`http://localhost:3003/api/restaurants/${id}`, {
           headers: { Authorization: `Bearer ${token}` },
         });
+        console.log('Frontend (AdminRestaurantDetails) - API Response:', response.data);
         setRestaurant(response.data);
-        console.log('Frontend (AdminRestaurantDetails): Fetched restaurant details for ID:', id);
       } catch (err) {
-        const errorMessage = err.response?.data?.error || err.message || 'Failed to fetch restaurant details';
+        const errorMessage = err.response?.data?.error || err.message || 'Failed to load restaurant details';
         setError(errorMessage);
         console.error('Frontend (AdminRestaurantDetails) - Fetch error:', err.response ? err.response.data : err);
       } finally {
         setLoading(false);
       }
     };
-    fetchDetails();
+    fetchRestaurantDetails();
   }, [id]);
 
+  const handleAddMenuItem = () => {
+    navigate(`/admin/restaurant/${id}/add-menu-item`);
+  };
+
+  if (loading) return <div className="flex justify-center"><p className="text-gray-600">Loading...</p></div>;
+  if (error) return <div className="flex justify-center"><p className="text-red-600 font-semibold">{error}</p></div>;
+  if (!restaurant) return <div className="flex justify-center"><p className="text-gray-600">Restaurant not found.</p></div>;
+
   return (
-    <section className="max-w-2xl mx-auto bg-white p-6 rounded-lg shadow-md">
-      <h2 className="text-2xl font-bold text-gray-800 mb-4 border-b pb-2">Restaurant Details</h2>
-      {loading ? (
-        <p className="text-gray-600">Loading restaurant details...</p>
-      ) : error ? (
-        <p className="text-red-600 font-semibold">{error}</p>
-      ) : restaurant ? (
+    <section className="bg-white rounded-xl shadow-md p-6">
+      <div className="flex justify-between items-center mb-4 border-b pb-2">
+        <h2 className="text-2xl font-bold text-gray-800">{restaurant.name} Details</h2>
+        <button
+          onClick={handleAddMenuItem}
+          className="bg-green-600 text-white px-4 py-2 rounded-lg hover:bg-green-700 flex items-center transition"
+        >
+          <FaPlus className="mr-2" /> Add Menu Item
+        </button>
+      </div>
+      <div className="space-y-4">
+        <p><strong>Address:</strong> {restaurant.address}</p>
         <div>
-          <p className="mb-2"><strong>Name:</strong> {restaurant.name}</p>
-          <p className="mb-4"><strong>Address:</strong> {restaurant.address}</p>
-          <h3 className="text-xl font-semibold mt-4 mb-2">Menu:</h3>
+          <strong>Menu:</strong>
           {restaurant.menu && restaurant.menu.length > 0 ? (
             <ul className="list-disc pl-5 mt-2">
               {restaurant.menu.map((item, index) => (
-                <li key={item._id || index} className="py-1">
-                  <strong>{item.name}</strong> - ${item.price} ({item.category})
+                <li key={index} className="text-gray-600">
+                  {item.name} - ${item.price} ({item.category})
                 </li>
               ))}
             </ul>
           ) : (
-            <p className="text-gray-600">No menu items available for this restaurant.</p>
+            <p className="text-gray-600 mt-2">No menu items available.</p>
           )}
-          {/* Add buttons for managing menu items or updating restaurant here */}
-          <div className="mt-6 flex space-x-3">
-             <button
-               onClick={() => alert('Navigate to Add Menu Item')} // Replace with actual navigation
-               className="bg-orange-500 text-white px-4 py-2 rounded-lg hover:bg-orange-600 transition"
-             >
-               Add Menu Item
-             </button>
-             <button
-               onClick={() => alert('Navigate to Update Restaurant')} // Replace with actual navigation
-               className="bg-purple-500 text-white px-4 py-2 rounded-lg hover:bg-purple-600 transition"
-             >
-               Edit Restaurant
-             </button>
-          </div>
         </div>
-      ) : (
-        <p className="text-gray-600">Restaurant not found.</p>
-      )}
+      </div>
     </section>
   );
 };

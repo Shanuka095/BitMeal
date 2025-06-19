@@ -1,8 +1,8 @@
 import { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import axios from 'axios';
-import { FaTrash, FaEye, FaPlus } from 'react-icons/fa';
-import jwtDecode from 'jwt-decode'; // Reverted to default import for jwt-decode
+import { FaTrash, FaEye } from 'react-icons/fa';
+import jwtDecode from 'jwt-decode';
 
 const RestaurantAdmin = () => {
   const navigate = useNavigate();
@@ -14,44 +14,41 @@ const RestaurantAdmin = () => {
     const fetchRestaurants = async () => {
       setLoading(true);
       setError('');
-      try {
-        const token = localStorage.getItem('token');
-        if (!token) {
-          console.error('Frontend (RestaurantAdmin) - No authentication token found.');
-          throw new Error('No authentication token');
-        }
+      const sessionKey = Object.keys(sessionStorage).find(key => key.startsWith('token_'));
+      const token = sessionKey ? sessionStorage.getItem(sessionKey) : localStorage.getItem('token');
 
-        console.log('Frontend (RestaurantAdmin) - Fetching with token (first 10 chars):', token.substring(0, 10) + '...');
-        
+      if (!token) {
+        console.error('Frontend (RestaurantAdmin) - No authentication token found.');
+        setError('No authentication token');
+        setLoading(false);
+        return;
+      }
+
+      console.log('Frontend (RestaurantAdmin) - Fetching with token (first 10 chars):', token.substring(0, 10) + '...');
+      try {
         const response = await axios.get('http://localhost:3003/api/restaurants', {
           headers: { Authorization: `Bearer ${token}` },
         });
-
+        console.log('Frontend (RestaurantAdmin) - API Response:', response.data);
         const data = response.data.data || response.data;
-        
         if (Array.isArray(data)) {
-          const decoded = jwtDecode(token);
-          const userId = decoded.userId;
-          console.log('Frontend (RestaurantAdmin) - Decoded userId from token:', userId);
-          const userRestaurants = data.filter(r => r.owner === userId);
-          setRestaurants(userRestaurants);
-          if (userRestaurants.length === 0) {
-            console.log('Frontend (RestaurantAdmin) - No restaurants found for this admin after client-side filter.');
-            setError('No restaurants found for this admin. Create one to get started.');
+          setRestaurants(data); // Set all restaurants without filtering
+          if (data.length === 0) {
+            console.log('Frontend (RestaurantAdmin) - No restaurants found.');
+            setError('No restaurants found. Create one to get started.');
           }
         } else {
           console.warn('Frontend (RestaurantAdmin) - Expected an array of restaurants, got:', data);
           setRestaurants([]);
         }
-        
       } catch (err) {
         const errorMessage = err.response?.data?.error || err.message || 'Failed to load restaurants';
         setError(errorMessage);
         console.error('Frontend (RestaurantAdmin) - Fetch error:', err.response ? err.response.data : err);
         if (err.response?.status === 403) {
-          console.log('Frontend (RestaurantAdmin): 403 Error - Access denied. The backend middleware blocked the request.');
+          console.log('Frontend (RestaurantAdmin): 403 Error - Access denied.');
         } else if (err.response?.status === 401) {
-          console.log('Frontend (RestaurantAdmin): 401 Error - Unauthorized. Token might be invalid or missing, or expired.');
+          console.log('Frontend (RestaurantAdmin): 401 Error - Unauthorized.');
         }
       } finally {
         setLoading(false);
@@ -62,9 +59,10 @@ const RestaurantAdmin = () => {
 
   const handleDeleteRestaurant = async (id, name) => {
     if (window.confirm(`Are you sure you want to delete "${name}"? This action cannot be undone.`)) {
+      const sessionKey = Object.keys(sessionStorage).find(key => key.startsWith('token_'));
+      const token = sessionKey ? sessionStorage.getItem(sessionKey) : localStorage.getItem('token');
+      if (!token) throw new Error('No authentication token');
       try {
-        const token = localStorage.getItem('token');
-        if (!token) throw new Error('No authentication token');
         await axios.delete(`http://localhost:3003/api/restaurants/${id}`, {
           headers: { Authorization: `Bearer ${token}` },
         });
@@ -77,19 +75,12 @@ const RestaurantAdmin = () => {
     }
   };
 
-  const handleCreateRestaurant = () => navigate('/admin/create-restaurant');
   const handleViewDetails = (id) => navigate(`/admin/restaurant/${id}`);
 
   return (
     <section className="bg-white rounded-xl shadow-md p-6">
       <div className="flex justify-between items-center mb-4 border-b pb-2">
         <h2 className="text-2xl font-bold text-gray-800">My Restaurants</h2>
-        <button
-          onClick={handleCreateRestaurant}
-          className="bg-green-600 text-white px-4 py-2 rounded-lg hover:bg-green-700 flex items-center transition"
-        >
-          <FaPlus className="mr-2" /> Add New Restaurant
-        </button>
       </div>
 
       {loading ? (
@@ -97,7 +88,7 @@ const RestaurantAdmin = () => {
       ) : error ? (
         <div className="flex justify-center"><p className="text-red-600 font-semibold">{error}</p></div>
       ) : restaurants.length === 0 ? (
-        <div className="flex justify-center"><p className="text-gray-600">No restaurants found. Click "Add New Restaurant" to get started.</p></div>
+        <div className="flex justify-center"><p className="text-gray-600">No restaurants found. Create one to get started.</p></div>
       ) : (
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
           {restaurants.map((restaurant) => (

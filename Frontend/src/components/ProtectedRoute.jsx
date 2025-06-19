@@ -1,5 +1,5 @@
 import { Navigate, useLocation } from 'react-router-dom';
-import jwtDecode from 'jwt-decode'; // Reverted to default import for jwt-decode
+import jwtDecode from 'jwt-decode';
 
 const ProtectedRoute = ({ children }) => {
   const location = useLocation();
@@ -21,30 +21,20 @@ const ProtectedRoute = ({ children }) => {
     const isAdmin = decoded.role === 'restaurant_admin';
     console.log('Frontend (ProtectedRoute) - Is Admin:', isAdmin);
 
-    // Redirect logic based on role
-    // If admin and trying to access root or dashboard, redirect to /admin
     if (isAdmin && (location.pathname === '/' || location.pathname.startsWith('/dashboard'))) {
-      console.log('Frontend (ProtectedRoute) - Admin accessing non-admin path, redirecting to /admin');
       return <Navigate to="/admin" replace />;
     }
-    // If not admin and trying to access root or admin paths, redirect to /dashboard
     if (!isAdmin && (location.pathname === '/' || location.pathname.startsWith('/admin'))) {
-      console.log('Frontend (ProtectedRoute) - Non-admin accessing admin path, redirecting to /dashboard');
       return <Navigate to="/dashboard" replace />;
     }
-    // No specific redirects if role and path are aligned, or if it's another allowed path
-    // For example, if admin is on /admin or a sub-path, just allow children
-    // if non-admin is on /dashboard or a sub-path, just allow children
-
   } catch (err) {
     console.error('Frontend (ProtectedRoute) - Token decoding error:', err);
-    // Clear invalid token and redirect to login
     localStorage.removeItem('token');
     if (sessionKey) sessionStorage.removeItem(sessionKey);
     return <Navigate to="/login" replace />;
   }
 
-  // If token is valid and role/path are consistent, render children
+  // Pass token to children via context or props if needed later
   return children;
 };
 
