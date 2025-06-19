@@ -69,7 +69,7 @@ const UpdateRestaurant = () => {
             value={form.name}
             onChange={e => setForm({ ...form, name: e.target.value })}
             placeholder="Name"
-            className="w-full p-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
+            className="w-full p-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-[#ffaa00]"
             required
           />
         </div>
@@ -81,13 +81,13 @@ const UpdateRestaurant = () => {
             value={form.address}
             onChange={e => setForm({ ...form, address: e.target.value })}
             placeholder="Address"
-            className="w-full p-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
+            className="w-full p-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-[#ffaa00]"
             required
           />
         </div>
         <button
           type="submit"
-          className="w-full bg-blue-600 text-white p-2 rounded-lg hover:bg-blue-700 transition disabled:opacity-50 disabled:cursor-not-allowed"
+          className="w-full bg-[#ffaa00] text-white p-2 rounded-lg hover:bg-[#e59400] transition disabled:opacity-50 disabled:cursor-not-allowed"
           disabled={submitting}
         >
           {submitting ? 'Updating...' : 'Update Restaurant'}
