@@ -1,7 +1,7 @@
 import { useState, useEffect } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import axios from 'axios';
-import { FaPlus } from 'react-icons/fa';
+import { FaPlus, FaEdit } from 'react-icons/fa';
 import jwtDecode from 'jwt-decode';
 
 const AdminRestaurantDetails = () => {
@@ -46,30 +46,44 @@ const AdminRestaurantDetails = () => {
     navigate(`/admin/restaurant/${id}/add-menu-item`);
   };
 
-  if (loading) return <div className="flex justify-center"><p className="text-gray-600">Loading...</p></div>;
-  if (error) return <div className="flex justify-center"><p className="text-red-600 font-semibold">{error}</p></div>;
-  if (!restaurant) return <div className="flex justify-center"><p className="text-gray-600">Restaurant not found.</p></div>;
+  const handleEditRestaurant = () => {
+    navigate(`/admin/update-restaurant/${id}`);
+  };
+
+  if (loading) return <div className="flex justify-center items-center h-screen"><p className="text-gray-600 text-lg">Loading...</p></div>;
+  if (error) return <div className="flex justify-center items-center h-screen"><p className="text-red-600 text-lg font-semibold">{error}</p></div>;
+  if (!restaurant) return <div className="flex justify-center items-center h-screen"><p className="text-gray-600 text-lg">Restaurant not found.</p></div>;
 
   return (
-    <section className="bg-white rounded-xl shadow-md p-6">
-      <div className="flex justify-between items-center mb-4 border-b pb-2">
-        <h2 className="text-2xl font-bold text-gray-800">{restaurant.name} Details</h2>
-        <button
-          onClick={handleAddMenuItem}
-          className="bg-green-600 text-white px-4 py-2 rounded-lg hover:bg-green-700 flex items-center transition"
-        >
-          <FaPlus className="mr-2" /> Add Menu Item
-        </button>
+    <section className="bg-white rounded-xl shadow-lg p-6 mx-auto max-w-4xl mt-6">
+      <div className="flex justify-between items-center mb-6 border-b-2 border-gray-200 pb-4">
+        <h2 className="text-3xl font-bold text-gray-800">{restaurant.name} Details</h2>
+        <div className="flex space-x-4">
+          <button
+            onClick={handleAddMenuItem}
+            className="bg-[#4CAF50] text-white px-6 py-2 rounded-lg hover:bg-[#45a049] flex items-center transition duration-200 ease-in-out shadow-md hover:shadow-lg"
+          >
+            <FaPlus className="mr-2" /> Add Menu Item
+          </button>
+          <button
+            onClick={handleEditRestaurant}
+            className="bg-[#ffaa00] text-white px-6 py-2 rounded-lg hover:bg-[#e59400] flex items-center transition duration-200 ease-in-out shadow-md hover:shadow-lg"
+          >
+            <FaEdit className="mr-2" /> Edit Restaurant
+          </button>
+        </div>
       </div>
-      <div className="space-y-4">
-        <p><strong>Address:</strong> {restaurant.address}</p>
-        <div>
-          <strong>Menu:</strong>
+      <div className="space-y-6">
+        <div className="bg-gray-50 p-4 rounded-lg border border-gray-200">
+          <p className="text-gray-700"><strong className="text-gray-900">Address:</strong> {restaurant.address}</p>
+        </div>
+        <div className="bg-gray-50 p-4 rounded-lg border border-gray-200">
+          <strong className="text-gray-900 text-lg">Menu:</strong>
           {restaurant.menu && restaurant.menu.length > 0 ? (
-            <ul className="list-disc pl-5 mt-2">
+            <ul className="list-disc pl-5 mt-2 space-y-2">
               {restaurant.menu.map((item, index) => (
-                <li key={index} className="text-gray-600">
-                  {item.name} - ${item.price} ({item.category})
+                <li key={index} className="text-gray-700">
+                  {item.name} - <span className="font-semibold">${item.price}</span> ({item.category})
                 </li>
               ))}
             </ul>
