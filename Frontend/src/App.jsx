@@ -12,7 +12,7 @@ import CreateRestaurant from './pages/CreateRestaurant';
 import UpdateRestaurant from './pages/UpdateRestaurant';
 import AddMenuItem from './pages/AddMenuItem';
 import AdminRestaurantDetails from './pages/AdminRestaurantDetails';
-import UpdateMenuItem from './pages/UpdateMenuItem'; // New import
+import UpdateMenuItem from './pages/UpdateMenuItem';
 import ProtectedRoute from './components/ProtectedRoute';
 import Login from './pages/Login';
 import Register from './pages/Register';
@@ -48,22 +48,22 @@ function App() {
 
         {/* Admin Routes with AdminLayout (no Navbar/Footer) */}
         <Route
-          path="/admin/*" // Use a wildcard to match all sub-routes
+          path="/admin/*"
           element={
             <ProtectedRoute>
-              <AdminLayout /> {/* AdminLayout will render its own Outlet */}
+              <AdminLayout />
             </ProtectedRoute>
           }
         >
-          <Route index element={<RestaurantAdmin />} /> {/* /admin */}
-          <Route path="create-restaurant" element={<CreateRestaurant />} /> {/* /admin/create-restaurant */}
-          <Route path="update-restaurant/:id" element={<UpdateRestaurant />} /> {/* /admin/update-restaurant/:id */}
-          <Route path="restaurant/:id/add-menu-item" element={<AddMenuItem />} /> {/* /admin/restaurant/:id/add-menu-item */}
-          <Route path="restaurant/:id" element={<AdminRestaurantDetails />} /> {/* /admin/restaurant/:id */}
-          <Route path="restaurant/:id/menu/:menuId/edit" element={<UpdateMenuItem />} /> {/* New route */}
+          <Route index element={<RestaurantAdmin />} />
+          <Route path="create-restaurant" element={<CreateRestaurant />} />
+          <Route path="update-restaurant/:id" element={<UpdateRestaurant />} />
+          <Route path="restaurant/:id/add-menu-item" element={<AddMenuItem />} />
+          <Route path="restaurant/:id" element={<AdminRestaurantDetails />} />
+          <Route path="restaurant/:id/menu/:menuId/edit" element={<UpdateMenuItem />} />
         </Route>
 
-        {/* Catch-all route for unmatched paths - consider your exact redirection logic */}
+        {/* Catch-all route for unmatched paths */}
         <Route path="*" element={<Navigate to="/login" replace />} />
       </Routes>
     </Router>
