@@ -34,9 +34,7 @@ const Restaurants = ({ standalone }) => {
             >
               <h3 className="text-lg font-semibold text-gray-800 mb-2">{restaurant.name}</h3>
               <p className="text-sm text-gray-600 mb-2">{restaurant.address}</p>
-              <p className="text-sm text-gray-500">
-                Menu Items: {restaurant.menu ? restaurant.menu.length : 0}
-              </p>
+              <p className="text-sm text-gray-500">Menu Items: {restaurant.menu ? restaurant.menu.length : 0}</p>
             </Link>
           ))}
         </div>
