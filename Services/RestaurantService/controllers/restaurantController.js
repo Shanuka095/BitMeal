@@ -28,6 +28,19 @@ const getPublicRestaurants = async (req, res) => {
   }
 };
 
+// Customer: Get specific restaurant details (Public access)
+const getPublicRestaurantDetails = async (req, res) => {
+  try {
+    const restaurant = await Restaurant.findById(req.params.id).lean();
+    if (!restaurant) return res.status(404).json({ error: 'Restaurant not found' });
+    console.log('Fetched public details for restaurant:', restaurant._id);
+    res.json(restaurant);
+  } catch (err) {
+    console.error('Error in getPublicRestaurantDetails:', err);
+    res.status(500).json({ error: 'Failed to fetch restaurant details' });
+  }
+};
+
 // Admin: Get restaurants owned by the logged-in admin
 const getAdminRestaurants = async (req, res) => {
   try {
@@ -245,13 +258,14 @@ const deleteMenuItem = async (req, res) => {
 
 module.exports = {
   getPublicRestaurants,
+  getPublicRestaurantDetails, // New function
   getAdminRestaurants,
   createRestaurant,
   updateRestaurant,
   deleteRestaurant,
   addMenuItem,
   getRestaurantDetails,
-  getMenuItem, // Added new function
+  getMenuItem,
   updateMenuItem,
   deleteMenuItem,
 };
