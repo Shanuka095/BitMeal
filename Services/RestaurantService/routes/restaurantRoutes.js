@@ -2,13 +2,14 @@ const express = require('express');
 const router = express.Router();
 const {
   getPublicRestaurants,
+  getPublicRestaurantDetails, // New function
   getAdminRestaurants,
   createRestaurant,
   updateRestaurant,
   deleteRestaurant,
   addMenuItem,
   getRestaurantDetails,
-  getMenuItem, // Added new function
+  getMenuItem,
   updateMenuItem,
   deleteMenuItem,
 } = require('../controllers/restaurantController');
@@ -16,11 +17,12 @@ const { authenticate, restrictTo } = require('../middleware/restrictAccess');
 
 // Customer: Public access
 router.get('/public', getPublicRestaurants);
+router.get('/public/:id', getPublicRestaurantDetails); // New route
 
 // Admin: Protected routes
 router.get('/', authenticate, restrictTo('restaurant_admin'), getAdminRestaurants);
 router.get('/:id', authenticate, restrictTo('restaurant_admin'), getRestaurantDetails);
-router.get('/:id/menu/:menuId', authenticate, restrictTo('restaurant_admin'), getMenuItem); // New route
+router.get('/:id/menu/:menuId', authenticate, restrictTo('restaurant_admin'), getMenuItem);
 router.post('/', authenticate, restrictTo('restaurant_admin'), createRestaurant);
 router.put('/:id', authenticate, restrictTo('restaurant_admin'), updateRestaurant);
 router.delete('/:id', authenticate, restrictTo('restaurant_admin'), deleteRestaurant);
