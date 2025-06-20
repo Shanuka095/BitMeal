@@ -21,10 +21,10 @@ const ProtectedRoute = ({ children }) => {
     const isAdmin = decoded.role === 'restaurant_admin';
     console.log('Frontend (ProtectedRoute) - Is Admin:', isAdmin);
 
-    if (isAdmin && (location.pathname === '/' || location.pathname.startsWith('/dashboard'))) {
+    if (isAdmin && location.pathname === '/') {
       return <Navigate to="/admin" replace />;
     }
-    if (!isAdmin && (location.pathname === '/' || location.pathname.startsWith('/admin'))) {
+    if (!isAdmin && location.pathname === '/admin') {
       return <Navigate to="/dashboard" replace />;
     }
   } catch (err) {
@@ -34,7 +34,6 @@ const ProtectedRoute = ({ children }) => {
     return <Navigate to="/login" replace />;
   }
 
-  // Pass token to children via context or props if needed later
   return children;
 };
 
