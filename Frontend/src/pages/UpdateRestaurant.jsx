@@ -1,6 +1,7 @@
 import { useState, useEffect } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import axios from 'axios';
+import { FaArrowLeft } from 'react-icons/fa';
 
 const UpdateRestaurant = () => {
   const { id } = useParams();
@@ -43,7 +44,7 @@ const UpdateRestaurant = () => {
         headers: { Authorization: `Bearer ${token}` },
       });
       console.log('Frontend (UpdateRestaurant) - Restaurant updated successfully:', form.name);
-      navigate('/admin'); // Navigate back to the admin dashboard
+      navigate(`/admin/restaurant/${id}`); // Navigate back to restaurant details
     } catch (err) {
       setError(err.response?.data?.error || 'Failed to update restaurant');
       console.error('Frontend (UpdateRestaurant) - Update error:', err.response ? err.response.data : err);
@@ -52,13 +53,25 @@ const UpdateRestaurant = () => {
     }
   };
 
+  const handleBack = () => {
+    navigate(`/admin/restaurant/${id}`);
+  };
+
   if (loading) {
     return <section className="max-w-md mx-auto bg-white p-6 rounded-lg shadow-md"><p className="text-gray-600">Loading restaurant data...</p></section>;
   }
 
   return (
     <section className="max-w-md mx-auto bg-white p-6 rounded-lg shadow-md">
-      <h2 className="text-2xl font-bold text-gray-800 mb-4 border-b pb-2">Update Restaurant</h2>
+      <div className="flex items-center mb-6 border-b-2 border-gray-200 pb-4">
+        <button
+          onClick={handleBack}
+          className="bg-gray-200 text-gray-800 px-3 py-2 rounded-lg hover:bg-gray-300 flex items-center mr-4 transition duration-200 ease-in-out"
+        >
+          <FaArrowLeft className="mr-1" /> Back
+        </button>
+        <h2 className="text-2xl font-bold text-gray-800">Update Restaurant</h2>
+      </div>
       {error && <p className="text-red-600 mb-4 font-semibold">{error}</p>}
       <form onSubmit={handleSubmit} className="space-y-4">
         <div>
