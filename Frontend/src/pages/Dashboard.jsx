@@ -12,7 +12,7 @@ const Dashboard = () => {
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-gray-100 to-gray-300 font-sans">
-      <header className="bg-white shadow-md p-6">
+      <header className="bg-white shadow-md p-6 pt-20"> {/* Increased padding-top */}
         <h1 className="text-4xl font-extrabold text-gray-900 text-center">Welcome to Your Dashboard</h1>
         <p className="text-center text-gray-600 mt-2">Explore restaurants and manage your orders easily!</p>
       </header>
