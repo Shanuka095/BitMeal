@@ -13,11 +13,11 @@ const RestaurantDetails = () => {
       setLoading(true);
       setError('');
       try {
-        const token = localStorage.getItem('token');
-        if (!token) throw new Error('No authentication token');
-        const response = await axios.get(`http://localhost:3003/api/restaurants/${id}`, {
-          headers: { Authorization: `Bearer ${token}` },
+        const token = localStorage.getItem('token'); // Optional: Keep token for auth if needed later
+        const response = await axios.get(`http://localhost:3003/api/restaurants/public/${id}`, {
+          headers: token ? { Authorization: `Bearer ${token}` } : {},
         });
+        console.log('Frontend (RestaurantDetails) - Response:', response.data);
         setRestaurant(response.data);
       } catch (err) {
         setError(err.response?.data?.error || 'Failed to fetch restaurant details');
