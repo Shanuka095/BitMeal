@@ -12,6 +12,7 @@ import CreateRestaurant from './pages/CreateRestaurant';
 import UpdateRestaurant from './pages/UpdateRestaurant';
 import AddMenuItem from './pages/AddMenuItem';
 import AdminRestaurantDetails from './pages/AdminRestaurantDetails';
+import UpdateMenuItem from './pages/UpdateMenuItem'; // New import
 import ProtectedRoute from './components/ProtectedRoute';
 import Login from './pages/Login';
 import Register from './pages/Register';
@@ -59,6 +60,7 @@ function App() {
           <Route path="update-restaurant/:id" element={<UpdateRestaurant />} /> {/* /admin/update-restaurant/:id */}
           <Route path="restaurant/:id/add-menu-item" element={<AddMenuItem />} /> {/* /admin/restaurant/:id/add-menu-item */}
           <Route path="restaurant/:id" element={<AdminRestaurantDetails />} /> {/* /admin/restaurant/:id */}
+          <Route path="restaurant/:id/menu/:menuId/edit" element={<UpdateMenuItem />} /> {/* New route */}
         </Route>
 
         {/* Catch-all route for unmatched paths - consider your exact redirection logic */}
