@@ -8,6 +8,7 @@ const {
   deleteRestaurant,
   addMenuItem,
   getRestaurantDetails,
+  getMenuItem, // Added new function
   updateMenuItem,
   deleteMenuItem,
 } = require('../controllers/restaurantController');
@@ -19,6 +20,7 @@ router.get('/public', getPublicRestaurants);
 // Admin: Protected routes
 router.get('/', authenticate, restrictTo('restaurant_admin'), getAdminRestaurants);
 router.get('/:id', authenticate, restrictTo('restaurant_admin'), getRestaurantDetails);
+router.get('/:id/menu/:menuId', authenticate, restrictTo('restaurant_admin'), getMenuItem); // New route
 router.post('/', authenticate, restrictTo('restaurant_admin'), createRestaurant);
 router.put('/:id', authenticate, restrictTo('restaurant_admin'), updateRestaurant);
 router.delete('/:id', authenticate, restrictTo('restaurant_admin'), deleteRestaurant);
