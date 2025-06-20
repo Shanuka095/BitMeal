@@ -6,21 +6,32 @@ const RestaurantDetails = () => {
   const { id } = useParams();
   const [restaurant, setRestaurant] = useState(null);
   const [error, setError] = useState('');
+  const [loading, setLoading] = useState(true);
 
   useEffect(() => {
     const fetchDetails = async () => {
+      setLoading(true);
+      setError('');
       try {
-        const response = await axios.get(`http://localhost:3003/api/restaurants/public/${id}`);
+        const token = localStorage.getItem('token');
+        if (!token) throw new Error('No authentication token');
+        const response = await axios.get(`http://localhost:3003/api/restaurants/${id}`, {
+          headers: { Authorization: `Bearer ${token}` },
+        });
         setRestaurant(response.data);
       } catch (err) {
-        setError(err.response?.data?.error || 'Failed to fetch details');
+        setError(err.response?.data?.error || 'Failed to fetch restaurant details');
+        console.error('Frontend (RestaurantDetails) - Fetch error:', err.response ? err.response.data : err);
+      } finally {
+        setLoading(false);
       }
     };
     fetchDetails();
   }, [id]);
 
+  if (loading) return <div className="p-6 text-center"><p className="text-gray-600">Loading...</p></div>;
   if (error) return <div className="p-6 text-center"><p className="text-red-600">{error}</p></div>;
-  if (!restaurant) return <div className="p-6 text-center"><p className="text-gray-600">Loading...</p></div>;
+  if (!restaurant) return <div className="p-6 text-center"><p className="text-gray-600">Restaurant not found</p></div>;
 
   return (
     <div className="p-6">
