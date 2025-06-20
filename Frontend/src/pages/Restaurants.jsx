@@ -21,14 +21,22 @@ const Restaurants = ({ standalone }) => {
 
   return (
     <div className="p-6">
-      <h2 className="text-2xl font-bold text-gray-800 mb-4">{standalone ? 'Restaurants' : 'All Restaurants'}</h2>
+      <h2 className="text-2xl font-bold text-gray-800 mb-6">{standalone ? 'Restaurants' : 'Explore Restaurants'}</h2>
       {error ? (
         <p className="text-red-600 text-center">{error}</p>
       ) : restaurants.length > 0 ? (
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
           {restaurants.map((restaurant) => (
-            <Link key={restaurant._id} to={`/restaurant/${restaurant._id}`} className="block bg-white p-4 rounded-lg shadow hover:shadow-lg transition">
-              <h3 className="text-lg font-semibold text-gray-800">{restaurant.name}</h3>
+            <Link
+              key={restaurant._id}
+              to={`/restaurant/${restaurant._id}`}
+              className="block bg-white p-4 rounded-lg shadow-md hover:shadow-lg transition transform hover:-translate-y-1 duration-200"
+            >
+              <h3 className="text-lg font-semibold text-gray-800 mb-2">{restaurant.name}</h3>
+              <p className="text-sm text-gray-600 mb-2">{restaurant.address}</p>
+              <p className="text-sm text-gray-500">
+                Menu Items: {restaurant.menu ? restaurant.menu.length : 0}
+              </p>
             </Link>
           ))}
         </div>
