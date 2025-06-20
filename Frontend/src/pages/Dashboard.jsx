@@ -13,7 +13,8 @@ const Dashboard = () => {
   return (
     <div className="min-h-screen bg-gradient-to-br from-gray-100 to-gray-300 font-sans">
       <header className="bg-white shadow-md p-6">
-        <h1 className="text-4xl font-extrabold text-gray-900 text-center">Customer Dashboard</h1>
+        <h1 className="text-4xl font-extrabold text-gray-900 text-center">Welcome to Your Dashboard</h1>
+        <p className="text-center text-gray-600 mt-2">Explore restaurants and manage your orders easily!</p>
       </header>
       <main className="p-6">
         <Restaurants standalone={false} />
