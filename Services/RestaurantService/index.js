@@ -4,26 +4,39 @@ const cors = require('cors');
 const restaurantRoutes = require('./routes/restaurantRoutes');
 const connectDB = require('./config/db');
 const multer = require('multer');
+const fs = require('fs');
 
 dotenv.config();
 
 const app = express();
 
+// Configure CORS
+const corsOptions = {
+  origin: 'http://localhost:5173',
+  credentials: true,
+  methods: ['GET', 'POST', 'PUT', 'DELETE'],
+  allowedHeaders: ['Authorization', 'Content-Type'],
+};
+app.use(cors(corsOptions));
+
 // Configure multer for file uploads
 const storage = multer.diskStorage({
   destination: (req, file, cb) => {
-    cb(null, 'uploads/'); // Store in 'uploads' folder
+    const uploadDir = 'uploads/';
+    if (!fs.existsSync(uploadDir)) {
+      fs.mkdirSync(uploadDir);
+    }
+    cb(null, uploadDir);
   },
   filename: (req, file, cb) => {
-    cb(null, Date.now() + '-' + file.originalname); // Unique filename
+    cb(null, Date.now() + '-' + file.originalname);
   },
 });
 const upload = multer({ storage });
 
-app.use(cors({
-  origin: 'http://localhost:5173',
-  credentials: true,
-}));
+// Use multer middleware to handle multipart/form-data with fields
+app.use(upload.fields([{ name: 'image', maxCount: 1 }]));
+
 app.use(express.json());
 
 // Serve uploaded images statically
