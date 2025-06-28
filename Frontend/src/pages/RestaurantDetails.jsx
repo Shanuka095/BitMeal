@@ -13,10 +13,7 @@ const RestaurantDetails = () => {
       setLoading(true);
       setError('');
       try {
-        const token = localStorage.getItem('token'); // Optional: Keep token for auth if needed later
-        const response = await axios.get(`http://localhost:3003/api/restaurants/public/${id}`, {
-          headers: token ? { Authorization: `Bearer ${token}` } : {},
-        });
+        const response = await axios.get(`http://localhost:3003/api/restaurants/public/${id}`);
         console.log('Frontend (RestaurantDetails) - Response:', response.data);
         setRestaurant(response.data);
       } catch (err) {
@@ -36,6 +33,13 @@ const RestaurantDetails = () => {
   return (
     <div className="p-6">
       <h1 className="text-3xl font-bold text-gray-800 mb-4">{restaurant.name}</h1>
+      {restaurant.imageUrl && (
+        <img
+          src={`http://localhost:3003/uploads/${restaurant.imageUrl}`}
+          alt={restaurant.name}
+          className="mb-4 w-64 h-64 object-cover rounded"
+        />
+      )}
       <p className="text-gray-600 mb-4"><strong>Address:</strong> {restaurant.address}</p>
       <h2 className="text-2xl font-semibold text-gray-800 mb-4">Menu</h2>
       {restaurant.menu && restaurant.menu.length > 0 ? (
@@ -45,6 +49,13 @@ const RestaurantDetails = () => {
               <p className="text-lg font-medium text-gray-800">{item.name}</p>
               <p className="text-gray-600">${item.price}</p>
               <p className="text-sm text-gray-500">{item.category}</p>
+              {item.imageUrl && (
+                <img
+                  src={`http://localhost:3003/uploads/${item.imageUrl}`}
+                  alt={item.name}
+                  className="mt-2 w-24 h-24 object-cover rounded"
+                />
+              )}
             </div>
           ))}
         </div>
