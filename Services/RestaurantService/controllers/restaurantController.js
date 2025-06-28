@@ -5,12 +5,14 @@ const Joi = require('joi');
 const restaurantSchema = Joi.object({
   name: Joi.string().min(3).max(100).required(),
   address: Joi.string().min(5).max(200).required(),
+  imageUrl: Joi.string().uri().optional().allow(''), // Validate image URL if provided
 });
 
 const menuItemSchema = Joi.object({
   name: Joi.string().min(3).max(100).required(),
   price: Joi.number().min(0).required(),
   category: Joi.string().min(2).max(50).required(),
+  imageUrl: Joi.string().uri().optional().allow(''), // Validate image URL if provided
 });
 
 // Customer: Get all restaurants (Public access)
@@ -86,8 +88,8 @@ const getMenuItem = async (req, res) => {
 // Admin: Create a restaurant
 const createRestaurant = async (req, res) => {
   try {
-    const { name, address } = req.body;
-    const { error } = restaurantSchema.validate({ name, address });
+    const { name, address, imageUrl } = req.body;
+    const { error } = restaurantSchema.validate({ name, address, imageUrl });
     if (error) {
       console.error('CreateRestaurant validation error:', error.details[0].message);
       return res.status(400).json({ error: error.details[0].message });
@@ -101,6 +103,7 @@ const createRestaurant = async (req, res) => {
     const restaurant = new Restaurant({
       name,
       address,
+      imageUrl,
       owner: req.user.userId,
     });
     await restaurant.save();
@@ -112,11 +115,11 @@ const createRestaurant = async (req, res) => {
   }
 };
 
-// Admin: Update a restaurant
+// Admin: Update a restaurant (including image)
 const updateRestaurant = async (req, res) => {
   try {
-    const { name, address } = req.body;
-    const { error } = restaurantSchema.validate({ name, address }, { stripUnknown: true });
+    const { name, address, imageUrl } = req.body;
+    const { error } = restaurantSchema.validate({ name, address, imageUrl }, { stripUnknown: true });
     if (error) {
       console.error('UpdateRestaurant validation error:', error.details[0].message);
       return res.status(400).json({ error: error.details[0].message });
@@ -129,7 +132,7 @@ const updateRestaurant = async (req, res) => {
 
     const restaurant = await Restaurant.findOneAndUpdate(
       { _id: req.params.id, owner: req.user.userId },
-      { name, address },
+      { name, address, imageUrl },
       { new: true, runValidators: true }
     );
     if (!restaurant) return res.status(404).json({ error: 'Restaurant not found or not owned by user' });
@@ -158,10 +161,11 @@ const deleteRestaurant = async (req, res) => {
   }
 };
 
-// Admin: Add a menu item
+// Admin: Add a menu item (including image)
 const addMenuItem = async (req, res) => {
   try {
-    const { error } = menuItemSchema.validate(req.body);
+    const { name, price, category, imageUrl } = req.body;
+    const { error } = menuItemSchema.validate({ name, price, category, imageUrl });
     if (error) {
       console.error('AddMenuItem validation error:', error.details[0].message);
       return res.status(400).json({ error: error.details[0].message });
@@ -175,7 +179,7 @@ const addMenuItem = async (req, res) => {
     const restaurant = await Restaurant.findOne({ _id: req.params.id, owner: req.user.userId });
     if (!restaurant) return res.status(404).json({ error: 'Restaurant not found or not owned by user' });
 
-    restaurant.menu.push(req.body);
+    restaurant.menu.push({ name, price, category, imageUrl });
     await restaurant.save();
     console.log('Menu item added to restaurant:', restaurant._id);
     res.status(201).json(restaurant.menu[restaurant.menu.length - 1]);
@@ -202,10 +206,11 @@ const getRestaurantDetails = async (req, res) => {
   }
 };
 
-// Admin: Update a menu item
+// Admin: Update a menu item (including image)
 const updateMenuItem = async (req, res) => {
   try {
-    const { error } = menuItemSchema.validate(req.body);
+    const { name, price, category, imageUrl } = req.body;
+    const { error } = menuItemSchema.validate({ name, price, category, imageUrl });
     if (error) {
       console.error('UpdateMenuItem validation error:', error.details[0].message);
       return res.status(400).json({ error: error.details[0].message });
@@ -222,7 +227,7 @@ const updateMenuItem = async (req, res) => {
     const menuItem = restaurant.menu.id(req.params.menuId);
     if (!menuItem) return res.status(404).json({ error: 'Menu item not found' });
 
-    Object.assign(menuItem, req.body);
+    Object.assign(menuItem, { name, price, category, imageUrl });
     await restaurant.save();
     console.log('Menu item updated:', req.params.menuId, 'for restaurant:', restaurant._id);
     res.json(menuItem);
@@ -246,7 +251,7 @@ const deleteMenuItem = async (req, res) => {
     const menuItem = restaurant.menu.id(req.params.menuId);
     if (!menuItem) return res.status(404).json({ error: 'Menu item not found' });
 
-    menuItem.deleteOne(); // Use .deleteOne() for Mongoose 5.x+ subdocuments
+    menuItem.deleteOne();
     await restaurant.save();
     console.log('Menu item deleted:', req.params.menuId, 'from restaurant:', restaurant._id);
     res.json({ message: 'Menu item deleted' });
@@ -258,7 +263,7 @@ const deleteMenuItem = async (req, res) => {
 
 module.exports = {
   getPublicRestaurants,
-  getPublicRestaurantDetails, // New function
+  getPublicRestaurantDetails,
   getAdminRestaurants,
   createRestaurant,
   updateRestaurant,
