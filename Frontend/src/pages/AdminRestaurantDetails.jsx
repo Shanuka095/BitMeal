@@ -51,7 +51,6 @@ const AdminRestaurantDetails = () => {
   };
 
   const handleUpdateMenuItem = (menuItem) => {
-    // Navigate to a new route or open a modal for updating (for simplicity, using a new route)
     navigate(`/admin/restaurant/${id}/menu/${menuItem._id}/edit`);
   };
 
@@ -111,6 +110,12 @@ const AdminRestaurantDetails = () => {
         </div>
       </div>
       <div className="space-y-6">
+        {restaurant.imageUrl && (
+          <div className="bg-gray-50 p-4 rounded-lg border border-gray-200">
+            <p className="text-gray-700"><strong className="text-gray-900">Image:</strong></p>
+            <img src={`http://localhost:3003/uploads/${restaurant.imageUrl}`} alt={restaurant.name} className="mt-2 w-64 h-64 object-cover rounded" />
+          </div>
+        )}
         <div className="bg-gray-50 p-4 rounded-lg border border-gray-200">
           <p className="text-gray-700"><strong className="text-gray-900">Address:</strong> {restaurant.address}</p>
         </div>
@@ -122,6 +127,9 @@ const AdminRestaurantDetails = () => {
                 <li key={item._id} className="text-gray-700 flex justify-between items-center">
                   <span>
                     {item.name} - <span className="font-semibold">${item.price}</span> ({item.category})
+                    {item.imageUrl && (
+                      <img src={`http://localhost:3003/uploads/${item.imageUrl}`} alt={item.name} className="ml-4 w-24 h-24 object-cover rounded" />
+                    )}
                   </span>
                   <div className="space-x-2">
                     <button

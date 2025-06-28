@@ -5,9 +5,16 @@ import axios from 'axios';
 const AddMenuItem = () => {
   const { id } = useParams();
   const navigate = useNavigate();
-  const [form, setForm] = useState({ name: '', price: '', category: '' });
+  const [form, setForm] = useState({ name: '', price: '', category: '', image: null });
   const [error, setError] = useState('');
   const [loading, setLoading] = useState(false);
+  const [preview, setPreview] = useState(null);
+
+  const handleFileChange = (e) => {
+    const file = e.target.files[0];
+    setForm({ ...form, image: file });
+    setPreview(file ? URL.createObjectURL(file) : null);
+  };
 
   const handleSubmit = async (e) => {
     e.preventDefault();
@@ -16,11 +23,21 @@ const AddMenuItem = () => {
     try {
       const token = localStorage.getItem('token');
       if (!token) throw new Error('No authentication token');
-      await axios.post(`http://localhost:3003/api/restaurants/${id}/menu`, form, {
-        headers: { Authorization: `Bearer ${token}` },
+
+      const formData = new FormData();
+      formData.append('name', form.name);
+      formData.append('price', form.price);
+      formData.append('category', form.category);
+      if (form.image) formData.append('image', form.image);
+
+      await axios.post(`http://localhost:3003/api/restaurants/${id}/menu`, formData, {
+        headers: { 
+          Authorization: `Bearer ${token}`,
+          'Content-Type': 'multipart/form-data',
+        },
       });
       console.log('Frontend (AddMenuItem) - Menu item added successfully for restaurant ID:', id);
-      navigate(`/admin/restaurant/${id}`); // Navigate back to restaurant details
+      navigate(`/admin/restaurant/${id}`);
     } catch (err) {
       setError(err.response?.data?.error || 'Failed to add menu item');
       console.error('Frontend (AddMenuItem) - Error:', err.response ? err.response.data : err);
@@ -70,6 +87,19 @@ const AddMenuItem = () => {
             className="w-full p-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-[#ffaa00]"
             required
           />
+        </div>
+        <div>
+          <label htmlFor="image" className="block text-sm font-medium text-gray-700 mb-1">Menu Item Image</label>
+          <input
+            type="file"
+            id="image"
+            accept="image/*"
+            onChange={handleFileChange}
+            className="w-full p-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-[#ffaa00]"
+          />
+          {preview && (
+            <img src={preview} alt="Preview" className="mt-2 w-32 h-32 object-cover rounded" />
+          )}
         </div>
         <button
           type="submit"
