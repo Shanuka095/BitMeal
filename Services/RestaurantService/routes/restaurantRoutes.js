@@ -23,7 +23,7 @@ router.get('/public/:id', getPublicRestaurantDetails);
 router.get('/', authenticate, restrictTo('restaurant_admin'), getAdminRestaurants);
 router.get('/:id', authenticate, restrictTo('restaurant_admin'), getRestaurantDetails);
 router.get('/:id/menu/:menuId', authenticate, restrictTo('restaurant_admin'), getMenuItem);
-router.post('/', authenticate, restrictTo('restaurant_admin'), createRestaurant);
+router.post('/', authenticate, restrictTo('restaurant_admin'), createRestaurant); // Updated middleware handled in index.js
 router.put('/:id', authenticate, restrictTo('restaurant_admin'), updateRestaurant);
 router.delete('/:id', authenticate, restrictTo('restaurant_admin'), deleteRestaurant);
 router.post('/:id/menu', authenticate, restrictTo('restaurant_admin'), addMenuItem);
