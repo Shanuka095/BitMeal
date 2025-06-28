@@ -2,7 +2,7 @@ const express = require('express');
 const router = express.Router();
 const {
   getPublicRestaurants,
-  getPublicRestaurantDetails, // New function
+  getPublicRestaurantDetails,
   getAdminRestaurants,
   createRestaurant,
   updateRestaurant,
@@ -17,7 +17,7 @@ const { authenticate, restrictTo } = require('../middleware/restrictAccess');
 
 // Customer: Public access
 router.get('/public', getPublicRestaurants);
-router.get('/public/:id', getPublicRestaurantDetails); // New route
+router.get('/public/:id', getPublicRestaurantDetails);
 
 // Admin: Protected routes
 router.get('/', authenticate, restrictTo('restaurant_admin'), getAdminRestaurants);
