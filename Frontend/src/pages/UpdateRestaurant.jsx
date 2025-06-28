@@ -6,10 +6,11 @@ import { FaArrowLeft } from 'react-icons/fa';
 const UpdateRestaurant = () => {
   const { id } = useParams();
   const navigate = useNavigate();
-  const [form, setForm] = useState({ name: '', address: '' });
+  const [form, setForm] = useState({ name: '', address: '', image: null });
   const [error, setError] = useState('');
   const [loading, setLoading] = useState(true);
   const [submitting, setSubmitting] = useState(false);
+  const [preview, setPreview] = useState(null);
 
   useEffect(() => {
     const fetchRestaurant = async () => {
@@ -21,8 +22,8 @@ const UpdateRestaurant = () => {
         const response = await axios.get(`http://localhost:3003/api/restaurants/${id}`, {
           headers: { Authorization: `Bearer ${token}` },
         });
-        setForm({ name: response.data.name, address: response.data.address });
-        console.log('Frontend (UpdateRestaurant): Fetched restaurant for update:', response.data.name);
+        setForm({ name: response.data.name, address: response.data.address, image: null });
+        setPreview(response.data.imageUrl || null);
       } catch (err) {
         setError(err.response?.data?.error || 'Failed to fetch restaurant for update');
         console.error('Frontend (UpdateRestaurant) - Fetch error:', err.response ? err.response.data : err);
@@ -33,6 +34,12 @@ const UpdateRestaurant = () => {
     fetchRestaurant();
   }, [id]);
 
+  const handleFileChange = (e) => {
+    const file = e.target.files[0];
+    setForm({ ...form, image: file });
+    setPreview(file ? URL.createObjectURL(file) : form.imageUrl);
+  };
+
   const handleSubmit = async (e) => {
     e.preventDefault();
     setSubmitting(true);
@@ -40,11 +47,20 @@ const UpdateRestaurant = () => {
     try {
       const token = localStorage.getItem('token');
       if (!token) throw new Error('No authentication token');
-      await axios.put(`http://localhost:3003/api/restaurants/${id}`, form, {
-        headers: { Authorization: `Bearer ${token}` },
+
+      const formData = new FormData();
+      formData.append('name', form.name);
+      formData.append('address', form.address);
+      if (form.image) formData.append('image', form.image);
+
+      await axios.put(`http://localhost:3003/api/restaurants/${id}`, formData, {
+        headers: { 
+          Authorization: `Bearer ${token}`,
+          'Content-Type': 'multipart/form-data',
+        },
       });
       console.log('Frontend (UpdateRestaurant) - Restaurant updated successfully:', form.name);
-      navigate(`/admin/restaurant/${id}`); // Navigate back to restaurant details
+      navigate(`/admin/restaurant/${id}`);
     } catch (err) {
       setError(err.response?.data?.error || 'Failed to update restaurant');
       console.error('Frontend (UpdateRestaurant) - Update error:', err.response ? err.response.data : err);
@@ -80,7 +96,7 @@ const UpdateRestaurant = () => {
             type="text"
             id="name"
             value={form.name}
-            onChange={e => setForm({ ...form, name: e.target.value })}
+            onChange={(e) => setForm({ ...form, name: e.target.value })}
             placeholder="Name"
             className="w-full p-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-[#ffaa00]"
             required
@@ -92,11 +108,24 @@ const UpdateRestaurant = () => {
             type="text"
             id="address"
             value={form.address}
-            onChange={e => setForm({ ...form, address: e.target.value })}
+            onChange={(e) => setForm({ ...form, address: e.target.value })}
             placeholder="Address"
             className="w-full p-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-[#ffaa00]"
             required
           />
+        </div>
+        <div>
+          <label htmlFor="image" className="block text-sm font-medium text-gray-700 mb-1">Restaurant Image</label>
+          <input
+            type="file"
+            id="image"
+            accept="image/*"
+            onChange={handleFileChange}
+            className="w-full p-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-[#ffaa00]"
+          />
+          {preview && (
+            <img src={preview} alt="Preview" className="mt-2 w-32 h-32 object-cover rounded" />
+          )}
         </div>
         <button
           type="submit"
