@@ -5,14 +5,14 @@ const Joi = require('joi');
 const restaurantSchema = Joi.object({
   name: Joi.string().min(3).max(100).required(),
   address: Joi.string().min(5).max(200).required(),
-  imageUrl: Joi.string().uri().optional().allow(''), // Validate image URL if provided
+  imageUrl: Joi.string().uri().optional().allow(''),
 });
 
 const menuItemSchema = Joi.object({
   name: Joi.string().min(3).max(100).required(),
   price: Joi.number().min(0).required(),
   category: Joi.string().min(2).max(50).required(),
-  imageUrl: Joi.string().uri().optional().allow(''), // Validate image URL if provided
+  imageUrl: Joi.string().uri().optional().allow(''),
 });
 
 // Customer: Get all restaurants (Public access)
@@ -48,8 +48,8 @@ const getAdminRestaurants = async (req, res) => {
   try {
     console.log('getAdminRestaurants - req.user:', req.user);
     if (!req.user || !req.user.userId) {
-      console.warn('getAdminRestaurants called without req.user.userId. Token decode issue or missing user.');
-      return res.status(401).json({ error: 'Unauthorized: User ID not found in token payload' });
+      console.warn('getAdminRestaurants called without req.user.userId.');
+      return res.status(401).json({ error: 'Unauthorized' });
     }
     console.log('Fetching restaurants for userId:', req.user.userId);
     const restaurants = await Restaurant.find({ owner: req.user.userId }).lean();
@@ -67,8 +67,8 @@ const getAdminRestaurants = async (req, res) => {
 const getMenuItem = async (req, res) => {
   try {
     if (!req.user || !req.user.userId) {
-      console.warn('getMenuItem called without req.user.userId. Token decode issue or missing user.');
-      return res.status(401).json({ error: 'Unauthorized: User ID not found in token payload' });
+      console.warn('getMenuItem called without req.user.userId.');
+      return res.status(401).json({ error: 'Unauthorized' });
     }
 
     const restaurant = await Restaurant.findOne({ _id: req.params.id, owner: req.user.userId });
@@ -88,7 +88,11 @@ const getMenuItem = async (req, res) => {
 // Admin: Create a restaurant
 const createRestaurant = async (req, res) => {
   try {
-    const { name, address, imageUrl } = req.body;
+    const { name, address } = req.body;
+    const imageUrl = req.file ? req.file.filename : '';
+    console.log('Request body:', req.body);
+    console.log('Request file:', req.file);
+    console.log('Generated imageUrl:', imageUrl);
     const { error } = restaurantSchema.validate({ name, address, imageUrl });
     if (error) {
       console.error('CreateRestaurant validation error:', error.details[0].message);
@@ -96,8 +100,8 @@ const createRestaurant = async (req, res) => {
     }
 
     if (!req.user || !req.user.userId) {
-      console.warn('CreateRestaurant called without req.user.userId. Token decode issue or missing user.');
-      return res.status(401).json({ error: 'Unauthorized: User ID not found in token payload' });
+      console.warn('CreateRestaurant called without req.user.userId.');
+      return res.status(401).json({ error: 'Unauthorized' });
     }
 
     const restaurant = new Restaurant({
@@ -107,7 +111,7 @@ const createRestaurant = async (req, res) => {
       owner: req.user.userId,
     });
     await restaurant.save();
-    console.log('Restaurant created:', restaurant.name, 'by owner:', req.user.userId);
+    console.log('Restaurant created:', name, 'by owner:', req.user.userId, 'with imageUrl:', imageUrl);
     res.status(201).json(restaurant);
   } catch (err) {
     console.error('Error in createRestaurant:', err);
@@ -118,7 +122,8 @@ const createRestaurant = async (req, res) => {
 // Admin: Update a restaurant (including image)
 const updateRestaurant = async (req, res) => {
   try {
-    const { name, address, imageUrl } = req.body;
+    const { name, address } = req.body;
+    const imageUrl = req.file ? req.file.filename : req.body.imageUrl || '';
     const { error } = restaurantSchema.validate({ name, address, imageUrl }, { stripUnknown: true });
     if (error) {
       console.error('UpdateRestaurant validation error:', error.details[0].message);
@@ -126,8 +131,8 @@ const updateRestaurant = async (req, res) => {
     }
 
     if (!req.user || !req.user.userId) {
-      console.warn('UpdateRestaurant called without req.user.userId. Token decode issue or missing user.');
-      return res.status(401).json({ error: 'Unauthorized: User ID not found in token payload' });
+      console.warn('UpdateRestaurant called without req.user.userId.');
+      return res.status(401).json({ error: 'Unauthorized' });
     }
 
     const restaurant = await Restaurant.findOneAndUpdate(
@@ -148,8 +153,8 @@ const updateRestaurant = async (req, res) => {
 const deleteRestaurant = async (req, res) => {
   try {
     if (!req.user || !req.user.userId) {
-      console.warn('DeleteRestaurant called without req.user.userId. Token decode issue or missing user.');
-      return res.status(401).json({ error: 'Unauthorized: User ID not found in token payload' });
+      console.warn('DeleteRestaurant called without req.user.userId.');
+      return res.status(401).json({ error: 'Unauthorized' });
     }
     const restaurant = await Restaurant.findOneAndDelete({ _id: req.params.id, owner: req.user.userId });
     if (!restaurant) return res.status(404).json({ error: 'Restaurant not found or not owned by user' });
@@ -164,7 +169,8 @@ const deleteRestaurant = async (req, res) => {
 // Admin: Add a menu item (including image)
 const addMenuItem = async (req, res) => {
   try {
-    const { name, price, category, imageUrl } = req.body;
+    const { name, price, category } = req.body;
+    const imageUrl = req.file ? req.file.filename : '';
     const { error } = menuItemSchema.validate({ name, price, category, imageUrl });
     if (error) {
       console.error('AddMenuItem validation error:', error.details[0].message);
@@ -172,8 +178,8 @@ const addMenuItem = async (req, res) => {
     }
 
     if (!req.user || !req.user.userId) {
-      console.warn('AddMenuItem called without req.user.userId. Token decode issue or missing user.');
-      return res.status(401).json({ error: 'Unauthorized: User ID not found in token payload' });
+      console.warn('AddMenuItem called without req.user.userId.');
+      return res.status(401).json({ error: 'Unauthorized' });
     }
 
     const restaurant = await Restaurant.findOne({ _id: req.params.id, owner: req.user.userId });
@@ -193,8 +199,8 @@ const addMenuItem = async (req, res) => {
 const getRestaurantDetails = async (req, res) => {
   try {
     if (!req.user || !req.user.userId) {
-      console.warn('getRestaurantDetails called without req.user.userId. Token decode issue or missing user.');
-      return res.status(401).json({ error: 'Unauthorized: User ID not found in token payload' });
+      console.warn('getRestaurantDetails called without req.user.userId.');
+      return res.status(401).json({ error: 'Unauthorized' });
     }
     const restaurant = await Restaurant.findOne({ _id: req.params.id, owner: req.user.userId }).lean();
     if (!restaurant) return res.status(404).json({ error: 'Restaurant not found or not owned by user' });
@@ -209,7 +215,8 @@ const getRestaurantDetails = async (req, res) => {
 // Admin: Update a menu item (including image)
 const updateMenuItem = async (req, res) => {
   try {
-    const { name, price, category, imageUrl } = req.body;
+    const { name, price, category } = req.body;
+    const imageUrl = req.file ? req.file.filename : req.body.imageUrl || '';
     const { error } = menuItemSchema.validate({ name, price, category, imageUrl });
     if (error) {
       console.error('UpdateMenuItem validation error:', error.details[0].message);
@@ -217,8 +224,8 @@ const updateMenuItem = async (req, res) => {
     }
 
     if (!req.user || !req.user.userId) {
-      console.warn('UpdateMenuItem called without req.user.userId. Token decode issue or missing user.');
-      return res.status(401).json({ error: 'Unauthorized: User ID not found in token payload' });
+      console.warn('UpdateMenuItem called without req.user.userId.');
+      return res.status(401).json({ error: 'Unauthorized' });
     }
 
     const restaurant = await Restaurant.findOne({ _id: req.params.id, owner: req.user.userId });
@@ -241,8 +248,8 @@ const updateMenuItem = async (req, res) => {
 const deleteMenuItem = async (req, res) => {
   try {
     if (!req.user || !req.user.userId) {
-      console.warn('DeleteMenuItem called without req.user.userId. Token decode issue or missing user.');
-      return res.status(401).json({ error: 'Unauthorized: User ID not found in token payload' });
+      console.warn('DeleteMenuItem called without req.user.userId.');
+      return res.status(401).json({ error: 'Unauthorized' });
     }
 
     const restaurant = await Restaurant.findOne({ _id: req.params.id, owner: req.user.userId });
