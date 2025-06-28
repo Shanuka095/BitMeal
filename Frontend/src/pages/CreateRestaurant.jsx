@@ -8,17 +8,21 @@ const CreateRestaurant = () => {
   const [error, setError] = useState('');
   const [loading, setLoading] = useState(false);
   const [preview, setPreview] = useState(null);
+  const [success, setSuccess] = useState('');
 
   const handleFileChange = (e) => {
     const file = e.target.files[0];
     setForm({ ...form, image: file });
     setPreview(file ? URL.createObjectURL(file) : null);
+    console.log('Selected file:', file); // Debug log for file selection
   };
 
   const handleSubmit = async (e) => {
     e.preventDefault();
     setLoading(true);
     setError('');
+    setSuccess('');
+
     try {
       const token = localStorage.getItem('token');
       if (!token) throw new Error('No authentication token');
@@ -26,19 +30,31 @@ const CreateRestaurant = () => {
       const formData = new FormData();
       formData.append('name', form.name);
       formData.append('address', form.address);
-      if (form.image) formData.append('image', form.image);
+      if (form.image) {
+        formData.append('image', form.image);
+        console.log('Appending image:', form.image.name); // Debug log for image upload
+      }
 
       const response = await axios.post('http://localhost:3003/api/restaurants', formData, {
-        headers: { 
+        headers: {
           Authorization: `Bearer ${token}`,
-          'Content-Type': 'multipart/form-data',
+          // Remove manual Content-Type to let FormData handle it
         },
       });
-      console.log('Frontend (CreateRestaurant) - Restaurant created successfully:', response.data.name);
-      navigate('/admin');
+
+      console.log('Frontend (CreateRestaurant) - Restaurant created successfully:', response.data);
+      setSuccess(`Restaurant created successfully: ${response.data.name}`);
+      setForm({ name: '', address: '', image: null }); // Clear form
+      setPreview(null); // Clear preview
+      setTimeout(() => navigate('/admin'), 1000); // Delay navigation for user feedback
     } catch (err) {
-      setError(err.response?.data?.error || 'Failed to create restaurant');
-      console.error('Frontend (CreateRestaurant) - Error:', err.response ? err.response.data : err);
+      const errorMsg = err.response?.data?.error || err.message || 'Failed to create restaurant';
+      setError(errorMsg);
+      console.error('Frontend (CreateRestaurant) - Error:', {
+        message: errorMsg,
+        response: err.response?.data,
+        status: err.response?.status,
+      });
     } finally {
       setLoading(false);
     }
@@ -48,6 +64,7 @@ const CreateRestaurant = () => {
     <section className="max-w-md mx-auto bg-white p-6 rounded-lg shadow-md">
       <h2 className="text-2xl font-bold text-gray-800 mb-4 border-b pb-2">Create New Restaurant</h2>
       {error && <p className="text-red-600 mb-4 font-semibold">{error}</p>}
+      {success && <p className="text-green-600 mb-4 font-semibold">{success}</p>}
       <form onSubmit={handleSubmit} className="space-y-4">
         <div>
           <label htmlFor="name" className="block text-sm font-medium text-gray-700 mb-1">Restaurant Name</label>
