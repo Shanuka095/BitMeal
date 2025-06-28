@@ -6,10 +6,11 @@ import { FaArrowLeft } from 'react-icons/fa';
 const UpdateMenuItem = () => {
   const { id, menuId } = useParams();
   const navigate = useNavigate();
-  const [form, setForm] = useState({ name: '', price: '', category: '' });
+  const [form, setForm] = useState({ name: '', price: '', category: '', image: null });
   const [error, setError] = useState('');
   const [loading, setLoading] = useState(true);
   const [submitting, setSubmitting] = useState(false);
+  const [preview, setPreview] = useState(null);
 
   useEffect(() => {
     const fetchMenuItem = async () => {
@@ -21,8 +22,8 @@ const UpdateMenuItem = () => {
         const response = await axios.get(`http://localhost:3003/api/restaurants/${id}/menu/${menuId}`, {
           headers: { Authorization: `Bearer ${token}` },
         });
-        setForm({ name: response.data.name, price: response.data.price, category: response.data.category });
-        console.log('Frontend (UpdateMenuItem): Fetched menu item for update:', response.data.name);
+        setForm({ name: response.data.name, price: response.data.price, category: response.data.category, image: null });
+        setPreview(response.data.imageUrl || null);
       } catch (err) {
         setError(err.response?.data?.error || 'Failed to fetch menu item for update');
         console.error('Frontend (UpdateMenuItem) - Fetch error:', err.response ? err.response.data : err);
@@ -33,6 +34,12 @@ const UpdateMenuItem = () => {
     fetchMenuItem();
   }, [id, menuId]);
 
+  const handleFileChange = (e) => {
+    const file = e.target.files[0];
+    setForm({ ...form, image: file });
+    setPreview(file ? URL.createObjectURL(file) : form.imageUrl);
+  };
+
   const handleSubmit = async (e) => {
     e.preventDefault();
     setSubmitting(true);
@@ -40,8 +47,18 @@ const UpdateMenuItem = () => {
     try {
       const token = localStorage.getItem('token');
       if (!token) throw new Error('No authentication token');
-      await axios.put(`http://localhost:3003/api/restaurants/${id}/menu/${menuId}`, form, {
-        headers: { Authorization: `Bearer ${token}` },
+
+      const formData = new FormData();
+      formData.append('name', form.name);
+      formData.append('price', form.price);
+      formData.append('category', form.category);
+      if (form.image) formData.append('image', form.image);
+
+      await axios.put(`http://localhost:3003/api/restaurants/${id}/menu/${menuId}`, formData, {
+        headers: { 
+          Authorization: `Bearer ${token}`,
+          'Content-Type': 'multipart/form-data',
+        },
       });
       console.log('Frontend (UpdateMenuItem) - Menu item updated successfully:', form.name);
       navigate(`/admin/restaurant/${id}`);
@@ -80,7 +97,7 @@ const UpdateMenuItem = () => {
             type="text"
             id="name"
             value={form.name}
-            onChange={e => setForm({ ...form, name: e.target.value })}
+            onChange={(e) => setForm({ ...form, name: e.target.value })}
             placeholder="Enter item name"
             className="w-full p-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-[#ffaa00]"
             required
@@ -92,7 +109,7 @@ const UpdateMenuItem = () => {
             type="number"
             id="price"
             value={form.price}
-            onChange={e => setForm({ ...form, price: e.target.value })}
+            onChange={(e) => setForm({ ...form, price: e.target.value })}
             placeholder="Enter price"
             className="w-full p-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-[#ffaa00]"
             step="0.01"
@@ -105,11 +122,24 @@ const UpdateMenuItem = () => {
             type="text"
             id="category"
             value={form.category}
-            onChange={e => setForm({ ...form, category: e.target.value })}
+            onChange={(e) => setForm({ ...form, category: e.target.value })}
             placeholder="Enter category"
             className="w-full p-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-[#ffaa00]"
             required
           />
+        </div>
+        <div>
+          <label htmlFor="image" className="block text-sm font-medium text-gray-700 mb-1">Menu Item Image</label>
+          <input
+            type="file"
+            id="image"
+            accept="image/*"
+            onChange={handleFileChange}
+            className="w-full p-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-[#ffaa00]"
+          />
+          {preview && (
+            <img src={preview} alt="Preview" className="mt-2 w-32 h-32 object-cover rounded" />
+          )}
         </div>
         <button
           type="submit"
