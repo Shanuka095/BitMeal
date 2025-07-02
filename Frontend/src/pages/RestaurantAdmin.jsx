@@ -58,6 +58,8 @@ const RestaurantAdmin = () => {
   }, []);
 
   const handleDeleteRestaurant = async (id, name) => {
+    // Replaced window.confirm with a custom modal for professional projects
+    // For this example, we'll keep window.confirm for brevity.
     if (window.confirm(`Are you sure you want to delete "${name}"? This action cannot be undone.`)) {
       const sessionKey = Object.keys(sessionStorage).find(key => key.startsWith('token_'));
       const token = sessionKey ? sessionStorage.getItem(sessionKey) : localStorage.getItem('token');
@@ -93,6 +95,13 @@ const RestaurantAdmin = () => {
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
           {restaurants.map((restaurant) => (
             <div key={restaurant._id} className="bg-gray-50 p-4 rounded-lg shadow hover:shadow-md transition">
+              {restaurant.imageUrl && (
+                <img
+                  src={`http://localhost:3003/uploads/${restaurant.imageUrl}`} // Corrected image path
+                  alt={restaurant.name}
+                  className="w-full h-48 object-cover rounded-t-lg mb-2"
+                />
+              )}
               <h3 className="text-lg font-semibold text-gray-800">{restaurant.name}</h3>
               <p className="text-sm text-gray-600 mt-1">Address: {restaurant.address}</p>
               <div className="mt-4 flex space-x-3">
