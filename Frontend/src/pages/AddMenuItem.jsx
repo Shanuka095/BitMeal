@@ -33,7 +33,7 @@ const AddMenuItem = () => {
       await axios.post(`http://localhost:3003/api/restaurants/${id}/menu`, formData, {
         headers: { 
           Authorization: `Bearer ${token}`,
-          'Content-Type': 'multipart/form-data',
+          'Content-Type': 'multipart/form-data', // Important for FormData
         },
       });
       console.log('Frontend (AddMenuItem) - Menu item added successfully for restaurant ID:', id);
