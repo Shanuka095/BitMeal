@@ -10,20 +10,25 @@ const UpdateRestaurant = () => {
   const [error, setError] = useState('');
   const [loading, setLoading] = useState(true);
   const [submitting, setSubmitting] = useState(false);
-  const [preview, setPreview] = useState(null); // Stores the URL for the image preview
+  const [preview, setPreview] = useState(null);
 
   useEffect(() => {
     const fetchRestaurant = async () => {
       setLoading(true);
       setError('');
+      // Get token from sessionStorage
+      const sessionKey = Object.keys(sessionStorage).find(key => key.startsWith('token_'));
+      const token = sessionKey ? sessionStorage.getItem(sessionKey) : null;
+      if (!token) {
+        setError('No authentication token found. Please log in.');
+        setLoading(false);
+        return;
+      }
       try {
-        const token = localStorage.getItem('token');
-        if (!token) throw new Error('No authentication token');
         const response = await axios.get(`http://localhost:3003/api/restaurants/${id}`, {
           headers: { Authorization: `Bearer ${token}` },
         });
         setForm({ name: response.data.name, address: response.data.address, image: null });
-        // Construct the full URL for the existing image preview
         setPreview(response.data.imageUrl ? `http://localhost:3003/uploads/${response.data.imageUrl}` : null);
       } catch (err) {
         setError(err.response?.data?.error || 'Failed to fetch restaurant for update');
@@ -38,8 +43,6 @@ const UpdateRestaurant = () => {
   const handleFileChange = (e) => {
     const file = e.target.files[0];
     setForm({ ...form, image: file });
-    // If a new file is selected, create a local URL for its preview
-    // Otherwise, keep the existing preview (which would be the full URL from backend)
     setPreview(file ? URL.createObjectURL(file) : preview);
   };
 
@@ -48,31 +51,33 @@ const UpdateRestaurant = () => {
     setSubmitting(true);
     setError('');
     try {
-      const token = localStorage.getItem('token');
-      if (!token) throw new Error('No authentication token');
+      // Get token from sessionStorage
+      const sessionKey = Object.keys(sessionStorage).find(key => key.startsWith('token_'));
+      const token = sessionKey ? sessionStorage.getItem(sessionKey) : null;
+      if (!token) {
+        setError('No authentication token found. Please log in.');
+        setSubmitting(false);
+        return;
+      }
 
       const formData = new FormData();
       formData.append('name', form.name);
       formData.append('address', form.address);
       if (form.image) {
-        // Only append the new image file if one was selected
         formData.append('image', form.image);
       } else if (preview && !preview.startsWith('blob:')) {
-        // If no new image, but there was an existing image (not a blob URL from a new selection),
-        // send its filename back to the server to retain it.
-        // We extract the filename from the full preview URL.
         const existingFilename = preview.split('/').pop();
         formData.append('imageUrl', existingFilename);
       }
 
       await axios.put(`http://localhost:3003/api/restaurants/${id}`, formData, {
-        headers: { 
+        headers: {
           Authorization: `Bearer ${token}`,
-          'Content-Type': 'multipart/form-data', // Important for FormData
+          'Content-Type': 'multipart/form-data',
         },
       });
       console.log('Frontend (UpdateRestaurant) - Restaurant updated successfully:', form.name);
-      navigate(`/admin/restaurant/${id}`); // Navigate back to details page
+      navigate(`/admin/restaurant/${id}`);
     } catch (err) {
       setError(err.response?.data?.error || 'Failed to update restaurant');
       console.error('Frontend (UpdateRestaurant) - Update error:', err.response ? err.response.data : err);
