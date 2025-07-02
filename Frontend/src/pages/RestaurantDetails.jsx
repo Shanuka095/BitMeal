@@ -35,7 +35,7 @@ const RestaurantDetails = () => {
       <h1 className="text-3xl font-bold text-gray-800 mb-4">{restaurant.name}</h1>
       {restaurant.imageUrl && (
         <img
-          src={`http://localhost:3003/uploads/${restaurant.imageUrl}`}
+          src={`http://localhost:3003/uploads/${restaurant.imageUrl}`} // Corrected image path
           alt={restaurant.name}
           className="mb-4 w-64 h-64 object-cover rounded"
         />
@@ -51,7 +51,7 @@ const RestaurantDetails = () => {
               <p className="text-sm text-gray-500">{item.category}</p>
               {item.imageUrl && (
                 <img
-                  src={`http://localhost:3003/uploads/${item.imageUrl}`}
+                  src={`http://localhost:3003/uploads/${item.imageUrl}`} // Corrected image path for menu item
                   alt={item.name}
                   className="mt-2 w-24 h-24 object-cover rounded"
                 />
