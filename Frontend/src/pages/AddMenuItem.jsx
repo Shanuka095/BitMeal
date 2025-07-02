@@ -10,7 +10,6 @@ const AddMenuItem = () => {
   const [loading, setLoading] = useState(false);
   const [preview, setPreview] = useState(null);
 
-  // Predefined categories for the dropdown
   const categories = [
     'Appetizers',
     'Main Courses',
@@ -20,7 +19,7 @@ const AddMenuItem = () => {
     'Salads',
     'Breakfast',
     'Snacks',
-    'Other' // Added 'Other' for flexibility
+    'Other'
   ];
 
   const handleFileChange = (e) => {
@@ -34,8 +33,14 @@ const AddMenuItem = () => {
     setLoading(true);
     setError('');
     try {
-      const token = localStorage.getItem('token');
-      if (!token) throw new Error('No authentication token');
+      // Get token from sessionStorage
+      const sessionKey = Object.keys(sessionStorage).find(key => key.startsWith('token_'));
+      const token = sessionKey ? sessionStorage.getItem(sessionKey) : null;
+      if (!token) {
+        setError('No authentication token found. Please log in.');
+        setLoading(false);
+        return;
+      }
 
       const formData = new FormData();
       formData.append('name', form.name);
