@@ -10,7 +10,7 @@ const UpdateMenuItem = () => {
   const [error, setError] = useState('');
   const [loading, setLoading] = useState(true);
   const [submitting, setSubmitting] = useState(false);
-  const [preview, setPreview] = useState(null);
+  const [preview, setPreview] = useState(null); // Stores the URL for the image preview
 
   useEffect(() => {
     const fetchMenuItem = async () => {
@@ -23,7 +23,8 @@ const UpdateMenuItem = () => {
           headers: { Authorization: `Bearer ${token}` },
         });
         setForm({ name: response.data.name, price: response.data.price, category: response.data.category, image: null });
-        setPreview(response.data.imageUrl || null);
+        // Construct the full URL for the existing image preview
+        setPreview(response.data.imageUrl ? `http://localhost:3003/uploads/${response.data.imageUrl}` : null);
       } catch (err) {
         setError(err.response?.data?.error || 'Failed to fetch menu item for update');
         console.error('Frontend (UpdateMenuItem) - Fetch error:', err.response ? err.response.data : err);
@@ -37,7 +38,9 @@ const UpdateMenuItem = () => {
   const handleFileChange = (e) => {
     const file = e.target.files[0];
     setForm({ ...form, image: file });
-    setPreview(file ? URL.createObjectURL(file) : form.imageUrl);
+    // If a new file is selected, create a local URL for its preview
+    // Otherwise, keep the existing preview (which would be the full URL from backend)
+    setPreview(file ? URL.createObjectURL(file) : preview);
   };
 
   const handleSubmit = async (e) => {
@@ -52,12 +55,21 @@ const UpdateMenuItem = () => {
       formData.append('name', form.name);
       formData.append('price', form.price);
       formData.append('category', form.category);
-      if (form.image) formData.append('image', form.image);
+      if (form.image) {
+        // Only append the new image file if one was selected
+        formData.append('image', form.image);
+      } else if (preview && !preview.startsWith('blob:')) {
+        // If no new image, but there was an existing image (not a blob URL from a new selection),
+        // send its filename back to the server to retain it.
+        // We extract the filename from the full preview URL.
+        const existingFilename = preview.split('/').pop();
+        formData.append('imageUrl', existingFilename);
+      }
 
       await axios.put(`http://localhost:3003/api/restaurants/${id}/menu/${menuId}`, formData, {
         headers: { 
           Authorization: `Bearer ${token}`,
-          'Content-Type': 'multipart/form-data',
+          'Content-Type': 'multipart/form-data', // Important for FormData
         },
       });
       console.log('Frontend (UpdateMenuItem) - Menu item updated successfully:', form.name);
