@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react';
 import axios from 'axios';
-import { format } from 'date-fns'; // For date formatting
+import { format } from 'date-fns';
 
 const CustomerOrders = () => {
   const [orders, setOrders] = useState([]);
@@ -11,14 +11,16 @@ const CustomerOrders = () => {
     const fetchOrders = async () => {
       setLoading(true);
       setError('');
-      try {
-        const token = localStorage.getItem('token');
-        if (!token) {
-          setError('No authentication token found. Please log in.');
-          setLoading(false);
-          return;
-        }
+      // Get token from sessionStorage
+      const sessionKey = Object.keys(sessionStorage).find(key => key.startsWith('token_'));
+      const token = sessionKey ? sessionStorage.getItem(sessionKey) : null;
+      if (!token) {
+        setError('No authentication token found. Please log in.');
+        setLoading(false);
+        return;
+      }
 
+      try {
         const response = await axios.get('http://localhost:3000/api/orders/my-orders', {
           headers: { Authorization: `Bearer ${token}` },
         });
