@@ -1,6 +1,5 @@
 import { Outlet, useLocation, useNavigate } from 'react-router-dom';
-import { FaUtensils, FaSignOutAlt } from 'react-icons/fa';
-import jwtDecode from 'jwt-decode';
+import { FaUtensils, FaSignOutAlt, FaClipboardList } from 'react-icons/fa'; // Added FaClipboardList
 
 const AdminLayout = () => {
   const location = useLocation();
@@ -8,6 +7,12 @@ const AdminLayout = () => {
 
   const handleLogout = () => {
     localStorage.removeItem('token');
+    // Also remove any session-specific tokens if they exist
+    Object.keys(sessionStorage).forEach(key => {
+      if (key.startsWith('token_')) {
+        sessionStorage.removeItem(key);
+      }
+    });
     navigate('/login');
   };
 
@@ -19,6 +24,7 @@ const AdminLayout = () => {
           <ul className="space-y-4">
             <li><button onClick={() => navigate('/admin')} className={`w-full text-left p-3 rounded-lg transition ${location.pathname === '/admin' ? 'bg-yellow-500 font-semibold' : 'hover:bg-yellow-400'}`}><FaUtensils className="inline mr-2" /> Overview</button></li>
             <li><button onClick={() => navigate('/admin/create-restaurant')} className={`w-full text-left p-3 rounded-lg transition ${location.pathname === '/admin/create-restaurant' ? 'bg-yellow-500 font-semibold' : 'hover:bg-yellow-400'}`}><FaUtensils className="inline mr-2" /> Add Restaurant</button></li>
+            <li><button onClick={() => navigate('/admin/orders')} className={`w-full text-left p-3 rounded-lg transition ${location.pathname === '/admin/orders' ? 'bg-yellow-500 font-semibold' : 'hover:bg-yellow-400'}`}><FaClipboardList className="inline mr-2" /> Manage Orders</button></li> {/* New "Manage Orders" link */}
             <li><button onClick={handleLogout} className="w-full text-left p-3 rounded-lg hover:bg-yellow-400 mt-6"><FaSignOutAlt className="inline mr-2" /> Logout</button></li>
           </ul>
         </nav>
