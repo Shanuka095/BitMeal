@@ -61,6 +61,24 @@ app.use('/api/restaurants', proxy('http://localhost:3003', {
     }
 }));
 
+// New: Proxy for OrderService
+app.use('/api/orders', proxy('http://localhost:3004', { // PORT for OrderService
+    proxyReqPathResolver: (req) => {
+        const newPath = `/api/orders${req.url.replace(/\/+$/, '')}`;
+        console.log(`Proxying ${req.method} request to OrderService: ${newPath}`);
+        return newPath;
+    },
+    proxyReqOptDecorator: (proxyReqOpts, srcReq) => {
+        proxyReqOpts.headers['Host'] = 'localhost:3004';
+        return proxyReqOpts;
+    },
+    proxyErrorHandler: (err, res) => {
+        console.error('Proxy error (OrderService):', err);
+        res.status(500).send('Proxy error');
+    }
+}));
+
+
 app.use((req, res) => {
     console.log(`Unhandled request: ${req.method} ${req.url}`);
     res.status(404).send('Not Found');
