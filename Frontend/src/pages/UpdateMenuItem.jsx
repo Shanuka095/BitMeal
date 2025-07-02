@@ -10,7 +10,20 @@ const UpdateMenuItem = () => {
   const [error, setError] = useState('');
   const [loading, setLoading] = useState(true);
   const [submitting, setSubmitting] = useState(false);
-  const [preview, setPreview] = useState(null); // Stores the URL for the image preview
+  const [preview, setPreview] = useState(null);
+
+  // Predefined categories for the dropdown
+  const categories = [
+    'Appetizers',
+    'Main Courses',
+    'Desserts',
+    'Beverages',
+    'Soups',
+    'Salads',
+    'Breakfast',
+    'Snacks',
+    'Other'
+  ];
 
   useEffect(() => {
     const fetchMenuItem = async () => {
@@ -22,8 +35,12 @@ const UpdateMenuItem = () => {
         const response = await axios.get(`http://localhost:3003/api/restaurants/${id}/menu/${menuId}`, {
           headers: { Authorization: `Bearer ${token}` },
         });
-        setForm({ name: response.data.name, price: response.data.price, category: response.data.category, image: null });
-        // Construct the full URL for the existing image preview
+        setForm({
+          name: response.data.name,
+          price: response.data.price,
+          category: response.data.category, // Set the category from fetched data
+          image: null
+        });
         setPreview(response.data.imageUrl ? `http://localhost:3003/uploads/${response.data.imageUrl}` : null);
       } catch (err) {
         setError(err.response?.data?.error || 'Failed to fetch menu item for update');
@@ -38,8 +55,6 @@ const UpdateMenuItem = () => {
   const handleFileChange = (e) => {
     const file = e.target.files[0];
     setForm({ ...form, image: file });
-    // If a new file is selected, create a local URL for its preview
-    // Otherwise, keep the existing preview (which would be the full URL from backend)
     setPreview(file ? URL.createObjectURL(file) : preview);
   };
 
@@ -56,20 +71,16 @@ const UpdateMenuItem = () => {
       formData.append('price', form.price);
       formData.append('category', form.category);
       if (form.image) {
-        // Only append the new image file if one was selected
         formData.append('image', form.image);
       } else if (preview && !preview.startsWith('blob:')) {
-        // If no new image, but there was an existing image (not a blob URL from a new selection),
-        // send its filename back to the server to retain it.
-        // We extract the filename from the full preview URL.
         const existingFilename = preview.split('/').pop();
         formData.append('imageUrl', existingFilename);
       }
 
       await axios.put(`http://localhost:3003/api/restaurants/${id}/menu/${menuId}`, formData, {
-        headers: { 
+        headers: {
           Authorization: `Bearer ${token}`,
-          'Content-Type': 'multipart/form-data', // Important for FormData
+          'Content-Type': 'multipart/form-data',
         },
       });
       console.log('Frontend (UpdateMenuItem) - Menu item updated successfully:', form.name);
@@ -87,11 +98,11 @@ const UpdateMenuItem = () => {
   };
 
   if (loading) {
-    return <section className="max-w-md mx-auto bg-white p-6 rounded-lg shadow-md"><p className="text-gray-600">Loading menu item data...</p></section>;
+    return <section className="max-w-md mx-auto bg-white p-6 rounded-lg shadow-xl"><p className="text-gray-600">Loading menu item data...</p></section>;
   }
 
   return (
-    <section className="max-w-md mx-auto bg-white p-6 rounded-lg shadow-md">
+    <section className="max-w-md mx-auto bg-white p-6 rounded-lg shadow-xl border border-gray-200">
       <div className="flex items-center mb-6 border-b-2 border-gray-200 pb-4">
         <button
           onClick={handleBack}
@@ -111,7 +122,7 @@ const UpdateMenuItem = () => {
             value={form.name}
             onChange={(e) => setForm({ ...form, name: e.target.value })}
             placeholder="Enter item name"
-            className="w-full p-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-[#ffaa00]"
+            className="w-full p-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-[#ffaa00]"
             required
           />
         </div>
@@ -123,22 +134,25 @@ const UpdateMenuItem = () => {
             value={form.price}
             onChange={(e) => setForm({ ...form, price: e.target.value })}
             placeholder="Enter price"
-            className="w-full p-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-[#ffaa00]"
+            className="w-full p-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-[#ffaa00]"
             step="0.01"
             required
           />
         </div>
         <div>
           <label htmlFor="category" className="block text-sm font-medium text-gray-700 mb-1">Category</label>
-          <input
-            type="text"
+          <select
             id="category"
             value={form.category}
             onChange={(e) => setForm({ ...form, category: e.target.value })}
-            placeholder="Enter category"
-            className="w-full p-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-[#ffaa00]"
+            className="w-full p-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-[#ffaa00]"
             required
-          />
+          >
+            <option value="" disabled>Select a category</option>
+            {categories.map((cat) => (
+              <option key={cat} value={cat}>{cat}</option>
+            ))}
+          </select>
         </div>
         <div>
           <label htmlFor="image" className="block text-sm font-medium text-gray-700 mb-1">Menu Item Image</label>
@@ -147,15 +161,15 @@ const UpdateMenuItem = () => {
             id="image"
             accept="image/*"
             onChange={handleFileChange}
-            className="w-full p-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-[#ffaa00]"
+            className="w-full p-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-[#ffaa00]"
           />
           {preview && (
-            <img src={preview} alt="Preview" className="mt-2 w-32 h-32 object-cover rounded" />
+            <img src={preview} alt="Preview" className="mt-2 w-32 h-32 object-cover rounded-md shadow-sm" />
           )}
         </div>
         <button
           type="submit"
-          className="w-full bg-[#ffaa00] text-white p-2 rounded-lg hover:bg-[#e59400] transition disabled:opacity-50 disabled:cursor-not-allowed"
+          className="w-full bg-[#ffaa00] text-white p-3 rounded-lg hover:bg-[#e59400] transition disabled:opacity-50 disabled:cursor-not-allowed font-semibold text-lg shadow-md hover:shadow-lg"
           disabled={submitting}
         >
           {submitting ? 'Updating...' : 'Update Menu Item'}
