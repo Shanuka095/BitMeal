@@ -13,9 +13,8 @@ const CreateRestaurant = () => {
   const handleFileChange = (e) => {
     const file = e.target.files[0];
     setForm({ ...form, image: file });
-    // Create a local URL for image preview
     setPreview(file ? URL.createObjectURL(file) : null);
-    console.log('Selected file:', file); // Debug log for file selection
+    console.log('Selected file:', file);
   };
 
   const handleSubmit = async (e) => {
@@ -25,30 +24,34 @@ const CreateRestaurant = () => {
     setSuccess('');
 
     try {
-      const token = localStorage.getItem('token');
-      if (!token) throw new Error('No authentication token');
+      // Get token from sessionStorage
+      const sessionKey = Object.keys(sessionStorage).find(key => key.startsWith('token_'));
+      const token = sessionKey ? sessionStorage.getItem(sessionKey) : null;
+      if (!token) {
+        setError('No authentication token found. Please log in.');
+        setLoading(false);
+        return;
+      }
 
       const formData = new FormData();
       formData.append('name', form.name);
       formData.append('address', form.address);
       if (form.image) {
         formData.append('image', form.image);
-        console.log('Appending image:', form.image.name); // Debug log for image upload
+        console.log('Appending image:', form.image.name);
       }
 
       const response = await axios.post('http://localhost:3003/api/restaurants', formData, {
         headers: {
           Authorization: `Bearer ${token}`,
-          // No need to set 'Content-Type': 'multipart/form-data' manually,
-          // Axios and FormData handle it automatically and correctly.
         },
       });
 
       console.log('Frontend (CreateRestaurant) - Restaurant created successfully:', response.data);
       setSuccess(`Restaurant created successfully: ${response.data.name}`);
-      setForm({ name: '', address: '', image: null }); // Clear form
-      setPreview(null); // Clear preview
-      setTimeout(() => navigate('/admin'), 1000); // Delay navigation for user feedback
+      setForm({ name: '', address: '', image: null });
+      setPreview(null);
+      setTimeout(() => navigate('/admin'), 1000);
     } catch (err) {
       const errorMsg = err.response?.data?.error || err.message || 'Failed to create restaurant';
       setError(errorMsg);
