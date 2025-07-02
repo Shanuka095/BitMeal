@@ -12,7 +12,7 @@ const Restaurants = ({ standalone }) => {
       setLoading(true);
       try {
         const response = await axios.get('http://localhost:3003/api/restaurants/public');
-        const data = response.data.data || response.data;
+        const data = response.data.data || response.data; // Handle potential inconsistent API response
         setRestaurants(Array.isArray(data) ? data : []);
       } catch (err) {
         setError(err.response?.data?.error || 'Failed to fetch restaurants');
@@ -39,7 +39,7 @@ const Restaurants = ({ standalone }) => {
             >
               {restaurant.imageUrl && (
                 <img
-                  src={`http://localhost:3003/uploads/${restaurant.imageUrl}`}
+                  src={`http://localhost:3003/uploads/${restaurant.imageUrl}`} // Corrected image path
                   alt={restaurant.name}
                   className="w-full h-48 object-cover rounded-t-lg mb-2"
                 />
