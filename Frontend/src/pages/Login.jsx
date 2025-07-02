@@ -16,14 +16,14 @@ const Login = () => {
     try {
       const response = await axios.post('http://localhost:3000/api/auth/login', { email, password });
       const { token, role } = response.data;
-      const sessionKey = `token_${Date.now()}`;
-      sessionStorage.setItem(sessionKey, token); // Store in sessionStorage
-      localStorage.setItem('token', token); // Add to localStorage as fallback
+      const sessionKey = `token_${Date.now()}`; // Generate a unique key for this session
+      sessionStorage.setItem(sessionKey, token); // Store token ONLY in sessionStorage
+
       setError('');
       if (role === 'customer') {
-        navigate('/dashboard', { state: { sessionKey } });
+        navigate('/dashboard', { state: { sessionKey } }); // Pass sessionKey in state
       } else if (role === 'restaurant_admin') {
-        navigate('/admin', { state: { sessionKey } });
+        navigate('/admin', { state: { sessionKey } }); // Pass sessionKey in state
       } else {
         setError('Unknown role');
       }
