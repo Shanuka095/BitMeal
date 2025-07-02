@@ -1,18 +1,17 @@
 import { Outlet, useLocation, useNavigate } from 'react-router-dom';
-import { FaUtensils, FaSignOutAlt, FaClipboardList } from 'react-icons/fa'; // Added FaClipboardList
+import { FaUtensils, FaSignOutAlt, FaClipboardList } from 'react-icons/fa';
 
 const AdminLayout = () => {
   const location = useLocation();
   const navigate = useNavigate();
 
   const handleLogout = () => {
-    localStorage.removeItem('token');
-    // Also remove any session-specific tokens if they exist
-    Object.keys(sessionStorage).forEach(key => {
-      if (key.startsWith('token_')) {
-        sessionStorage.removeItem(key);
-      }
-    });
+    // Find the current session token key and remove it
+    const sessionKey = Object.keys(sessionStorage).find(key => key.startsWith('token_'));
+    if (sessionKey) {
+      sessionStorage.removeItem(sessionKey);
+    }
+    // No need to remove from localStorage anymore
     navigate('/login');
   };
 
@@ -24,7 +23,7 @@ const AdminLayout = () => {
           <ul className="space-y-4">
             <li><button onClick={() => navigate('/admin')} className={`w-full text-left p-3 rounded-lg transition ${location.pathname === '/admin' ? 'bg-yellow-500 font-semibold' : 'hover:bg-yellow-400'}`}><FaUtensils className="inline mr-2" /> Overview</button></li>
             <li><button onClick={() => navigate('/admin/create-restaurant')} className={`w-full text-left p-3 rounded-lg transition ${location.pathname === '/admin/create-restaurant' ? 'bg-yellow-500 font-semibold' : 'hover:bg-yellow-400'}`}><FaUtensils className="inline mr-2" /> Add Restaurant</button></li>
-            <li><button onClick={() => navigate('/admin/orders')} className={`w-full text-left p-3 rounded-lg transition ${location.pathname === '/admin/orders' ? 'bg-yellow-500 font-semibold' : 'hover:bg-yellow-400'}`}><FaClipboardList className="inline mr-2" /> Manage Orders</button></li> {/* New "Manage Orders" link */}
+            <li><button onClick={() => navigate('/admin/orders')} className={`w-full text-left p-3 rounded-lg transition ${location.pathname === '/admin/orders' ? 'bg-yellow-500 font-semibold' : 'hover:bg-yellow-400'}`}><FaClipboardList className="inline mr-2" /> Manage Orders</button></li>
             <li><button onClick={handleLogout} className="w-full text-left p-3 rounded-lg hover:bg-yellow-400 mt-6"><FaSignOutAlt className="inline mr-2" /> Logout</button></li>
           </ul>
         </nav>
