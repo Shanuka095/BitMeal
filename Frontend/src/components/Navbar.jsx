@@ -1,7 +1,7 @@
 // src/components/Navbar.jsx
 import { useState } from 'react';
 import { useNavigate, Link } from 'react-router-dom';
-import { FaUserCircle, FaBars, FaTimes, FaShoppingCart, FaClipboardList } from 'react-icons/fa'; // Added FaClipboardList
+import { FaUserCircle, FaBars, FaTimes, FaShoppingCart, FaClipboardList } from 'react-icons/fa';
 
 const Navbar = () => {
   const [isMenuOpen, setIsMenuOpen] = useState(false);
@@ -9,13 +9,12 @@ const Navbar = () => {
   const navigate = useNavigate();
 
   const handleLogout = () => {
-    localStorage.removeItem('token');
-    // Also remove any session-specific tokens if they exist
-    Object.keys(sessionStorage).forEach(key => {
-      if (key.startsWith('token_')) {
-        sessionStorage.removeItem(key);
-      }
-    });
+    // Find the current session token key and remove it
+    const sessionKey = Object.keys(sessionStorage).find(key => key.startsWith('token_'));
+    if (sessionKey) {
+      sessionStorage.removeItem(sessionKey);
+    }
+    // No need to remove from localStorage anymore
     navigate('/login');
   };
 
@@ -38,7 +37,7 @@ const Navbar = () => {
             <Link to="/restaurants" className="text-[#4f4f4f] hover:text-[#ffaa00] font-medium transition-colors duration-200">
               Menu
             </Link>
-            <Link to="/my-orders" className="text-[#4f4f4f] hover:text-[#ffaa00] font-medium transition-colors duration-200"> {/* New "My Orders" link */}
+            <Link to="/my-orders" className="text-[#4f4f4f] hover:text-[#ffaa00] font-medium transition-colors duration-200">
               My Orders
             </Link>
             <Link to="#" className="text-[#4f4f4f] hover:text-[#ffaa00] font-medium transition-colors duration-200">
