@@ -19,6 +19,8 @@ import Register from './pages/Register';
 import Profile from './pages/Profile';
 import Home from './pages/Home';
 import VerifyOTP from './pages/VerifyOTP';
+import CustomerOrders from './pages/CustomerOrders'; // Import new customer orders component
+import AdminOrders from './pages/AdminOrders';     // Import new admin orders component
 
 function App() {
   return (
@@ -44,6 +46,7 @@ function App() {
           <Route path="/restaurants" element={<ProtectedRoute><Restaurants standalone={true} /></ProtectedRoute>} />
           <Route path="/restaurant/:id" element={<ProtectedRoute><RestaurantDetails /></ProtectedRoute>} />
           <Route path="/profile" element={<ProtectedRoute><Profile /></ProtectedRoute>} />
+          <Route path="/my-orders" element={<ProtectedRoute><CustomerOrders /></ProtectedRoute>} /> {/* New customer orders route */}
         </Route>
 
         {/* Admin Routes with AdminLayout (no Navbar/Footer) */}
@@ -61,6 +64,7 @@ function App() {
           <Route path="restaurant/:id/add-menu-item" element={<AddMenuItem />} />
           <Route path="restaurant/:id" element={<AdminRestaurantDetails />} />
           <Route path="restaurant/:id/menu/:menuId/edit" element={<UpdateMenuItem />} />
+          <Route path="orders" element={<AdminOrders />} /> {/* New admin orders route */}
         </Route>
 
         {/* Catch-all route for unmatched paths */}
