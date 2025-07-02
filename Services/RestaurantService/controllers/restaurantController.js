@@ -5,14 +5,16 @@ const Joi = require('joi');
 const restaurantSchema = Joi.object({
   name: Joi.string().min(3).max(100).required(),
   address: Joi.string().min(5).max(200).required(),
-  imageUrl: Joi.string().uri().optional().allow(''),
+  // FIX: Changed .uri() to just .string() as we store filenames, not full URIs
+  imageUrl: Joi.string().optional().allow(''),
 });
 
 const menuItemSchema = Joi.object({
   name: Joi.string().min(3).max(100).required(),
   price: Joi.number().min(0).required(),
   category: Joi.string().min(2).max(50).required(),
-  imageUrl: Joi.string().uri().optional().allow(''),
+  // FIX: Changed .uri() to just .string() as we store filenames, not full URIs
+  imageUrl: Joi.string().optional().allow(''),
 });
 
 // Customer: Get all restaurants (Public access)
