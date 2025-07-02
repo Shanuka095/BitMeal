@@ -6,7 +6,9 @@ const Dashboard = () => {
   const navigate = useNavigate();
 
   useEffect(() => {
-    const token = localStorage.getItem('token');
+    // Get token from sessionStorage
+    const sessionKey = Object.keys(sessionStorage).find(key => key.startsWith('token_'));
+    const token = sessionKey ? sessionStorage.getItem(sessionKey) : null;
     if (!token) navigate('/login');
   }, [navigate]);
 
