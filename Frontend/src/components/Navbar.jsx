@@ -1,7 +1,7 @@
 // src/components/Navbar.jsx
 import { useState } from 'react';
 import { useNavigate, Link } from 'react-router-dom';
-import { FaUserCircle, FaBars, FaTimes, FaShoppingCart } from 'react-icons/fa';
+import { FaUserCircle, FaBars, FaTimes, FaShoppingCart, FaClipboardList } from 'react-icons/fa'; // Added FaClipboardList
 
 const Navbar = () => {
   const [isMenuOpen, setIsMenuOpen] = useState(false);
@@ -10,6 +10,12 @@ const Navbar = () => {
 
   const handleLogout = () => {
     localStorage.removeItem('token');
+    // Also remove any session-specific tokens if they exist
+    Object.keys(sessionStorage).forEach(key => {
+      if (key.startsWith('token_')) {
+        sessionStorage.removeItem(key);
+      }
+    });
     navigate('/login');
   };
 
@@ -31,6 +37,9 @@ const Navbar = () => {
             </Link>
             <Link to="/restaurants" className="text-[#4f4f4f] hover:text-[#ffaa00] font-medium transition-colors duration-200">
               Menu
+            </Link>
+            <Link to="/my-orders" className="text-[#4f4f4f] hover:text-[#ffaa00] font-medium transition-colors duration-200"> {/* New "My Orders" link */}
+              My Orders
             </Link>
             <Link to="#" className="text-[#4f4f4f] hover:text-[#ffaa00] font-medium transition-colors duration-200">
               Services
@@ -67,6 +76,13 @@ const Navbar = () => {
                   onClick={() => setIsProfileOpen(false)}
                 >
                   Profile
+                </Link>
+                <Link
+                  to="/my-orders"
+                  className="block px-4 py-2 text-[#4f4f4f] hover:bg-[#ffaa00]/10 hover:text-[#ffaa00] transition-colors duration-200"
+                  onClick={() => setIsProfileOpen(false)}
+                >
+                  My Orders
                 </Link>
                 <button
                   onClick={() => {
@@ -109,6 +125,13 @@ const Navbar = () => {
             onClick={() => setIsMenuOpen(false)}
           >
             Menu
+          </Link>
+          <Link
+            to="/my-orders"
+            className="block py-2 text-[#4f4f4f] hover:text-[#ffaa00] font-medium transition-colors duration-200"
+            onClick={() => setIsMenuOpen(false)}
+          >
+            My Orders
           </Link>
           <Link
             to="#"
