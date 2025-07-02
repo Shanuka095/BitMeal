@@ -13,6 +13,7 @@ const CreateRestaurant = () => {
   const handleFileChange = (e) => {
     const file = e.target.files[0];
     setForm({ ...form, image: file });
+    // Create a local URL for image preview
     setPreview(file ? URL.createObjectURL(file) : null);
     console.log('Selected file:', file); // Debug log for file selection
   };
@@ -38,7 +39,8 @@ const CreateRestaurant = () => {
       const response = await axios.post('http://localhost:3003/api/restaurants', formData, {
         headers: {
           Authorization: `Bearer ${token}`,
-          // Remove manual Content-Type to let FormData handle it
+          // No need to set 'Content-Type': 'multipart/form-data' manually,
+          // Axios and FormData handle it automatically and correctly.
         },
       });
 
