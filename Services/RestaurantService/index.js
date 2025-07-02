@@ -34,8 +34,9 @@ const storage = multer.diskStorage({
 });
 const upload = multer({ storage });
 
-// Use multer middleware to handle multipart/form-data with fields
-app.use(upload.fields([{ name: 'image', maxCount: 1 }]));
+// Use multer middleware to handle single file upload for 'image' field
+// This makes the file available at req.file
+app.use(upload.single('image')); // Changed from upload.fields to upload.single
 
 app.use(express.json());
 
