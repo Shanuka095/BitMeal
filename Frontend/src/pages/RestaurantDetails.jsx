@@ -26,16 +26,24 @@ const RestaurantDetails = () => {
     fetchDetails();
   }, [id]);
 
+  // Function to handle the "Buy" button click for a specific menu item
+  const handleBuyClick = (itemName, itemPrice) => {
+    // In a real application, this would add the item to a cart,
+    // initiate an order, or navigate to a checkout page.
+    alert(`You clicked "Buy" for: ${itemName} (Rs. ${itemPrice})`);
+    // Example: navigate('/checkout', { state: { item: { name: itemName, price: itemPrice } } });
+  };
+
   if (loading) return <div className="p-6 text-center"><p className="text-gray-600">Loading...</p></div>;
   if (error) return <div className="p-6 text-center"><p className="text-red-600">{error}</p></div>;
   if (!restaurant) return <div className="p-6 text-center"><p className="text-gray-600">Restaurant not found</p></div>;
 
   return (
-    <div className="p-6">
+    <div className="p-6 pt-24"> {/* Added pt-24 to push content below Navbar */}
       <h1 className="text-3xl font-bold text-gray-800 mb-4">{restaurant.name}</h1>
       {restaurant.imageUrl && (
         <img
-          src={`http://localhost:3003/uploads/${restaurant.imageUrl}`} // Corrected image path
+          src={`http://localhost:3003/uploads/${restaurant.imageUrl}`}
           alt={restaurant.name}
           className="mb-4 w-64 h-64 object-cover rounded"
         />
@@ -45,29 +53,33 @@ const RestaurantDetails = () => {
       {restaurant.menu && restaurant.menu.length > 0 ? (
         <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-6">
           {restaurant.menu.map((item) => (
-            <div key={item._id || item.name} className="bg-white p-4 rounded-lg shadow hover:shadow-md transition">
-              <p className="text-lg font-medium text-gray-800">{item.name}</p>
-              <p className="text-gray-600">${item.price}</p>
-              <p className="text-sm text-gray-500">{item.category}</p>
-              {item.imageUrl && (
-                <img
-                  src={`http://localhost:3003/uploads/${item.imageUrl}`} // Corrected image path for menu item
-                  alt={item.name}
-                  className="mt-2 w-24 h-24 object-cover rounded"
-                />
-              )}
+            <div key={item._id || item.name} className="bg-white p-4 rounded-lg shadow hover:shadow-md transition flex flex-col justify-between">
+              <div>
+                <p className="text-lg font-medium text-gray-800">{item.name}</p>
+                {/* Changed price display to Sri Lankan Rupees */}
+                <p className="text-gray-600">Rs. {item.price}</p>
+                <p className="text-sm text-gray-500">{item.category}</p>
+                {item.imageUrl && (
+                  <img
+                    src={`http://localhost:3003/uploads/${item.imageUrl}`}
+                    alt={item.name}
+                    className="mt-2 w-24 h-24 object-cover rounded"
+                  />
+                )}
+              </div>
+              {/* "Buy" button moved inside the menu item card */}
+              <button
+                onClick={() => handleBuyClick(item.name, item.price)}
+                className="mt-4 bg-[#ffaa00] text-white px-4 py-2 rounded-lg hover:bg-[#e59400] transition duration-200 self-start"
+              >
+                Buy
+              </button>
             </div>
           ))}
         </div>
       ) : (
         <p className="text-gray-600">No menu items available</p>
       )}
-      <button
-        className="bg-[#ffaa00] text-white px-6 py-3 rounded-lg hover:bg-[#e59400] transition duration-200"
-        onClick={() => alert('Order functionality to be implemented')}
-      >
-        Order Now
-      </button>
     </div>
   );
 };
