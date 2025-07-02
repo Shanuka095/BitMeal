@@ -10,6 +10,19 @@ const AddMenuItem = () => {
   const [loading, setLoading] = useState(false);
   const [preview, setPreview] = useState(null);
 
+  // Predefined categories for the dropdown
+  const categories = [
+    'Appetizers',
+    'Main Courses',
+    'Desserts',
+    'Beverages',
+    'Soups',
+    'Salads',
+    'Breakfast',
+    'Snacks',
+    'Other' // Added 'Other' for flexibility
+  ];
+
   const handleFileChange = (e) => {
     const file = e.target.files[0];
     setForm({ ...form, image: file });
@@ -31,9 +44,9 @@ const AddMenuItem = () => {
       if (form.image) formData.append('image', form.image);
 
       await axios.post(`http://localhost:3003/api/restaurants/${id}/menu`, formData, {
-        headers: { 
+        headers: {
           Authorization: `Bearer ${token}`,
-          'Content-Type': 'multipart/form-data', // Important for FormData
+          'Content-Type': 'multipart/form-data',
         },
       });
       console.log('Frontend (AddMenuItem) - Menu item added successfully for restaurant ID:', id);
@@ -47,7 +60,7 @@ const AddMenuItem = () => {
   };
 
   return (
-    <section className="max-w-md mx-auto bg-white p-6 rounded-lg shadow-md">
+    <section className="max-w-md mx-auto bg-white p-6 rounded-lg shadow-xl border border-gray-200">
       <h2 className="text-2xl font-bold text-gray-800 mb-4 border-b pb-2">Add Menu Item</h2>
       {error && <p className="text-red-600 mb-4 font-semibold">{error}</p>}
       <form onSubmit={handleSubmit} className="space-y-4">
@@ -59,7 +72,7 @@ const AddMenuItem = () => {
             value={form.name}
             onChange={(e) => setForm({ ...form, name: e.target.value })}
             placeholder="Enter item name"
-            className="w-full p-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-[#ffaa00]"
+            className="w-full p-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-[#ffaa00]"
             required
           />
         </div>
@@ -71,22 +84,25 @@ const AddMenuItem = () => {
             value={form.price}
             onChange={(e) => setForm({ ...form, price: e.target.value })}
             placeholder="Enter price"
-            className="w-full p-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-[#ffaa00]"
+            className="w-full p-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-[#ffaa00]"
             step="0.01"
             required
           />
         </div>
         <div>
           <label htmlFor="category" className="block text-sm font-medium text-gray-700 mb-1">Category</label>
-          <input
-            type="text"
+          <select
             id="category"
             value={form.category}
             onChange={(e) => setForm({ ...form, category: e.target.value })}
-            placeholder="Enter category"
-            className="w-full p-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-[#ffaa00]"
+            className="w-full p-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-[#ffaa00]"
             required
-          />
+          >
+            <option value="" disabled>Select a category</option>
+            {categories.map((cat) => (
+              <option key={cat} value={cat}>{cat}</option>
+            ))}
+          </select>
         </div>
         <div>
           <label htmlFor="image" className="block text-sm font-medium text-gray-700 mb-1">Menu Item Image</label>
@@ -95,15 +111,15 @@ const AddMenuItem = () => {
             id="image"
             accept="image/*"
             onChange={handleFileChange}
-            className="w-full p-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-[#ffaa00]"
+            className="w-full p-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-[#ffaa00]"
           />
           {preview && (
-            <img src={preview} alt="Preview" className="mt-2 w-32 h-32 object-cover rounded" />
+            <img src={preview} alt="Preview" className="mt-2 w-32 h-32 object-cover rounded-md shadow-sm" />
           )}
         </div>
         <button
           type="submit"
-          className="w-full bg-[#ffaa00] text-white p-2 rounded-lg hover:bg-[#e59400] transition disabled:opacity-50 disabled:cursor-not-allowed"
+          className="w-full bg-[#ffaa00] text-white p-3 rounded-lg hover:bg-[#e59400] transition disabled:opacity-50 disabled:cursor-not-allowed font-semibold text-lg shadow-md hover:shadow-lg"
           disabled={loading}
         >
           {loading ? 'Adding...' : 'Add Menu Item'}
