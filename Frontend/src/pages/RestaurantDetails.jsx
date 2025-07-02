@@ -1,7 +1,7 @@
 import { useParams } from 'react-router-dom';
 import { useState, useEffect } from 'react';
 import axios from 'axios';
-import jwtDecode from 'jwt-decode'; // Import jwtDecode to get userId and role
+import jwtDecode from 'jwt-decode';
 
 const RestaurantDetails = () => {
   const { id } = useParams();
@@ -9,28 +9,31 @@ const RestaurantDetails = () => {
   const [error, setError] = useState('');
   const [loading, setLoading] = useState(true);
   const [orderMessage, setOrderMessage] = useState('');
-  const [userRole, setUserRole] = useState(null); // State to store the user's role
+  const [userRole, setUserRole] = useState(null);
 
   useEffect(() => {
     const fetchDetails = async () => {
       setLoading(true);
       setError('');
-      try {
-        const token = localStorage.getItem('token');
-        if (token) {
-          try {
-            const decodedToken = jwtDecode(token);
-            setUserRole(decodedToken.role); // Set user role from token
-          } catch (decodeError) {
-            console.error("Error decoding token:", decodeError);
-            // Handle invalid token, e.g., clear it and force re-login
-            localStorage.removeItem('token');
-            setUserRole(null);
-          }
-        } else {
-          setUserRole(null); // No token, no role
-        }
+      // Get token from sessionStorage
+      const sessionKey = Object.keys(sessionStorage).find(key => key.startsWith('token_'));
+      const token = sessionKey ? sessionStorage.getItem(sessionKey) : null;
 
+      if (token) {
+        try {
+          const decodedToken = jwtDecode(token);
+          setUserRole(decodedToken.role);
+        } catch (decodeError) {
+          console.error("Error decoding token:", decodeError);
+          // Handle invalid token, e.g., clear it and force re-login
+          if (sessionKey) sessionStorage.removeItem(sessionKey);
+          setUserRole(null);
+        }
+      } else {
+        setUserRole(null);
+      }
+
+      try {
         const response = await axios.get(`http://localhost:3003/api/restaurants/public/${id}`);
         console.log('Frontend (RestaurantDetails) - Response:', response.data);
         setRestaurant(response.data);
@@ -52,7 +55,9 @@ const RestaurantDetails = () => {
     }
 
     try {
-      const token = localStorage.getItem('token');
+      // Get token from sessionStorage
+      const sessionKey = Object.keys(sessionStorage).find(key => key.startsWith('token_'));
+      const token = sessionKey ? sessionStorage.getItem(sessionKey) : null;
       if (!token) {
         setOrderMessage('Please log in to place an order.');
         return;
@@ -138,7 +143,6 @@ const RestaurantDetails = () => {
                   />
                 )}
               </div>
-              {/* Only show buy button if user is a customer */}
               {userRole === 'customer' ? (
                 <button
                   onClick={() => handleBuyClick(item)}
