@@ -12,8 +12,14 @@ const Profile = () => {
 
   useEffect(() => {
     const fetchProfile = async () => {
+      // Get token from sessionStorage
+      const sessionKey = Object.keys(sessionStorage).find(key => key.startsWith('token_'));
+      const token = sessionKey ? sessionStorage.getItem(sessionKey) : null;
+      if (!token) {
+        setError('No authentication token found. Please log in.');
+        return;
+      }
       try {
-        const token = localStorage.getItem('token');
         const response = await axios.get('http://localhost:3003/api/users/profile', {
           headers: { Authorization: `Bearer ${token}` },
         });
@@ -29,7 +35,14 @@ const Profile = () => {
     e.preventDefault();
     setLoading(true);
     try {
-      const token = localStorage.getItem('token');
+      // Get token from sessionStorage
+      const sessionKey = Object.keys(sessionStorage).find(key => key.startsWith('token_'));
+      const token = sessionKey ? sessionStorage.getItem(sessionKey) : null;
+      if (!token) {
+        setError('No authentication token found. Please log in.');
+        setLoading(false);
+        return;
+      }
       await axios.put('http://localhost:3003/api/users/profile', profile, {
         headers: { Authorization: `Bearer ${token}` },
       });
