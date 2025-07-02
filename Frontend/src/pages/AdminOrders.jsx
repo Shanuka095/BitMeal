@@ -1,70 +1,71 @@
 import { useState, useEffect } from 'react';
 import axios from 'axios';
 import { format } from 'date-fns';
-import { FaSyncAlt } from 'react-icons/fa'; // For refresh icon
+import { FaSyncAlt } from 'react-icons/fa';
 
 const AdminOrders = () => {
-  const [restaurants, setRestaurants] = useState([]); // To store admin's restaurants
+  const [restaurants, setRestaurants] = useState([]);
   const [selectedRestaurantId, setSelectedRestaurantId] = useState('');
   const [orders, setOrders] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');
   const [updateMessage, setUpdateMessage] = useState('');
 
-  // Fetch admin's restaurants on component mount
   useEffect(() => {
     const fetchAdminRestaurants = async () => {
-      setLoading(true); // Set loading for restaurant fetch
-      setError(''); // Clear previous errors
+      setLoading(true);
+      setError('');
+      // Get token from sessionStorage
+      const sessionKey = Object.keys(sessionStorage).find(key => key.startsWith('token_'));
+      const token = sessionKey ? sessionStorage.getItem(sessionKey) : null;
+      if (!token) {
+        setError('No authentication token found. Please log in.');
+        setLoading(false);
+        return;
+      }
+      console.log('Frontend (AdminOrders) - Fetching admin restaurants with token:', token.substring(0, 10) + '...');
       try {
-        const token = localStorage.getItem('token');
-        if (!token) {
-          setError('No authentication token found. Please log in.');
-          setLoading(false);
-          return;
-        }
-        console.log('Frontend (AdminOrders) - Fetching admin restaurants with token:', token.substring(0, 10) + '...'); // Debug log
-        const response = await axios.get('http://localhost:3000/api/restaurants', { // Use API Gateway URL
+        const response = await axios.get('http://localhost:3000/api/restaurants', {
           headers: { Authorization: `Bearer ${token}` },
         });
-        const data = response.data.data || response.data; // Handle potential inconsistent API response
+        const data = response.data.data || response.data;
         setRestaurants(Array.isArray(data) ? data : []);
         if (Array.isArray(data) && data.length > 0) {
-          setSelectedRestaurantId(data[0]._id); // Auto-select the first restaurant
+          setSelectedRestaurantId(data[0]._id);
         }
       } catch (err) {
         const errorMessage = err.response?.data?.error || 'Failed to fetch your restaurants.';
         setError(errorMessage);
         console.error('Frontend (AdminOrders) - Fetch restaurants error:', err.response ? err.response.data : err);
       } finally {
-        setLoading(false); // End loading for restaurant fetch
+        setLoading(false);
       }
     };
     fetchAdminRestaurants();
   }, []);
 
-  // Fetch orders when selectedRestaurantId changes
   useEffect(() => {
     const fetchOrders = async () => {
       if (!selectedRestaurantId) {
         setOrders([]);
-        // Only set loading to false if no restaurant is selected AND it's not the initial load
         if (!loading) setLoading(false);
         return;
       }
 
-      setLoading(true); // Set loading for orders fetch
-      setError(''); // Clear previous errors
+      setLoading(true);
+      setError('');
       setUpdateMessage('');
+      // Get token from sessionStorage
+      const sessionKey = Object.keys(sessionStorage).find(key => key.startsWith('token_'));
+      const token = sessionKey ? sessionStorage.getItem(sessionKey) : null;
+      if (!token) {
+        setError('No authentication token found. Please log in.');
+        setLoading(false);
+        return;
+      }
+      console.log('Frontend (AdminOrders) - Fetching orders for restaurant:', selectedRestaurantId, 'with token:', token.substring(0, 10) + '...');
       try {
-        const token = localStorage.getItem('token');
-        if (!token) {
-          setError('No authentication token found. Please log in.');
-          setLoading(false);
-          return;
-        }
-        console.log('Frontend (AdminOrders) - Fetching orders for restaurant:', selectedRestaurantId, 'with token:', token.substring(0, 10) + '...'); // Debug log
-        const response = await axios.get(`http://localhost:3000/api/orders/restaurant/${selectedRestaurantId}`, { // Use API Gateway URL
+        const response = await axios.get(`http://localhost:3000/api/orders/restaurant/${selectedRestaurantId}`, {
           headers: { Authorization: `Bearer ${token}` },
         });
         setOrders(response.data);
@@ -73,26 +74,27 @@ const AdminOrders = () => {
         setError(errorMessage);
         console.error('Frontend (AdminOrders) - Fetch orders error:', err.response ? err.response.data : err);
       } finally {
-        setLoading(false); // End loading for orders fetch
+        setLoading(false);
       }
     };
     fetchOrders();
-  }, [selectedRestaurantId]); // Dependency on selectedRestaurantId
+  }, [selectedRestaurantId]);
 
   const handleStatusChange = async (orderId, newStatus) => {
     setUpdateMessage('');
     try {
-      const token = localStorage.getItem('token');
+      // Get token from sessionStorage
+      const sessionKey = Object.keys(sessionStorage).find(key => key.startsWith('token_'));
+      const token = sessionKey ? sessionStorage.getItem(sessionKey) : null;
       if (!token) {
         setUpdateMessage('Error: No authentication token.');
         return;
       }
 
-      await axios.put(`http://localhost:3000/api/orders/${orderId/status}`, { status: newStatus }, { // Use API Gateway URL
+      await axios.put(`http://localhost:3000/api/orders/${orderId}/status`, { status: newStatus }, {
         headers: { Authorization: `Bearer ${token}` },
       });
 
-      // Update the order status in the local state
       setOrders(prevOrders =>
         prevOrders.map(order =>
           order._id === orderId ? { ...order, status: newStatus } : order
@@ -106,7 +108,6 @@ const AdminOrders = () => {
     }
   };
 
-  // Display initial loading for the entire component
   if (loading && restaurants.length === 0 && !error) {
     return <div className="p-6 text-center"><p className="text-gray-600 text-lg">Loading admin data...</p></div>;
   }
@@ -145,7 +146,7 @@ const AdminOrders = () => {
         </div>
       )}
 
-      {loading ? ( // This loading state is specifically for orders after restaurant is selected
+      {loading ? (
         <div className="flex justify-center"><p className="text-gray-600 text-lg">Loading orders...</p></div>
       ) : orders.length === 0 ? (
         <p className="text-gray-600 text-center text-lg">No orders found for this restaurant.</p>
