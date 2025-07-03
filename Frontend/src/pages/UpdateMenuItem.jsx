@@ -6,13 +6,23 @@ import { FaArrowLeft } from 'react-icons/fa';
 const UpdateMenuItem = () => {
   const { id, menuId } = useParams();
   const navigate = useNavigate();
-  const [form, setForm] = useState({ name: '', price: '', category: '', image: null });
+  const [form, setForm] = useState({ name: '', normalPrice: '', extraPriceForFull: '', category: '', image: null }); // Updated state
   const [error, setError] = useState('');
   const [loading, setLoading] = useState(true);
   const [submitting, setSubmitting] = useState(false);
   const [preview, setPreview] = useState(null);
 
   const categories = [
+    'Noodle',
+    'Fried Rice (Basmathi)',
+    'Fried Rice (Keeri Samba)',
+    'Chicken Mix Rice',
+    'Fish Mix Rice',
+    'Seafood',
+    'All Mix Rice',
+    'Kottu',
+    'Cheese Kottu',
+    'Dolphin Kottu',
     'Appetizers',
     'Main Courses',
     'Desserts',
@@ -28,7 +38,6 @@ const UpdateMenuItem = () => {
     const fetchMenuItem = async () => {
       setLoading(true);
       setError('');
-      // Get token from sessionStorage
       const sessionKey = Object.keys(sessionStorage).find(key => key.startsWith('token_'));
       const token = sessionKey ? sessionStorage.getItem(sessionKey) : null;
       if (!token) {
@@ -42,9 +51,10 @@ const UpdateMenuItem = () => {
         });
         setForm({
           name: response.data.name,
-          price: response.data.price,
+          normalPrice: response.data.normalPrice, // Set normalPrice
+          extraPriceForFull: response.data.extraPriceForFull || '', // Set extraPriceForFull
           category: response.data.category,
-          image: null
+          image: null // Image is not pre-filled for security/simplicity
         });
         setPreview(response.data.imageUrl ? `http://localhost:3003/uploads/${response.data.imageUrl}` : null);
       } catch (err) {
@@ -68,7 +78,6 @@ const UpdateMenuItem = () => {
     setSubmitting(true);
     setError('');
     try {
-      // Get token from sessionStorage
       const sessionKey = Object.keys(sessionStorage).find(key => key.startsWith('token_'));
       const token = sessionKey ? sessionStorage.getItem(sessionKey) : null;
       if (!token) {
@@ -79,7 +88,8 @@ const UpdateMenuItem = () => {
 
       const formData = new FormData();
       formData.append('name', form.name);
-      formData.append('price', form.price);
+      formData.append('normalPrice', form.normalPrice); // Send normalPrice
+      formData.append('extraPriceForFull', form.extraPriceForFull || 0); // Send extraPriceForFull
       formData.append('category', form.category);
       if (form.image) {
         formData.append('image', form.image);
@@ -138,16 +148,28 @@ const UpdateMenuItem = () => {
           />
         </div>
         <div>
-          <label htmlFor="price" className="block text-sm font-medium text-gray-700 mb-1">Price</label>
+          <label htmlFor="normalPrice" className="block text-sm font-medium text-gray-700 mb-1">Normal Price (Rs.)</label>
           <input
             type="number"
-            id="price"
-            value={form.price}
-            onChange={(e) => setForm({ ...form, price: e.target.value })}
-            placeholder="Enter price"
+            id="normalPrice"
+            value={form.normalPrice}
+            onChange={(e) => setForm({ ...form, normalPrice: e.target.value })}
+            placeholder="Enter normal price"
             className="w-full p-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-[#ffaa00]"
             step="0.01"
             required
+          />
+        </div>
+        <div>
+          <label htmlFor="extraPriceForFull" className="block text-sm font-medium text-gray-700 mb-1">Extra Price for Full Size (Rs.)</label>
+          <input
+            type="number"
+            id="extraPriceForFull"
+            value={form.extraPriceForFull}
+            onChange={(e) => setForm({ ...form, extraPriceForFull: e.target.value })}
+            placeholder="Enter extra price for full size (e.g., 300)"
+            className="w-full p-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-[#ffaa00]"
+            step="0.01"
           />
         </div>
         <div>
@@ -166,7 +188,7 @@ const UpdateMenuItem = () => {
           </select>
         </div>
         <div>
-          <label htmlFor="image" className="block text-sm font-medium text-gray-700 mb-1">Menu Item Image</label>
+          <label htmlFor="image" className="block text-sm font-medium text-gray-700 mb-1">Menu Item Image (Optional)</label>
           <input
             type="file"
             id="image"
