@@ -19,23 +19,25 @@ import Register from './pages/Register';
 import Profile from './pages/Profile';
 import Home from './pages/Home';
 import VerifyOTP from './pages/VerifyOTP';
-import CustomerOrders from './pages/CustomerOrders'; // Import new customer orders component
-import AdminOrders from './pages/AdminOrders';     // Import new admin orders component
+import CustomerOrders from './pages/CustomerOrders';
+import AdminOrders from './pages/AdminOrders';
+import CartPage from './pages/CartPage'; // Import new CartPage
+import { CartProvider } from './context/CartContext'; // Import CartProvider
 
 function App() {
   return (
     <Router>
       <Routes>
-        {/* Customer and Public Routes with Navbar and Footer */}
+        {/* Customer and Public Routes with Navbar and Footer, wrapped by CartProvider */}
         <Route
           element={
-            <>
+            <CartProvider> {/* Wrap customer routes with CartProvider */}
               <Navbar />
               <div className="flex-grow">
                 <Outlet /> {/* Render child routes here */}
               </div>
               <Footer />
-            </>
+            </CartProvider>
           }
         >
           <Route path="/" element={<Home />} />
@@ -46,10 +48,11 @@ function App() {
           <Route path="/restaurants" element={<ProtectedRoute><Restaurants standalone={true} /></ProtectedRoute>} />
           <Route path="/restaurant/:id" element={<ProtectedRoute><RestaurantDetails /></ProtectedRoute>} />
           <Route path="/profile" element={<ProtectedRoute><Profile /></ProtectedRoute>} />
-          <Route path="/my-orders" element={<ProtectedRoute><CustomerOrders /></ProtectedRoute>} /> {/* New customer orders route */}
+          <Route path="/my-orders" element={<ProtectedRoute><CustomerOrders /></ProtectedRoute>} />
+          <Route path="/cart" element={<ProtectedRoute><CartPage /></ProtectedRoute>} /> {/* New Cart Page route */}
         </Route>
 
-        {/* Admin Routes with AdminLayout (no Navbar/Footer) */}
+        {/* Admin Routes with AdminLayout (no Navbar/Footer) - NOT wrapped by CartProvider as cart is customer-specific */}
         <Route
           path="/admin/*"
           element={
@@ -64,7 +67,7 @@ function App() {
           <Route path="restaurant/:id/add-menu-item" element={<AddMenuItem />} />
           <Route path="restaurant/:id" element={<AdminRestaurantDetails />} />
           <Route path="restaurant/:id/menu/:menuId/edit" element={<UpdateMenuItem />} />
-          <Route path="orders" element={<AdminOrders />} /> {/* New admin orders route */}
+          <Route path="orders" element={<AdminOrders />} />
         </Route>
 
         {/* Catch-all route for unmatched paths */}
