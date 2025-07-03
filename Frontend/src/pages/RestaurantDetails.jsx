@@ -2,17 +2,24 @@ import { useParams } from 'react-router-dom';
 import { useState, useEffect, useRef } from 'react';
 import axios from 'axios';
 import jwtDecode from 'jwt-decode';
+import MenuItemModal from '../components/MenuItemModal'; // Import the new modal component
+import { useCart } from '../context/CartContext'; // Import useCart hook
+import { FaPlus, FaMinus, FaTrash } from 'react-icons/fa'; // Import icons for cart controls
 
 const RestaurantDetails = () => {
   const { id } = useParams();
   const [restaurant, setRestaurant] = useState(null);
   const [error, setError] = useState('');
   const [loading, setLoading] = useState(true);
-  const [orderMessage, setOrderMessage] = useState('');
+  const [orderMessage, setOrderMessage] = useState(''); // Still used for direct order placement (now checkout)
   const [userRole, setUserRole] = useState(null);
   const [groupedMenu, setGroupedMenu] = useState({});
-  const [selectedSizes, setSelectedSizes] = useState({});
   const categoryRefs = useRef({});
+
+  const [isModalOpen, setIsModalOpen] = useState(false);
+  const [selectedMenuItem, setSelectedMenuItem] = useState(null);
+
+  const { addToCart, cartItems, incrementQuantity, decrementQuantity, removeFromCart } = useCart(); // Use cart hook
 
   useEffect(() => {
     const fetchDetails = async () => {
@@ -49,12 +56,6 @@ const RestaurantDetails = () => {
         }, {});
         setGroupedMenu(newGroupedMenu);
 
-        const initialSizes = {};
-        menu.forEach(item => {
-          initialSizes[item._id] = 'normal';
-        });
-        setSelectedSizes(initialSizes);
-
       } catch (err) {
         setError(err.response?.data?.error || 'Failed to fetch restaurant details');
         console.error('Frontend (RestaurantDetails) - Fetch error:', err.response ? err.response.data : err);
@@ -65,80 +66,28 @@ const RestaurantDetails = () => {
     fetchDetails();
   }, [id]);
 
-  const handleSizeChange = (menuItemId, size) => {
-    setSelectedSizes(prevSizes => ({
-      ...prevSizes,
-      [menuItemId]: size,
-    }));
-  };
-
-  const getPrice = (item) => {
-    const selectedSize = selectedSizes[item._id];
-    // FIX: Add || 0 to handle cases where normalPrice or extraPriceForFull might be undefined
+  // Function to get the current price of an item based on its size (for display)
+  const getDisplayPrice = (item, size) => {
     const normalPrice = item.normalPrice || 0;
     const extraPriceForFull = item.extraPriceForFull || 0;
-
-    if (selectedSize === 'full' && extraPriceForFull > 0) {
-      return normalPrice + extraPriceForFull;
-    }
-    return normalPrice;
+    return size === 'full' ? normalPrice + extraPriceForFull : normalPrice;
   };
 
-  const handleBuyClick = async (menuItem) => {
-    setOrderMessage('');
-    if (userRole !== 'customer') {
-      setOrderMessage('Error: Only customers can place orders. Please log in as a customer.');
-      return;
-    }
+  const handleOpenModal = (item) => {
+    setSelectedMenuItem(item);
+    setIsModalOpen(true);
+  };
 
-    try {
-      const sessionKey = Object.keys(sessionStorage).find(key => key.startsWith('token_'));
-      const token = sessionKey ? sessionStorage.getItem(sessionKey) : null;
-      if (!token) {
-        setOrderMessage('Please log in to place an order.');
-        return;
-      }
+  const handleCloseModal = () => {
+    setIsModalOpen(false);
+    setSelectedMenuItem(null);
+  };
 
-      const deliveryAddress = prompt("Please enter your delivery address:");
-      if (!deliveryAddress) {
-        setOrderMessage('Delivery address is required to place an order.');
-        return;
-      }
-
-      const selectedPrice = getPrice(menuItem);
-
-      const orderItems = [{
-        menuItemId: menuItem._id,
-        name: menuItem.name,
-        price: selectedPrice,
-        quantity: 1,
-        size: selectedSizes[menuItem._id],
-      }];
-
-      const totalAmount = orderItems.reduce((sum, item) => sum + (item.price * item.quantity), 0);
-
-      const orderData = {
-        restaurantId: restaurant._id,
-        items: orderItems,
-        totalAmount: totalAmount,
-        deliveryAddress: deliveryAddress,
-      };
-
-      const response = await axios.post('http://localhost:3000/api/orders', orderData, {
-        headers: {
-          Authorization: `Bearer ${token}`,
-          'Content-Type': 'application/json',
-        },
-      });
-
-      setOrderMessage(`Order placed successfully! Order ID: ${response.data._id}`);
-      console.log('Order created:', response.data);
-
-    } catch (err) {
-      const msg = err.response?.data?.error || 'Failed to place order.';
-      setOrderMessage(`Error: ${msg}`);
-      console.error('Order placement error:', err.response ? err.response.data : err);
-    }
+  const handleAddToCartFromButton = (item) => {
+    // Default to normal size and quantity 1 when adding directly from the '+' button
+    addToCart({ ...item, restaurantId: restaurant._id }, 1, 'normal');
+    setOrderMessage(`'${item.name}' added to cart!`);
+    setTimeout(() => setOrderMessage(''), 2000);
   };
 
   const scrollToCategory = (category) => {
@@ -183,61 +132,65 @@ const RestaurantDetails = () => {
               <div key={category} ref={el => categoryRefs.current[category] = el} className="mb-8">
                 <h3 className="text-2xl font-bold text-gray-800 mb-4 border-b-2 border-[#ffaa00] pb-2">{category}</h3>
                 <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-2 gap-6">
-                  {groupedMenu[category].map((item) => (
-                    <div key={item._id} className="bg-white p-6 rounded-xl shadow-lg hover:shadow-2xl transition flex flex-col justify-between border border-gray-100">
-                      <div>
-                        <h4 className="text-xl font-semibold text-gray-800 mb-2">{item.name}</h4>
-                        {item.imageUrl && (
-                          <img
-                            src={`http://localhost:3003/uploads/${item.imageUrl}`}
-                            alt={item.name}
-                            className="mt-2 w-full h-40 object-cover rounded-md shadow-sm mb-3"
-                          />
-                        )}
-                        <div className="flex items-center space-x-4 mb-3">
-                          <label className="inline-flex items-center">
-                            <input
-                              type="radio"
-                              name={`size-${item._id}`}
-                              value="normal"
-                              checked={selectedSizes[item._id] === 'normal'}
-                              onChange={() => handleSizeChange(item._id, 'normal')}
-                              className="form-radio h-4 w-4 text-[#ffaa00] focus:ring-[#ffaa00]"
+                  {groupedMenu[category].map((item) => {
+                    const cartItemNormal = cartItems.find(cartIt => cartIt.menuItemId === item._id && cartIt.size === 'normal');
+                    const cartItemFull = cartItems.find(cartIt => cartIt.menuItemId === item._id && cartIt.size === 'full');
+
+                    return (
+                      <div
+                        key={item._id}
+                        className="bg-white p-6 rounded-xl shadow-lg hover:shadow-2xl transition flex flex-col justify-between border border-gray-100 cursor-pointer"
+                        onClick={() => handleOpenModal(item)} // Open modal on card click
+                      >
+                        <div>
+                          <h4 className="text-xl font-semibold text-gray-800 mb-2">{item.name}</h4>
+                          {item.imageUrl && (
+                            <img
+                              src={`http://localhost:3003/uploads/${item.imageUrl}`}
+                              alt={item.name}
+                              className="mt-2 w-full h-40 object-cover rounded-md shadow-sm mb-3"
                             />
-                            <span className="ml-2 text-gray-700 font-medium">Normal (Rs. {(item.normalPrice || 0).toFixed(2)})</span> {/* FIX: Add || 0 and toFixed(2) */}
-                          </label>
-                          {(item.extraPriceForFull || 0) > 0 && ( // FIX: Add || 0
-                            <label className="inline-flex items-center">
-                              <input
-                                type="radio"
-                                name={`size-${item._id}`}
-                                value="full"
-                                checked={selectedSizes[item._id] === 'full'}
-                                onChange={() => handleSizeChange(item._id, 'full')}
-                                className="form-radio h-4 w-4 text-[#ffaa00] focus:ring-[#ffaa00]"
-                              />
-                              <span className="ml-2 text-gray-700 font-medium">
-                                Full (+Rs. {(item.extraPriceForFull || 0).toFixed(2)}) {/* FIX: Add || 0 and toFixed(2) */}
-                              </span>
-                            </label>
                           )}
+                          {/* Display prices for normal and full */}
+                          <p className="text-gray-700 font-bold mb-1">
+                            Normal: Rs. {(item.normalPrice || 0).toFixed(2)}
+                            {(item.extraPriceForFull || 0) > 0 && ` | Full: Rs. ${(item.normalPrice + (item.extraPriceForFull || 0)).toFixed(2)}`}
+                          </p>
                         </div>
-                        <p className="text-2xl font-bold text-gray-900 mt-2">
-                          Price: Rs. {getPrice(item).toFixed(2)}
-                        </p>
+                        {userRole === 'customer' && (
+                          <div className="mt-5 flex justify-end">
+                            {/* Conditional rendering for add/quantity controls */}
+                            {cartItemNormal || cartItemFull ? (
+                              <div className="flex items-center space-x-2 bg-gray-100 rounded-lg p-1">
+                                <button
+                                  onClick={(e) => { e.stopPropagation(); removeFromCart(item._id, cartItemNormal ? 'normal' : 'full'); }} // Stop propagation to prevent modal open
+                                  className="text-red-500 w-8 h-8 rounded-md flex items-center justify-center hover:bg-red-600 hover:text-white transition"
+                                >
+                                  <FaTrash size={16} />
+                                </button>
+                                <span className="font-semibold text-lg text-gray-800 w-8 text-center">
+                                  {cartItemNormal?.quantity || cartItemFull?.quantity || 0}
+                                </span>
+                                <button
+                                  onClick={(e) => { e.stopPropagation(); handleOpenModal(item); }} // Open modal to add more
+                                  className="bg-[#ffaa00] text-white w-8 h-8 rounded-md flex items-center justify-center hover:bg-[#e59400] transition"
+                                >
+                                  <FaPlus size={16} />
+                                </button>
+                              </div>
+                            ) : (
+                              <button
+                                onClick={(e) => { e.stopPropagation(); handleAddToCartFromButton(item); }} // Stop propagation
+                                className="bg-[#ffaa00] text-white px-5 py-2.5 rounded-lg hover:bg-[#e59400] transition font-semibold text-lg shadow-md hover:shadow-lg flex items-center justify-center"
+                              >
+                                <FaPlus className="mr-2" /> Add
+                              </button>
+                            )}
+                          </div>
+                        )}
                       </div>
-                      {userRole === 'customer' ? (
-                        <button
-                          onClick={() => handleBuyClick(item)}
-                          className="mt-5 bg-[#ffaa00] text-white px-5 py-2.5 rounded-lg hover:bg-[#e59400] transition duration-200 self-start font-semibold shadow-md hover:shadow-lg"
-                        >
-                          Buy
-                        </button>
-                      ) : (
-                        <p className="mt-5 text-sm text-gray-500">Log in as customer to buy</p>
-                      )}
-                    </div>
-                  ))}
+                    );
+                  })}
                 </div>
               </div>
             ))}
@@ -266,6 +219,11 @@ const RestaurantDetails = () => {
             </ul>
           </div>
         </div>
+      )}
+
+      {/* Menu Item Details Modal */}
+      {isModalOpen && selectedMenuItem && (
+        <MenuItemModal item={selectedMenuItem} onClose={handleCloseModal} />
       )}
     </div>
   );
