@@ -2,19 +2,21 @@
 import { useState } from 'react';
 import { useNavigate, Link } from 'react-router-dom';
 import { FaUserCircle, FaBars, FaTimes, FaShoppingCart, FaClipboardList } from 'react-icons/fa';
+import { useCart } from '../context/CartContext'; // Import useCart hook
 
 const Navbar = () => {
   const [isMenuOpen, setIsMenuOpen] = useState(false);
   const [isProfileOpen, setIsProfileOpen] = useState(false);
   const navigate = useNavigate();
+  const { getTotalItemsInCart } = useCart(); // Use cart hook to get item count
 
   const handleLogout = () => {
-    // Find the current session token key and remove it
     const sessionKey = Object.keys(sessionStorage).find(key => key.startsWith('token_'));
     if (sessionKey) {
       sessionStorage.removeItem(sessionKey);
     }
-    // No need to remove from localStorage anymore
+    // Clear cart on logout
+    sessionStorage.removeItem('bitmeal_cart');
     navigate('/login');
   };
 
@@ -55,9 +57,13 @@ const Navbar = () => {
         {/* Right Corner - Profile and Cart Icons */}
         <div className="flex items-center space-x-4">
           <div className="relative">
-            <Link to="#" className="text-[#4f4f4f] hover:text-[#ffaa00] transition-colors duration-200">
+            <Link to="/cart" className="text-[#4f4f4f] hover:text-[#ffaa00] transition-colors duration-200">
               <FaShoppingCart className="h-6 w-6" />
-              <span className="absolute -top-2 -right-2 bg-[#ffaa00] text-white text-xs rounded-full h-4 w-4 flex items-center justify-center">1</span>
+              {getTotalItemsInCart() > 0 && (
+                <span className="absolute -top-2 -right-2 bg-[#ffaa00] text-white text-xs rounded-full h-4 w-4 flex items-center justify-center">
+                  {getTotalItemsInCart()}
+                </span>
+              )}
             </Link>
           </div>
           <div className="relative">
