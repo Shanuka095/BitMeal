@@ -1,19 +1,22 @@
 const Restaurant = require('../models/restaurantModel');
 const Joi = require('joi');
+const axios = require('axios'); // Keep axios for inter-service communication
+
+// Base URL for the RestaurantService (can be an environment variable in production)
+const RESTAURANT_SERVICE_URL = 'http://localhost:3003/api/restaurants'; // Used by OrderService
 
 // Validation Schemas
 const restaurantSchema = Joi.object({
   name: Joi.string().min(3).max(100).required(),
   address: Joi.string().min(5).max(200).required(),
-  // FIX: Changed .uri() to just .string() as we store filenames, not full URIs
   imageUrl: Joi.string().optional().allow(''),
 });
 
 const menuItemSchema = Joi.object({
   name: Joi.string().min(3).max(100).required(),
-  price: Joi.number().min(0).required(),
+  normalPrice: Joi.number().min(0).required(), // Changed from 'price'
+  extraPriceForFull: Joi.number().min(0).default(0), // New field, optional, defaults to 0
   category: Joi.string().min(2).max(50).required(),
-  // FIX: Changed .uri() to just .string() as we store filenames, not full URIs
   imageUrl: Joi.string().optional().allow(''),
 });
 
@@ -171,9 +174,21 @@ const deleteRestaurant = async (req, res) => {
 // Admin: Add a menu item (including image)
 const addMenuItem = async (req, res) => {
   try {
-    const { name, price, category } = req.body;
+    const { name, normalPrice, extraPriceForFull, category } = req.body;
     const imageUrl = req.file ? req.file.filename : '';
-    const { error } = menuItemSchema.validate({ name, price, category, imageUrl });
+
+    // FIX: Ensure prices are numbers before validation and saving
+    const parsedNormalPrice = Number(normalPrice);
+    const parsedExtraPriceForFull = Number(extraPriceForFull || 0); // Default to 0 if empty or undefined
+
+    const { error } = menuItemSchema.validate({
+      name,
+      normalPrice: parsedNormalPrice,
+      extraPriceForFull: parsedExtraPriceForFull,
+      category,
+      imageUrl
+    });
+
     if (error) {
       console.error('AddMenuItem validation error:', error.details[0].message);
       return res.status(400).json({ error: error.details[0].message });
@@ -187,7 +202,13 @@ const addMenuItem = async (req, res) => {
     const restaurant = await Restaurant.findOne({ _id: req.params.id, owner: req.user.userId });
     if (!restaurant) return res.status(404).json({ error: 'Restaurant not found or not owned by user' });
 
-    restaurant.menu.push({ name, price, category, imageUrl });
+    restaurant.menu.push({
+      name,
+      normalPrice: parsedNormalPrice,
+      extraPriceForFull: parsedExtraPriceForFull,
+      category,
+      imageUrl
+    });
     await restaurant.save();
     console.log('Menu item added to restaurant:', restaurant._id);
     res.status(201).json(restaurant.menu[restaurant.menu.length - 1]);
@@ -217,9 +238,20 @@ const getRestaurantDetails = async (req, res) => {
 // Admin: Update a menu item (including image)
 const updateMenuItem = async (req, res) => {
   try {
-    const { name, price, category } = req.body;
+    const { name, normalPrice, extraPriceForFull, category } = req.body;
     const imageUrl = req.file ? req.file.filename : req.body.imageUrl || '';
-    const { error } = menuItemSchema.validate({ name, price, category, imageUrl });
+
+    // FIX: Ensure prices are numbers before validation and saving
+    const parsedNormalPrice = Number(normalPrice);
+    const parsedExtraPriceForFull = Number(extraPriceForFull || 0); // Default to 0 if empty or undefined
+
+    const { error } = menuItemSchema.validate({
+      name,
+      normalPrice: parsedNormalPrice,
+      extraPriceForFull: parsedExtraPriceForFull,
+      category,
+      imageUrl
+    });
     if (error) {
       console.error('UpdateMenuItem validation error:', error.details[0].message);
       return res.status(400).json({ error: error.details[0].message });
@@ -236,7 +268,13 @@ const updateMenuItem = async (req, res) => {
     const menuItem = restaurant.menu.id(req.params.menuId);
     if (!menuItem) return res.status(404).json({ error: 'Menu item not found' });
 
-    Object.assign(menuItem, { name, price, category, imageUrl });
+    Object.assign(menuItem, {
+      name,
+      normalPrice: parsedNormalPrice,
+      extraPriceForFull: parsedExtraPriceForFull,
+      category,
+      imageUrl
+    });
     await restaurant.save();
     console.log('Menu item updated:', req.params.menuId, 'for restaurant:', restaurant._id);
     res.json(menuItem);
