@@ -2,7 +2,7 @@ import { useState, useEffect } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import axios from 'axios';
 import { FaPlus, FaEdit, FaTrash, FaArrowLeft } from 'react-icons/fa';
-import jwtDecode from 'jwt-decode'; // Keep this for role check if needed, but not for token retrieval
+import jwtDecode from 'jwt-decode';
 
 const AdminRestaurantDetails = () => {
   const { id } = useParams();
@@ -15,7 +15,6 @@ const AdminRestaurantDetails = () => {
     const fetchRestaurantDetails = async () => {
       setLoading(true);
       setError('');
-      // Get token from sessionStorage
       const sessionKey = Object.keys(sessionStorage).find(key => key.startsWith('token_'));
       const token = sessionKey ? sessionStorage.getItem(sessionKey) : null;
 
@@ -57,7 +56,6 @@ const AdminRestaurantDetails = () => {
 
   const handleDeleteMenuItem = async (menuItemId, menuItemName) => {
     if (window.confirm(`Are you sure you want to delete "${menuItemName}"? This action cannot be undone.`)) {
-      // Get token from sessionStorage
       const sessionKey = Object.keys(sessionStorage).find(key => key.startsWith('token_'));
       const token = sessionKey ? sessionStorage.getItem(sessionKey) : null;
       if (!token) {
@@ -137,7 +135,8 @@ const AdminRestaurantDetails = () => {
                 <li key={item._id} className="bg-white p-5 rounded-lg shadow-md hover:shadow-xl transition flex flex-col justify-between border border-gray-100">
                   <div>
                     <h4 className="text-lg font-semibold text-gray-800 mb-1">{item.name}</h4>
-                    <p className="text-gray-700 font-bold mb-1">Rs. {item.price}</p>
+                    {/* Display normal price and optionally full price */}
+                    <p className="text-gray-700 font-bold mb-1">Rs. {item.normalPrice} {item.extraPriceForFull > 0 && `(Full: Rs. ${item.normalPrice + item.extraPriceForFull})`}</p>
                     <p className="text-sm text-gray-500 mb-2">Category: {item.category}</p>
                     {item.imageUrl && (
                       <img
