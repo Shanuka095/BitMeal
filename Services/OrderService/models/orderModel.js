@@ -20,6 +20,11 @@ const orderItemSchema = new mongoose.Schema({
     required: true,
     min: 1,
   },
+  size: { // New field to store selected size (e.g., 'normal', 'full')
+    type: String,
+    enum: ['normal', 'full'],
+    default: 'normal',
+  },
   // You might add other fields like imageUrl, notes, etc.
 });
 
