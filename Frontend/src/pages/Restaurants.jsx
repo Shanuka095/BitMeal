@@ -16,7 +16,7 @@ const Restaurants = ({ standalone }) => {
         const response = await axios.get('http://localhost:3003/api/restaurants/public');
         const data = response.data.data || response.data;
         setRestaurants(Array.isArray(data) ? data : []);
-        setFilteredRestaurants(Array.isArray(data) ? data : []); // Initialize filtered list
+        setFilteredRestaurants(Array.isArray(data) ? data : []);
       } catch (err) {
         setError(err.response?.data?.error || 'Failed to fetch restaurants');
       } finally {
@@ -26,40 +26,37 @@ const Restaurants = ({ standalone }) => {
     fetchRestaurants();
   }, []);
 
-  // Effect for search functionality
   useEffect(() => {
     const lowercasedSearchTerm = searchTerm.toLowerCase();
     if (lowercasedSearchTerm === '') {
-      setFilteredRestaurants(restaurants); // Show all if search term is empty
+      setFilteredRestaurants(restaurants);
       return;
     }
 
     const results = restaurants.filter(restaurant => {
-      // Search by restaurant name
       if (restaurant.name.toLowerCase().includes(lowercasedSearchTerm)) {
         return true;
       }
-      // Search by menu item name within the restaurant's menu
       if (restaurant.menu && restaurant.menu.some(item =>
-        item.name.toLowerCase().includes(lowercasedSearchTerm)
+        item.name.toLowerCase().includes(lowercasedSearchTerm) ||
+        item.category.toLowerCase().includes(lowercasedSearchTerm) // Also search by category
       )) {
         return true;
       }
       return false;
     });
     setFilteredRestaurants(results);
-  }, [searchTerm, restaurants]); // Re-run when search term or original restaurants list changes
+  }, [searchTerm, restaurants]);
 
-  if (loading) return <div className="p-6 text-center"><p className="text-gray-600">Loading...</p></div>;
+  if (loading) return <div className="p-6 text-center pt-24"><p className="text-gray-600">Loading...</p></div>;
   return (
-    <div className="p-6 pt-24"> {/* Added pt-24 to push content below Navbar */}
+    <div className="p-6 pt-24">
       <h2 className="text-3xl font-bold text-gray-800 mb-6">{standalone ? 'Restaurants' : 'Explore Restaurants'}</h2>
 
-      {/* Search Bar */}
       <div className="mb-8 max-w-xl mx-auto">
         <input
           type="text"
-          placeholder="Search restaurants or menu items..."
+          placeholder="Search restaurants, menu items, or categories..."
           className="w-full p-3 border border-gray-300 rounded-lg shadow-sm focus:outline-none focus:ring-2 focus:ring-[#ffaa00] text-gray-700"
           value={searchTerm}
           onChange={(e) => setSearchTerm(e.target.value)}
