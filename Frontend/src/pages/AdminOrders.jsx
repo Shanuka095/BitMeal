@@ -15,7 +15,6 @@ const AdminOrders = () => {
     const fetchAdminRestaurants = async () => {
       setLoading(true);
       setError('');
-      // Get token from sessionStorage
       const sessionKey = Object.keys(sessionStorage).find(key => key.startsWith('token_'));
       const token = sessionKey ? sessionStorage.getItem(sessionKey) : null;
       if (!token) {
@@ -55,7 +54,6 @@ const AdminOrders = () => {
       setLoading(true);
       setError('');
       setUpdateMessage('');
-      // Get token from sessionStorage
       const sessionKey = Object.keys(sessionStorage).find(key => key.startsWith('token_'));
       const token = sessionKey ? sessionStorage.getItem(sessionKey) : null;
       if (!token) {
@@ -83,7 +81,6 @@ const AdminOrders = () => {
   const handleStatusChange = async (orderId, newStatus) => {
     setUpdateMessage('');
     try {
-      // Get token from sessionStorage
       const sessionKey = Object.keys(sessionStorage).find(key => key.startsWith('token_'));
       const token = sessionKey ? sessionStorage.getItem(sessionKey) : null;
       if (!token) {
@@ -172,6 +169,7 @@ const AdminOrders = () => {
                 {order.items.map((item, index) => (
                   <li key={index} className="text-gray-600">
                     {item.name} (x{item.quantity}) - <span className="font-semibold">Rs. {item.price}</span>
+                    {item.size && <span className="text-sm text-gray-500 ml-2">({item.size === 'full' ? 'Full Size' : 'Normal Size'})</span>} {/* Display size */}
                   </li>
                 ))}
               </ul>
