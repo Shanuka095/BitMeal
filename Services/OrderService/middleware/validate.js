@@ -21,6 +21,9 @@ const orderItemSchema = Joi.object({
     'number.min': '"item quantity" must be at least 1',
     'any.required': '"item quantity" is required',
   }),
+  size: Joi.string().valid('normal', 'full').optional().messages({ // FIX: Added 'size' field validation
+    'any.only': '"size" must be either "normal" or "full"',
+  }),
 });
 
 // Joi schema for creating a new order
