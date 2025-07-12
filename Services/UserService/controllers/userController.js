@@ -10,7 +10,14 @@ const getProfile = async (req, res) => {
     const user = await User.findById(decoded.userId).select('-password -verificationToken');
     if (!user) return res.status(404).json({ error: 'User not found' });
 
-    res.json(user);
+    res.json({
+      name: user.name || '',
+      phone: user.phone || '',
+      address: user.profile?.address || '', // <-- FETCH ADDRESS FROM PROFILE SUB-DOCUMENT
+      profileImageUrl: user.profile?.profileImageUrl || '',
+      createdAt: user.createdAt,
+      updatedAt: user.updatedAt,
+    });
   } catch (error) {
     res.status(500).json({ error: error.message });
   }
@@ -22,18 +29,26 @@ const updateProfile = async (req, res) => {
     if (!token) return res.status(401).json({ error: 'No token provided' });
 
     const decoded = jwt.verify(token, process.env.JWT_SECRET);
+    // Destructure name, phone from root, address from body for profile sub-document
     const { name, phone, address } = req.body;
+    const profileImageUrl = req.file ? req.file.filename : req.body.profileImageUrl || '';
 
     const user = await User.findByIdAndUpdate(
       decoded.userId,
-      { 'profile.name': name, 'profile.phone': phone, 'profile.address': address },
-      { new: true }
+      {
+        name: name,
+        phone: phone,
+        'profile.address': address, // <-- UPDATE ADDRESS IN PROFILE SUB-DOCUMENT
+        'profile.profileImageUrl': profileImageUrl,
+      },
+      { new: true, runValidators: true }
     ).select('-password -verificationToken');
 
     if (!user) return res.status(404).json({ error: 'User not found' });
     res.json(user);
   } catch (error) {
-    res.status(500).json({ error: error.message });
+    console.error('Error updating profile:', error);
+    res.status(500).json({ error: error.message || 'Failed to update profile' });
   }
 };
 
