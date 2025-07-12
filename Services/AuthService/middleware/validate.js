@@ -16,9 +16,18 @@ const registerSchema = Joi.object({
         '"password" must contain at least 8 characters, one uppercase, one lowercase, one number, and one special character',
       'any.required': '"password" is required',
     }),
-  role: Joi.string()
-    .valid('customer', 'restaurant_admin', 'delivery_personnel')
-    .default('customer'),
+  phone: Joi.string()
+    .pattern(/^(07|(\+94)?)(\d{8})$/)
+    .required()
+    .messages({
+      'string.pattern.base': '"phone" number must be 10 digits and start with "07" or "+947" (e.g., 0712345678 or +94712345678)',
+      'any.required': '"phone" number is required',
+    }),
+  name: Joi.string().min(2).max(100).required().messages({ // <-- ADD THIS LINE
+    'string.min': '"name" must be at least 2 characters long',
+    'string.max': '"name" cannot exceed 100 characters',
+    'any.required': '"name" is required',
+  }),
 });
 
 const loginSchema = Joi.object({
