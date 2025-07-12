@@ -61,8 +61,7 @@ app.use('/api/restaurants', proxy('http://localhost:3003', {
     }
 }));
 
-// New: Proxy for OrderService
-app.use('/api/orders', proxy('http://localhost:3004', { // PORT for OrderService
+app.use('/api/orders', proxy('http://localhost:3004', {
     proxyReqPathResolver: (req) => {
         const newPath = `/api/orders${req.url.replace(/\/+$/, '')}`;
         console.log(`Proxying ${req.method} request to OrderService: ${newPath}`);
