@@ -5,6 +5,7 @@ import jwtDecode from 'jwt-decode';
 import MenuItemModal from '../components/MenuItemModal';
 import { useCart } from '../context/CartContext';
 import { FaPlus, FaMinus, FaTrash } from 'react-icons/fa';
+import { useModal } from '../context/ModalContext'; // Import useModal
 
 const RestaurantDetails = () => {
   const { id } = useParams();
@@ -20,6 +21,7 @@ const RestaurantDetails = () => {
   const [selectedMenuItem, setSelectedMenuItem] = useState(null);
 
   const { addToCart, cartItems, incrementQuantity, decrementQuantity, removeFromCart } = useCart();
+  const { showAlert, showPrompt } = useModal(); // Use useModal hook
 
   useEffect(() => {
     const fetchDetails = async () => {
@@ -83,10 +85,13 @@ const RestaurantDetails = () => {
   };
 
   const handleAddToCartFromButton = (item) => {
-    // FIX: Pass restaurant._id as the fourth argument to addToCart
+    if (!restaurant || !restaurant._id) {
+      console.error("Restaurant ID is not available yet when trying to add to cart.");
+      showAlert("Cannot add to cart: Restaurant data not fully loaded.");
+      return;
+    }
     addToCart(item, 1, 'normal', restaurant._id);
-    setOrderMessage(`'${item.name}' added to cart!`);
-    setTimeout(() => setOrderMessage(''), 2000);
+    showAlert(`'${item.name}' added to cart!`);
   };
 
   const scrollToCategory = (category) => {
@@ -132,7 +137,6 @@ const RestaurantDetails = () => {
                 <h3 className="text-2xl font-bold text-gray-800 mb-4 border-b-2 border-[#ffaa00] pb-2">{category}</h3>
                 <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-2 gap-6">
                   {(groupedMenu[category] || []).map((item) => {
-                    // Ensure item is valid before accessing properties
                     if (!item) return null;
 
                     const cartItemNormal = cartItems.find(cartIt => cartIt.menuItemId === item._id && cartIt.size === 'normal');
@@ -158,7 +162,7 @@ const RestaurantDetails = () => {
                             {(item.extraPriceForFull || 0) > 0 && ` | Full: Rs. ${((item.normalPrice || 0) + (item.extraPriceForFull || 0)).toFixed(2)}`}
                           </p>
                         </div>
-                        {userRole === 'customer' && (
+                        {userRole === 'customer' && restaurant && restaurant._id && (
                           <div className="mt-5 flex justify-end">
                             {cartItemNormal || cartItemFull ? (
                               <div className="flex items-center space-x-2 bg-gray-100 rounded-lg p-1">
@@ -222,7 +226,7 @@ const RestaurantDetails = () => {
       )}
 
       {/* Menu Item Details Modal */}
-      {isModalOpen && selectedMenuItem && (
+      {isModalOpen && selectedMenuItem && restaurant && restaurant._id && (
         <MenuItemModal item={selectedMenuItem} onClose={handleCloseModal} restaurantId={restaurant._id} />
       )}
     </div>
