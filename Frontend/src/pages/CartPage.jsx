@@ -4,20 +4,22 @@ import { FaTrash, FaPlus, FaMinus } from 'react-icons/fa';
 import axios from 'axios';
 import jwtDecode from 'jwt-decode';
 import { useNavigate } from 'react-router-dom';
+import { useModal } from '../context/ModalContext'; // Import useModal
 
 const CartPage = () => {
   const { cartItems, incrementQuantity, decrementQuantity, removeFromCart, getCartTotal, clearCart } = useCart();
   const [orderMessage, setOrderMessage] = useState('');
   const [loading, setLoading] = useState(false);
   const navigate = useNavigate();
+  const { showAlert, showPrompt } = useModal(); // Use useModal hook
 
   const handleCheckout = async () => {
     setLoading(true);
-    setOrderMessage('');
+    setOrderMessage(''); // Clear previous messages
     try {
       const token = sessionStorage.getItem(Object.keys(sessionStorage).find(key => key.startsWith('token_')));
       if (!token) {
-        setOrderMessage('Error: You must be logged in to checkout.');
+        showAlert('Error: You must be logged in to checkout.');
         setLoading(false);
         return;
       }
@@ -25,55 +27,78 @@ const CartPage = () => {
       const decodedToken = jwtDecode(token);
       const userId = decodedToken.userId;
 
-      // Ensure all items belong to the same restaurant for a single order
       if (cartItems.length === 0) {
-        setOrderMessage('Error: Your cart is empty.');
-        setLoading(false);
-        return;
-      }
-      const restaurantId = cartItems[0].restaurantId; // Assuming all items are from one restaurant
-
-      const deliveryAddress = prompt("Please confirm your delivery address:");
-      if (!deliveryAddress) {
-        setOrderMessage('Delivery address is required to place the order.');
+        showAlert('Error: Your cart is empty.');
         setLoading(false);
         return;
       }
 
-      const orderItems = cartItems.map(item => ({
-        menuItemId: item.menuItemId,
-        name: item.name,
-        price: item.size === 'full' ? (item.normalPrice + item.extraPriceForFull) : item.normalPrice,
-        quantity: item.quantity,
-        size: item.size,
-      }));
+      const firstRestaurantId = cartItems[0].restaurantId;
+      const allSameRestaurant = cartItems.every(item => item.restaurantId === firstRestaurantId);
 
-      const totalAmount = getCartTotal();
+      if (!firstRestaurantId || !allSameRestaurant) {
+        showAlert("Error: All items in the cart must be from the same restaurant. Please clear your cart and try again.");
+        setLoading(false);
+        return;
+      }
 
-      const orderData = {
-        restaurantId: restaurantId,
-        items: orderItems,
-        totalAmount: totalAmount,
-        deliveryAddress: deliveryAddress,
-      };
+      showPrompt(
+        "Confirm Delivery Address",
+        "Please enter your delivery address:",
+        "Your full address",
+        async (deliveryAddress) => { // onConfirm callback
+          if (!deliveryAddress || deliveryAddress.trim() === '') {
+            showAlert('Delivery address is required to place the order.');
+            setLoading(false);
+            return;
+          }
 
-      const response = await axios.post('http://localhost:3000/api/orders', orderData, {
-        headers: {
-          Authorization: `Bearer ${token}`,
-          'Content-Type': 'application/json',
+          const orderItems = cartItems.map(item => ({
+            menuItemId: item.menuItemId,
+            name: item.name,
+            price: (item.size === 'full' ? (item.normalPrice + (item.extraPriceForFull || 0)) : item.normalPrice) || 0,
+            quantity: item.quantity,
+            size: item.size,
+          }));
+
+          const totalAmount = getCartTotal();
+
+          const orderData = {
+            restaurantId: firstRestaurantId,
+            items: orderItems,
+            totalAmount: totalAmount,
+            deliveryAddress: deliveryAddress,
+          };
+
+          try {
+            const response = await axios.post('http://localhost:3000/api/orders', orderData, {
+              headers: {
+                Authorization: `Bearer ${token}`,
+                'Content-Type': 'application/json',
+              },
+            });
+
+            showAlert(`Order placed successfully! Order ID: ${response.data._id}`);
+            clearCart();
+            setTimeout(() => navigate('/my-orders'), 2000);
+          } catch (err) {
+            const msg = err.response?.data?.error || 'Failed to place order.';
+            showAlert(`Error: ${msg}`);
+            console.error('Checkout error:', err.response ? err.response.data : err);
+          } finally {
+            setLoading(false);
+          }
         },
-      });
-
-      setOrderMessage(`Order placed successfully! Order ID: ${response.data._id}`);
-      clearCart(); // Clear cart after successful order
-      // Optionally navigate to order history or a confirmation page
-      setTimeout(() => navigate('/my-orders'), 2000);
+        () => { // onCancel callback
+          setLoading(false);
+          showAlert('Order placement cancelled.');
+        }
+      );
 
     } catch (err) {
-      const msg = err.response?.data?.error || 'Failed to place order.';
-      setOrderMessage(`Error: ${msg}`);
-      console.error('Checkout error:', err.response ? err.response.data : err);
-    } finally {
+      const msg = err.response?.data?.error || 'Failed to initiate checkout.';
+      showAlert(`Error: ${msg}`);
+      console.error('Checkout initiation error:', err.response ? err.response.data : err);
       setLoading(false);
     }
   };
@@ -108,7 +133,7 @@ const CartPage = () => {
                     <p className="text-sm text-gray-600">
                       {item.category} - {item.size === 'full' ? 'Full Size' : 'Normal Size'}
                     </p>
-                    <p className="text-md font-bold text-gray-900">Rs. {((item.size === 'full' ? (item.normalPrice + item.extraPriceForFull) : item.normalPrice) || 0).toFixed(2)}</p>
+                    <p className="text-md font-bold text-gray-900">Rs. {((item.size === 'full' ? (item.normalPrice + (item.extraPriceForFull || 0)) : item.normalPrice) || 0).toFixed(2)}</p>
                   </div>
                 </div>
                 <div className="flex items-center space-x-3">
