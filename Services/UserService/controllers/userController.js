@@ -10,10 +10,11 @@ const getProfile = async (req, res) => {
     const user = await User.findById(decoded.userId).select('-password -verificationToken');
     if (!user) return res.status(404).json({ error: 'User not found' });
 
+    // Return root-level name, phone, and nested profile.address, profileImageUrl, createdAt
     res.json({
       name: user.name || '',
       phone: user.phone || '',
-      address: user.profile?.address || '', // <-- FETCH ADDRESS FROM PROFILE SUB-DOCUMENT
+      address: user.profile?.address || '', // Address is nested
       profileImageUrl: user.profile?.profileImageUrl || '',
       createdAt: user.createdAt,
       updatedAt: user.updatedAt,
@@ -29,18 +30,20 @@ const updateProfile = async (req, res) => {
     if (!token) return res.status(401).json({ error: 'No token provided' });
 
     const decoded = jwt.verify(token, process.env.JWT_SECRET);
-    // Destructure name, phone from root, address from body for profile sub-document
-    const { name, phone, address } = req.body;
+    // name and phone are now expected at the root level for updates
+    const { name, phone, address } = req.body; // Address is still from body
     const profileImageUrl = req.file ? req.file.filename : req.body.profileImageUrl || '';
+
+    const updateFields = {
+      name: name,
+      phone: phone,
+      'profile.address': address, // Update nested address
+      'profile.profileImageUrl': profileImageUrl,
+    };
 
     const user = await User.findByIdAndUpdate(
       decoded.userId,
-      {
-        name: name,
-        phone: phone,
-        'profile.address': address, // <-- UPDATE ADDRESS IN PROFILE SUB-DOCUMENT
-        'profile.profileImageUrl': profileImageUrl,
-      },
+      updateFields,
       { new: true, runValidators: true }
     ).select('-password -verificationToken');
 
