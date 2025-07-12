@@ -3,13 +3,15 @@ import { useParams, useNavigate } from 'react-router-dom';
 import axios from 'axios';
 import { FaPlus, FaEdit, FaTrash, FaArrowLeft } from 'react-icons/fa';
 import jwtDecode from 'jwt-decode';
+import { useModal } from '../context/ModalContext'; // Import useModal
 
-const AdminRestaurantDetails = () => {
+const AdminRestaurantDetails = () => { // Removed showAlert, showConfirm from props
   const { id } = useParams();
   const navigate = useNavigate();
   const [restaurant, setRestaurant] = useState(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');
+  const { showAlert, showConfirm } = useModal(); // Use useModal hook
 
   useEffect(() => {
     const fetchRestaurantDetails = async () => {
@@ -54,28 +56,35 @@ const AdminRestaurantDetails = () => {
     navigate(`/admin/restaurant/${id}/menu/${menuItem._id}/edit`);
   };
 
-  const handleDeleteMenuItem = async (menuItemId, menuItemName) => {
-    if (window.confirm(`Are you sure you want to delete "${menuItemName}"? This action cannot be undone.`)) {
-      const sessionKey = Object.keys(sessionStorage).find(key => key.startsWith('token_'));
-      const token = sessionKey ? sessionStorage.getItem(sessionKey) : null;
-      if (!token) {
-        setError('No authentication token found. Please log in.');
-        return;
+  const handleDeleteMenuItem = (menuItemId, menuItemName) => {
+    showConfirm(
+      `Are you sure you want to delete "${menuItemName}"? This action cannot be undone.`,
+      async () => {
+        const sessionKey = Object.keys(sessionStorage).find(key => key.startsWith('token_'));
+        const token = sessionKey ? sessionStorage.getItem(sessionKey) : null;
+        if (!token) {
+          showAlert('No authentication token found. Please log in.');
+          return;
+        }
+        try {
+          await axios.delete(`http://localhost:3003/api/restaurants/${id}/menu/${menuItemId}`, {
+            headers: { Authorization: `Bearer ${token}` },
+          });
+          setRestaurant(prev => ({
+            ...prev,
+            menu: prev.menu.filter(item => item._id !== menuItemId),
+          }));
+          showAlert(`Menu item "${menuItemName}" deleted successfully.`);
+          console.log(`Frontend (AdminRestaurantDetails) - Menu item ${menuItemName} deleted successfully.`);
+        } catch (err) {
+          showAlert(err.response?.data?.error || 'Failed to delete menu item');
+          console.error('Frontend (AdminRestaurantDetails) - Delete error:', err.response ? err.response.data : err);
+        }
+      },
+      () => {
+        console.log('Delete cancelled.');
       }
-      try {
-        await axios.delete(`http://localhost:3003/api/restaurants/${id}/menu/${menuItemId}`, {
-          headers: { Authorization: `Bearer ${token}` },
-        });
-        setRestaurant(prev => ({
-          ...prev,
-          menu: prev.menu.filter(item => item._id !== menuItemId),
-        }));
-        console.log(`Frontend (AdminRestaurantDetails) - Menu item ${menuItemName} deleted successfully.`);
-      } catch (err) {
-        setError(err.response?.data?.error || 'Failed to delete menu item');
-        console.error('Frontend (AdminRestaurantDetails) - Delete error:', err.response ? err.response.data : err);
-      }
-    }
+    );
   };
 
   const handleBack = () => {
@@ -135,7 +144,6 @@ const AdminRestaurantDetails = () => {
                 <li key={item._id} className="bg-white p-5 rounded-lg shadow-md hover:shadow-xl transition flex flex-col justify-between border border-gray-100">
                   <div>
                     <h4 className="text-lg font-semibold text-gray-800 mb-1">{item.name}</h4>
-                    {/* Display normal price and optionally full price */}
                     <p className="text-gray-700 font-bold mb-1">Rs. {item.normalPrice} {item.extraPriceForFull > 0 && `(Full: Rs. ${item.normalPrice + item.extraPriceForFull})`}</p>
                     <p className="text-sm text-gray-500 mb-2">Category: {item.category}</p>
                     {item.imageUrl && (
