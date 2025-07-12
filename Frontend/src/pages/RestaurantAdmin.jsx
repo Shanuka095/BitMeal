@@ -3,18 +3,19 @@ import { useNavigate } from 'react-router-dom';
 import axios from 'axios';
 import { FaTrash, FaEye } from 'react-icons/fa';
 import jwtDecode from 'jwt-decode';
+import { useModal } from '../context/ModalContext'; // Import useModal
 
-const RestaurantAdmin = () => {
+const RestaurantAdmin = () => { // Removed showAlert, showConfirm from props
   const navigate = useNavigate();
   const [restaurants, setRestaurants] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');
+  const { showAlert, showConfirm } = useModal(); // Use useModal hook
 
   useEffect(() => {
     const fetchRestaurants = async () => {
       setLoading(true);
       setError('');
-      // Get token from sessionStorage
       const sessionKey = Object.keys(sessionStorage).find(key => key.startsWith('token_'));
       const token = sessionKey ? sessionStorage.getItem(sessionKey) : null;
 
@@ -58,26 +59,32 @@ const RestaurantAdmin = () => {
     fetchRestaurants();
   }, []);
 
-  const handleDeleteRestaurant = async (id, name) => {
-    if (window.confirm(`Are you sure you want to delete "${name}"? This action cannot be undone.`)) {
-      // Get token from sessionStorage
-      const sessionKey = Object.keys(sessionStorage).find(key => key.startsWith('token_'));
-      const token = sessionKey ? sessionStorage.getItem(sessionKey) : null;
-      if (!token) {
-        setError('No authentication token found. Please log in.');
-        return;
+  const handleDeleteRestaurant = (id, name) => {
+    showConfirm(
+      `Are you sure you want to delete "${name}"? This action cannot be undone.`,
+      async () => {
+        const sessionKey = Object.keys(sessionStorage).find(key => key.startsWith('token_'));
+        const token = sessionKey ? sessionStorage.getItem(sessionKey) : null;
+        if (!token) {
+          showAlert('No authentication token found. Please log in.');
+          return;
+        }
+        try {
+          await axios.delete(`http://localhost:3003/api/restaurants/${id}`, {
+            headers: { Authorization: `Bearer ${token}` },
+          });
+          setRestaurants(restaurants.filter(r => r._id !== id));
+          showAlert(`Restaurant "${name}" deleted successfully.`);
+          console.log(`Frontend (RestaurantAdmin) - Restaurant ${name} deleted successfully.`);
+        } catch (err) {
+          showAlert(err.response?.data?.error || 'Failed to delete restaurant');
+          console.error('Frontend (RestaurantAdmin) - Delete error:', err.response ? err.response.data : err);
+        }
+      },
+      () => {
+        console.log('Delete cancelled.');
       }
-      try {
-        await axios.delete(`http://localhost:3003/api/restaurants/${id}`, {
-          headers: { Authorization: `Bearer ${token}` },
-        });
-        setRestaurants(restaurants.filter(r => r._id !== id));
-        console.log(`Frontend (RestaurantAdmin) - Restaurant ${name} deleted successfully.`);
-      } catch (err) {
-        setError(err.response?.data?.error || 'Failed to delete restaurant');
-        console.error('Frontend (RestaurantAdmin) - Delete error:', err.response ? err.response.data : err);
-      }
-    }
+    );
   };
 
   const handleViewDetails = (id) => navigate(`/admin/restaurant/${id}`);
