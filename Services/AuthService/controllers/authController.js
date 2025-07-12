@@ -8,7 +8,8 @@ const generateOTP = () => Math.floor(100000 + Math.random() * 900000).toString()
 
 // Register
 const register = async (req, res) => {
-  const { email, password, role } = req.body;
+  // Add 'name' to destructuring
+  const { email, password, phone, name } = req.body; // <-- ADD 'name' here
   try {
     const existingUser = await Auth.findOne({ email });
     if (existingUser) return res.status(400).json({ error: 'User already exists' });
@@ -19,7 +20,8 @@ const register = async (req, res) => {
     const otpExpires = new Date(Date.now() + 10 * 60 * 1000); // OTP valid for 10 minutes
     const otpToken = jwt.sign({ email }, process.env.JWT_SECRET, { expiresIn: '10m' });
 
-    const user = new Auth({ email, password: hashedPassword, role, otp: hashedOTP, otpExpires });
+    // Add 'name' to the user creation
+    const user = new Auth({ email, password: hashedPassword, phone, name, otp: hashedOTP, otpExpires }); // <-- ADD 'name' here
     await user.save();
 
     // Nodemailer Setup
@@ -91,7 +93,7 @@ const login = async (req, res) => {
     if (!isMatch) return res.status(400).json({ error: 'Invalid credentials' });
 
     const token = jwt.sign({ userId: user._id, role: user.role }, process.env.JWT_SECRET, { expiresIn: '1d' });
-    console.log(`Login successful for ${email}, role: ${user.role}`); // Debug log
+    console.log(`Login successful for ${email}, role: ${user.role}`);
     res.json({ token, role: user.role });
   } catch (error) {
     res.status(500).json({ error: error.message });
