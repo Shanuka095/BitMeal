@@ -2,6 +2,7 @@ import { useState, useEffect } from 'react';
 import axios from 'axios';
 import { format } from 'date-fns';
 import { FaSyncAlt } from 'react-icons/fa';
+import { useModal } from '../context/ModalContext'; // Import useModal
 
 const AdminOrders = () => {
   const [restaurants, setRestaurants] = useState([]);
@@ -10,6 +11,7 @@ const AdminOrders = () => {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');
   const [updateMessage, setUpdateMessage] = useState('');
+  const { showAlert, showConfirm } = useModal(); // Use useModal hook
 
   useEffect(() => {
     const fetchAdminRestaurants = async () => {
@@ -18,7 +20,7 @@ const AdminOrders = () => {
       const sessionKey = Object.keys(sessionStorage).find(key => key.startsWith('token_'));
       const token = sessionKey ? sessionStorage.getItem(sessionKey) : null;
       if (!token) {
-        setError('No authentication token found. Please log in.');
+        showAlert('No authentication token found. Please log in.');
         setLoading(false);
         return;
       }
@@ -57,7 +59,7 @@ const AdminOrders = () => {
       const sessionKey = Object.keys(sessionStorage).find(key => key.startsWith('token_'));
       const token = sessionKey ? sessionStorage.getItem(sessionKey) : null;
       if (!token) {
-        setError('No authentication token found. Please log in.');
+        showAlert('No authentication token found. Please log in.');
         setLoading(false);
         return;
       }
@@ -84,7 +86,7 @@ const AdminOrders = () => {
       const sessionKey = Object.keys(sessionStorage).find(key => key.startsWith('token_'));
       const token = sessionKey ? sessionStorage.getItem(sessionKey) : null;
       if (!token) {
-        setUpdateMessage('Error: No authentication token.');
+        showAlert('Error: No authentication token.');
         return;
       }
 
@@ -97,10 +99,10 @@ const AdminOrders = () => {
           order._id === orderId ? { ...order, status: newStatus } : order
         )
       );
-      setUpdateMessage('Order status updated successfully!');
+      showAlert('Order status updated successfully!');
     } catch (err) {
       const msg = err.response?.data?.error || 'Failed to update order status.';
-      setUpdateMessage(`Error: ${msg}`);
+      showAlert(`Error: ${msg}`);
       console.error('Frontend (AdminOrders) - Status update error:', err.response ? err.response.data : err);
     }
   };
@@ -169,7 +171,7 @@ const AdminOrders = () => {
                 {order.items.map((item, index) => (
                   <li key={index} className="text-gray-600">
                     {item.name} (x{item.quantity}) - <span className="font-semibold">Rs. {item.price}</span>
-                    {item.size && <span className="text-sm text-gray-500 ml-2">({item.size === 'full' ? 'Full Size' : 'Normal Size'})</span>} {/* Display size */}
+                    {item.size && <span className="text-sm text-gray-500 ml-2">({item.size === 'full' ? 'Full Size' : 'Normal Size'})</span>}
                   </li>
                 ))}
               </ul>
