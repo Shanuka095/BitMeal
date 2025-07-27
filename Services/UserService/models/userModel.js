@@ -1,17 +1,18 @@
 const mongoose = require('mongoose');
 
 const userSchema = new mongoose.Schema({
+  _id: { type: mongoose.Schema.Types.ObjectId, required: true },
   email: { type: String, required: true, unique: true },
-  password: { type: String, required: true }, // Ideally this should not be here if AuthService is the source of truth
+  password: { type: String, required: false }, // <-- FIX: Make password not required in UserService
   role: { type: String, enum: ['customer', 'restaurant_admin', 'delivery_personnel'], default: 'customer' },
   isVerified: { type: Boolean, default: false },
   verificationToken: { type: String },
 
-  name: { type: String },    // <-- Ensure 'name' is here (from registration)
-  phone: { type: String },   // <-- Ensure 'phone' is here (from registration)
+  name: { type: String, required: true },
+  phone: { type: String, required: true },
 
   profile: {
-    address: { type: String }, // <-- 'address' remains in profile, updated separately
+    address: { type: String },
     profileImageUrl: { type: String, default: '' },
   },
 }, { timestamps: true });
