@@ -1,8 +1,11 @@
 import { useState, useEffect } from 'react';
 import axios from 'axios';
 import { format } from 'date-fns';
-import { FaSyncAlt } from 'react-icons/fa';
-import { useModal } from '../context/ModalContext'; // Import useModal
+import { FaSyncAlt, FaMotorcycle, FaCheckCircle } from 'react-icons/fa';
+import { useModal } from '../context/ModalContext';
+
+// NEW: Import a modal component for assigning delivery person
+import AssignDeliveryModal from '../components/AssignDeliveryModal';
 
 const AdminOrders = () => {
   const [restaurants, setRestaurants] = useState([]);
@@ -10,9 +13,14 @@ const AdminOrders = () => {
   const [orders, setOrders] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');
-  const [updateMessage, setUpdateMessage] = useState('');
-  const { showAlert, showConfirm } = useModal(); // Use useModal hook
+  const { showAlert, showConfirm } = useModal();
 
+  // NEW state for the assignment modal
+  const [isAssignModalOpen, setIsAssignModalOpen] = useState(false);
+  const [orderToAssign, setOrderToAssign] = useState(null);
+  const [availableDrivers, setAvailableDrivers] = useState([]);
+
+  // Fetch admin restaurants
   useEffect(() => {
     const fetchAdminRestaurants = async () => {
       setLoading(true);
@@ -24,7 +32,6 @@ const AdminOrders = () => {
         setLoading(false);
         return;
       }
-      console.log('Frontend (AdminOrders) - Fetching admin restaurants with token:', token.substring(0, 10) + '...');
       try {
         const response = await axios.get('http://localhost:3000/api/restaurants', {
           headers: { Authorization: `Bearer ${token}` },
@@ -37,6 +44,7 @@ const AdminOrders = () => {
       } catch (err) {
         const errorMessage = err.response?.data?.error || 'Failed to fetch your restaurants.';
         setError(errorMessage);
+        showAlert(`Error: ${errorMessage}`);
         console.error('Frontend (AdminOrders) - Fetch restaurants error:', err.response ? err.response.data : err);
       } finally {
         setLoading(false);
@@ -45,43 +53,62 @@ const AdminOrders = () => {
     fetchAdminRestaurants();
   }, []);
 
-  useEffect(() => {
-    const fetchOrders = async () => {
-      if (!selectedRestaurantId) {
-        setOrders([]);
-        if (!loading) setLoading(false);
-        return;
-      }
+  // Fetch orders when restaurant changes or on refresh
+  const fetchOrders = async () => {
+    if (!selectedRestaurantId) {
+      setOrders([]);
+      return;
+    }
 
-      setLoading(true);
-      setError('');
-      setUpdateMessage('');
-      const sessionKey = Object.keys(sessionStorage).find(key => key.startsWith('token_'));
-      const token = sessionKey ? sessionStorage.getItem(sessionKey) : null;
-      if (!token) {
-        showAlert('No authentication token found. Please log in.');
-        setLoading(false);
-        return;
-      }
-      console.log('Frontend (AdminOrders) - Fetching orders for restaurant:', selectedRestaurantId, 'with token:', token.substring(0, 10) + '...');
-      try {
-        const response = await axios.get(`http://localhost:3000/api/orders/restaurant/${selectedRestaurantId}`, {
-          headers: { Authorization: `Bearer ${token}` },
-        });
-        setOrders(response.data);
-      } catch (err) {
-        const errorMessage = err.response?.data?.error || 'Failed to fetch orders for this restaurant.';
-        setError(errorMessage);
-        console.error('Frontend (AdminOrders) - Fetch orders error:', err.response ? err.response.data : err);
-      } finally {
-        setLoading(false);
-      }
-    };
+    setLoading(true);
+    setError('');
+    const sessionKey = Object.keys(sessionStorage).find(key => key.startsWith('token_'));
+    const token = sessionKey ? sessionStorage.getItem(sessionKey) : null;
+    if (!token) {
+      showAlert('No authentication token found. Please log in.');
+      setLoading(false);
+      return;
+    }
+    try {
+      const response = await axios.get(`http://localhost:3000/api/orders/restaurant/${selectedRestaurantId}`, {
+        headers: { Authorization: `Bearer ${token}` },
+      });
+      setOrders(response.data);
+    } catch (err) {
+      const errorMessage = err.response?.data?.error || 'Failed to fetch orders for this restaurant.';
+      setError(errorMessage);
+      showAlert(`Error: ${errorMessage}`);
+      console.error('Frontend (AdminOrders) - Fetch orders error:', err.response ? err.response.data : err);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  useEffect(() => {
     fetchOrders();
   }, [selectedRestaurantId]);
 
+  // NEW: Fetch available drivers for assignment
+  const fetchAvailableDrivers = async () => {
+    try {
+      const sessionKey = Object.keys(sessionStorage).find(key => key.startsWith('token_'));
+      const token = sessionKey ? sessionStorage.getItem(sessionKey) : null;
+      if (!token) {
+        showAlert('Authentication required to fetch drivers.');
+        return;
+      }
+      const response = await axios.get('http://localhost:3000/api/delivery', {
+        headers: { Authorization: `Bearer ${token}` },
+        params: { status: 'available' } // Optional: filter by status
+      });
+      setAvailableDrivers(response.data);
+    } catch (err) {
+      showAlert('Error fetching available drivers.');
+      console.error('Frontend (AdminOrders) - Fetch drivers error:', err.response?.data || err);
+    }
+  };
+
   const handleStatusChange = async (orderId, newStatus) => {
-    setUpdateMessage('');
     try {
       const sessionKey = Object.keys(sessionStorage).find(key => key.startsWith('token_'));
       const token = sessionKey ? sessionStorage.getItem(sessionKey) : null;
@@ -94,16 +121,49 @@ const AdminOrders = () => {
         headers: { Authorization: `Bearer ${token}` },
       });
 
-      setOrders(prevOrders =>
-        prevOrders.map(order =>
-          order._id === orderId ? { ...order, status: newStatus } : order
-        )
-      );
       showAlert('Order status updated successfully!');
+      fetchOrders();
     } catch (err) {
       const msg = err.response?.data?.error || 'Failed to update order status.';
       showAlert(`Error: ${msg}`);
       console.error('Frontend (AdminOrders) - Status update error:', err.response ? err.response.data : err);
+    }
+  };
+
+  // NEW: Handle assignment modal open
+  const handleOpenAssignModal = (order) => {
+    fetchAvailableDrivers();
+    setOrderToAssign(order);
+    setIsAssignModalOpen(true);
+  };
+
+  // NEW: Handle order assignment submission
+  const handleAssignDriver = async (deliveryPersonId) => {
+    if (!orderToAssign || !deliveryPersonId) {
+      showAlert('Invalid order or delivery person selected.');
+      return;
+    }
+
+    try {
+      const sessionKey = Object.keys(sessionStorage).find(key => key.startsWith('token_'));
+      const token = sessionKey ? sessionStorage.getItem(sessionKey) : null;
+      if (!token) {
+        showAlert('Authentication required.');
+        return;
+      }
+      
+      await axios.put(`http://localhost:3000/api/orders/${orderToAssign._id}/assign-delivery`, { deliveryPersonId }, {
+        headers: { Authorization: `Bearer ${token}` }
+      });
+
+      showAlert(`Order ${orderToAssign._id.substring(0, 8)} successfully assigned!`);
+      setIsAssignModalOpen(false);
+      setOrderToAssign(null);
+      fetchOrders(); // Refresh order list
+    } catch (err) {
+      const msg = err.response?.data?.error || 'Failed to assign delivery person.';
+      showAlert(`Error: ${msg}`);
+      console.error('Frontend (AdminOrders) - Assign driver error:', err.response ? err.response.data : err);
     }
   };
 
@@ -118,7 +178,7 @@ const AdminOrders = () => {
       <h1 className="text-3xl font-bold text-gray-800 mb-6">Manage Orders</h1>
 
       {restaurants.length > 0 ? (
-        <div className="mb-6">
+        <div className="mb-6 flex items-center space-x-4">
           <label htmlFor="restaurant-select" className="block text-lg font-medium text-gray-700 mb-2">
             Select Restaurant:
           </label>
@@ -137,12 +197,6 @@ const AdminOrders = () => {
         </div>
       ) : (
         <p className="text-gray-600 mb-6">You don't have any restaurants to manage orders for. Please create one first.</p>
-      )}
-
-      {updateMessage && (
-        <div className={`p-3 mb-4 rounded-md text-center ${updateMessage.startsWith('Error') ? 'bg-red-100 text-red-700' : 'bg-green-100 text-green-700'}`}>
-          {updateMessage}
-        </div>
       )}
 
       {loading ? (
@@ -165,6 +219,9 @@ const AdminOrders = () => {
               <p className="text-gray-700 mb-1"><strong>User ID:</strong> {order.userId}</p>
               <p className="text-gray-700 mb-1"><strong>Order Date:</strong> {format(new Date(order.orderDate), 'PPP p')}</p>
               <p className="text-gray-700 mb-3"><strong>Delivery Address:</strong> {order.deliveryAddress}</p>
+              {order.deliveryPersonId && (
+                <p className="text-gray-700 mb-3"><strong>Assigned to:</strong> {order.deliveryPersonId}</p>
+              )}
 
               <h4 className="text-lg font-semibold text-gray-800 mb-2">Items:</h4>
               <ul className="list-disc pl-5 space-y-1 mb-4">
@@ -179,23 +236,42 @@ const AdminOrders = () => {
                 <div className="text-xl font-bold text-gray-900">
                   Total: Rs. {order.totalAmount.toFixed(2)}
                 </div>
-                <select
-                  value={order.status}
-                  onChange={(e) => handleStatusChange(order._id, e.target.value)}
-                  className="p-2 border border-gray-300 rounded-lg bg-white focus:outline-none focus:ring-2 focus:ring-blue-500"
-                >
-                  <option value="pending">Pending</option>
-                  <option value="confirmed">Confirmed</option>
-                  <option value="preparing">Preparing</option>
-                  <option value="out_for_delivery">Out for Delivery</option>
-                  <option value="delivered">Delivered</option>
-                  <option value="cancelled">Cancelled</option>
-                </select>
+                <div className="flex items-center space-x-2">
+                  {order.status === 'confirmed' && !order.deliveryPersonId && (
+                    <button
+                      onClick={() => handleOpenAssignModal(order)}
+                      className="bg-purple-600 text-white px-4 py-2 rounded-lg hover:bg-purple-700 flex items-center text-sm transition shadow-sm"
+                    >
+                      <FaCheckCircle className="mr-2" /> Assign Delivery
+                    </button>
+                  )}
+                  <select
+                    value={order.status}
+                    onChange={(e) => handleStatusChange(order._id, e.target.value)}
+                    className="p-2 border border-gray-300 rounded-lg bg-white focus:outline-none focus:ring-2 focus:ring-blue-500"
+                  >
+                    <option value="pending">Pending</option>
+                    <option value="confirmed">Confirmed</option>
+                    <option value="preparing">Preparing</option>
+                    <option value="out_for_delivery">Out for Delivery</option>
+                    <option value="delivered">Delivered</option>
+                    <option value="cancelled">Cancelled</option>
+                  </select>
+                </div>
               </div>
             </div>
           ))}
         </div>
       )}
+      
+      {/* NEW: Render the assignment modal */}
+      <AssignDeliveryModal
+        isOpen={isAssignModalOpen}
+        onClose={() => setIsAssignModalOpen(false)}
+        onAssign={handleAssignDriver}
+        order={orderToAssign}
+        drivers={availableDrivers}
+      />
     </div>
   );
 };
