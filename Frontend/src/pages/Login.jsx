@@ -24,6 +24,8 @@ const Login = () => {
         navigate('/dashboard', { state: { sessionKey } }); // Pass sessionKey in state
       } else if (role === 'restaurant_admin') {
         navigate('/admin', { state: { sessionKey } }); // Pass sessionKey in state
+      } else if (role === 'delivery_personnel') { // NEW: Add case for delivery personnel
+        navigate('/delivery-personnel', { state: { sessionKey } });
       } else {
         setError('Unknown role');
       }
@@ -82,6 +84,7 @@ const Login = () => {
           </p>
         </div>
       </div>
+      <Footer />
     </div>
   );
 };
