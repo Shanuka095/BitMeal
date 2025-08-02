@@ -1,5 +1,4 @@
 import React, { useState } from 'react';
-import { createRoot } from 'react-dom/client';
 import { BrowserRouter as Router, Route, Routes, Navigate, Outlet } from 'react-router-dom';
 import Navbar from './components/Navbar';
 import Footer from './components/Footer';
@@ -30,15 +29,18 @@ import ConfirmationModal from './components/ConfirmationModal';
 import PromptModal from './components/PromptModal';
 import { ModalProvider } from './context/ModalContext';
 
-// NEW: Import ManageDeliveryPersonnel page
 import ManageDeliveryPersonnel from './pages/ManageDeliveryPersonnel';
+
+// NEW: Import Delivery Personnel components and pages
+import DeliveryPersonnelLayout from './components/DeliveryPersonnelLayout';
+import DeliveryDashboard from './pages/DeliveryDashboard';
 
 
 function App() {
   // Global modal states
-  const [alertInfo, setAlertInfo] = useState(null); // { message: '...' }
-  const [confirmInfo, setConfirmInfo] = useState(null); // { message: '...', onConfirm: () => {}, onCancel: () => {} }
-  const [promptInfo, setPromptInfo] = useState(null); // { title: '...', message: '...', placeholder: '...', onConfirm: (value) => {}, onCancel: () => {} }
+  const [alertInfo, setAlertInfo] = useState(null);
+  const [confirmInfo, setConfirmInfo] = useState(null);
+  const [promptInfo, setPromptInfo] = useState(null);
 
   // Functions to trigger modals
   const showAlert = (message) => setAlertInfo({ message });
@@ -71,20 +73,17 @@ function App() {
     });
   };
 
-
   return (
     <Router>
-      {/* Render global modals */}
       {alertInfo && <AlertDialog message={alertInfo.message} onClose={() => setAlertInfo(null)} />}
       {confirmInfo && <ConfirmationModal {...confirmInfo} />}
       {promptInfo && <PromptModal {...promptInfo} />}
 
       <Routes>
-        {/* Customer and Public Routes with Navbar and Footer, wrapped by CartProvider and ModalProvider */}
+        {/* Customer and Public Routes with Navbar and Footer */}
         <Route
           element={
             <CartProvider>
-              {/* Wrap with ModalProvider here to provide context to all nested routes */}
               <ModalProvider showAlert={showAlert} showConfirm={showConfirm} showPrompt={showPrompt}>
                 <Navbar />
                 <div className="flex-grow">
@@ -99,7 +98,6 @@ function App() {
           <Route path="/login" element={<Login />} />
           <Route path="/register" element={<Register />} />
           <Route path="/verify-otp" element={<VerifyOTP />} />
-          {/* Protected routes will now consume context from ModalProvider */}
           <Route path="/dashboard" element={<ProtectedRoute><Dashboard /></ProtectedRoute>} />
           <Route path="/restaurants" element={<ProtectedRoute><Restaurants standalone={true} /></ProtectedRoute>} />
           <Route path="/restaurant/:id" element={<ProtectedRoute><RestaurantDetails /></ProtectedRoute>} />
@@ -108,12 +106,11 @@ function App() {
           <Route path="/cart" element={<ProtectedRoute><CartPage /></ProtectedRoute>} />
         </Route>
 
-        {/* Admin Routes with AdminLayout (no Navbar/Footer) - also wrapped by ModalProvider */}
+        {/* Admin Routes with AdminLayout */}
         <Route
           path="/admin/*"
           element={
             <ProtectedRoute>
-              {/* Admin routes also need access to modals, so wrap AdminLayout with ModalProvider */}
               <ModalProvider showAlert={showAlert} showConfirm={showConfirm} showPrompt={showPrompt}>
                 <AdminLayout />
               </ModalProvider>
@@ -127,8 +124,23 @@ function App() {
           <Route path="restaurant/:id" element={<AdminRestaurantDetails />} />
           <Route path="restaurant/:id/menu/:menuId/edit" element={<UpdateMenuItem />} />
           <Route path="orders" element={<AdminOrders />} />
-          {/* NEW: Route for ManageDeliveryPersonnel */}
           <Route path="delivery-personnel" element={<ManageDeliveryPersonnel />} />
+        </Route>
+
+        {/* NEW: Delivery Personnel Routes */}
+        <Route
+          path="/delivery-personnel/*"
+          element={
+            <ProtectedRoute>
+              <ModalProvider showAlert={showAlert} showConfirm={showConfirm} showPrompt={showPrompt}>
+                <DeliveryPersonnelLayout />
+              </ModalProvider>
+            </ProtectedRoute>
+          }
+        >
+          <Route index element={<DeliveryDashboard />} />
+          <Route path="my-deliveries" element={<div>My Deliveries Page (coming soon)</div>} />
+          <Route path="profile" element={<div>My Profile Page (coming soon)</div>} />
         </Route>
 
         {/* Catch-all route for unmatched paths */}
