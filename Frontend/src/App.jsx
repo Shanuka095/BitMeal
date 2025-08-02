@@ -28,7 +28,11 @@ import { CartProvider } from './context/CartContext';
 import AlertDialog from './components/AlertDialog';
 import ConfirmationModal from './components/ConfirmationModal';
 import PromptModal from './components/PromptModal';
-import { ModalProvider } from './context/ModalContext'; // Import ModalProvider
+import { ModalProvider } from './context/ModalContext';
+
+// NEW: Import ManageDeliveryPersonnel page
+import ManageDeliveryPersonnel from './pages/ManageDeliveryPersonnel';
+
 
 function App() {
   // Global modal states
@@ -84,7 +88,7 @@ function App() {
               <ModalProvider showAlert={showAlert} showConfirm={showConfirm} showPrompt={showPrompt}>
                 <Navbar />
                 <div className="flex-grow">
-                  <Outlet /> {/* Outlet no longer needs to pass context directly */}
+                  <Outlet />
                 </div>
                 <Footer />
               </ModalProvider>
@@ -123,6 +127,8 @@ function App() {
           <Route path="restaurant/:id" element={<AdminRestaurantDetails />} />
           <Route path="restaurant/:id/menu/:menuId/edit" element={<UpdateMenuItem />} />
           <Route path="orders" element={<AdminOrders />} />
+          {/* NEW: Route for ManageDeliveryPersonnel */}
+          <Route path="delivery-personnel" element={<ManageDeliveryPersonnel />} />
         </Route>
 
         {/* Catch-all route for unmatched paths */}
