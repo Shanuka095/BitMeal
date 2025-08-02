@@ -4,112 +4,124 @@ import { FaTrash, FaPlus, FaMinus } from 'react-icons/fa';
 import axios from 'axios';
 import jwtDecode from 'jwt-decode';
 import { useNavigate } from 'react-router-dom';
-import { useModal } from '../context/ModalContext'; // Import useModal
+import { useModal } from '../context/ModalContext';
+
+// NEW: Import the map component
+import MapComponent from '../components/MapComponent';
 
 const CartPage = () => {
   const { cartItems, incrementQuantity, decrementQuantity, removeFromCart, getCartTotal, clearCart } = useCart();
   const [orderMessage, setOrderMessage] = useState('');
   const [loading, setLoading] = useState(false);
   const navigate = useNavigate();
-  const { showAlert, showPrompt } = useModal(); // Use useModal hook
+  const { showAlert, showPrompt } = useModal();
+
+  // NEW state for delivery location
+  const [deliveryLocation, setDeliveryLocation] = useState(null);
 
   const handleCheckout = async () => {
     setLoading(true);
-    setOrderMessage(''); // Clear previous messages
-    try {
-      const token = sessionStorage.getItem(Object.keys(sessionStorage).find(key => key.startsWith('token_')));
-      if (!token) {
-        showAlert('Error: You must be logged in to checkout.');
-        setLoading(false);
-        return;
-      }
+    setOrderMessage('');
 
-      const decodedToken = jwtDecode(token);
-      const userId = decodedToken.userId;
-
-      if (cartItems.length === 0) {
-        showAlert('Error: Your cart is empty.');
-        setLoading(false);
-        return;
-      }
-
-      const firstRestaurantId = cartItems[0].restaurantId;
-      const allSameRestaurant = cartItems.every(item => item.restaurantId === firstRestaurantId);
-
-      if (!firstRestaurantId || !allSameRestaurant) {
-        showAlert("Error: All items in the cart must be from the same restaurant. Please clear your cart and try again.");
-        setLoading(false);
-        return;
-      }
-
-      showPrompt(
-        "Confirm Delivery Address",
-        "Please enter your delivery address:",
-        "Your full address",
-        async (deliveryAddress) => { // onConfirm callback
-          if (!deliveryAddress || deliveryAddress.trim() === '') {
-            showAlert('Delivery address is required to place the order.');
-            setLoading(false);
-            return;
-          }
-
-          const orderItems = cartItems.map(item => ({
-            menuItemId: item.menuItemId,
-            name: item.name,
-            price: (item.size === 'full' ? (item.normalPrice + (item.extraPriceForFull || 0)) : item.normalPrice) || 0,
-            quantity: item.quantity,
-            size: item.size,
-          }));
-
-          const totalAmount = getCartTotal();
-
-          const orderData = {
-            restaurantId: firstRestaurantId,
-            items: orderItems,
-            totalAmount: totalAmount,
-            deliveryAddress: deliveryAddress,
-          };
-
-          try {
-            const response = await axios.post('http://localhost:3000/api/orders', orderData, {
-              headers: {
-                Authorization: `Bearer ${token}`,
-                'Content-Type': 'application/json',
-              },
-            });
-
-            showAlert(`Order placed successfully! Order ID: ${response.data._id}`);
-            clearCart();
-            setTimeout(() => navigate('/my-orders'), 2000);
-          } catch (err) {
-            const msg = err.response?.data?.error || 'Failed to place order.';
-            showAlert(`Error: ${msg}`);
-            console.error('Checkout error:', err.response ? err.response.data : err);
-          } finally {
-            setLoading(false);
-          }
-        },
-        () => { // onCancel callback
-          setLoading(false);
-          showAlert('Order placement cancelled.');
-        }
-      );
-
-    } catch (err) {
-      const msg = err.response?.data?.error || 'Failed to initiate checkout.';
-      showAlert(`Error: ${msg}`);
-      console.error('Checkout initiation error:', err.response ? err.response.data : err);
+    const token = sessionStorage.getItem(Object.keys(sessionStorage).find(key => key.startsWith('token_')));
+    if (!token) {
+      showAlert('Error: You must be logged in to checkout.');
       setLoading(false);
+      return;
     }
+
+    if (cartItems.length === 0) {
+      showAlert('Error: Your cart is empty.');
+      setLoading(false);
+      return;
+    }
+
+    const firstRestaurantId = cartItems[0].restaurantId;
+    const allSameRestaurant = cartItems.every(item => item.restaurantId === firstRestaurantId);
+
+    if (!firstRestaurantId || !allSameRestaurant) {
+      showAlert("Error: All items in the cart must be from the same restaurant. Please clear your cart and try again.");
+      setLoading(false);
+      return;
+    }
+
+    // NEW: Check if a delivery location has been selected
+    if (!deliveryLocation) {
+      showAlert('Please select your delivery location on the map.');
+      setLoading(false);
+      return;
+    }
+
+    showPrompt(
+      "Confirm Delivery Address",
+      "Please enter your detailed delivery address:",
+      "Your full address",
+      async (deliveryAddress) => {
+        if (!deliveryAddress || deliveryAddress.trim() === '') {
+          showAlert('Delivery address is required to place the order.');
+          setLoading(false);
+          return;
+        }
+
+        const orderItems = cartItems.map(item => ({
+          menuItemId: item.menuItemId,
+          name: item.name,
+          price: (item.size === 'full' ? (item.normalPrice + (item.extraPriceForFull || 0)) : item.normalPrice) || 0,
+          quantity: item.quantity,
+          size: item.size,
+        }));
+
+        const totalAmount = getCartTotal();
+
+        const orderData = {
+          restaurantId: firstRestaurantId,
+          items: orderItems,
+          totalAmount: totalAmount,
+          deliveryAddress: deliveryAddress,
+          deliveryLocation: deliveryLocation, // NEW: Add location to order data
+        };
+
+        try {
+          const response = await axios.post('http://localhost:3000/api/orders', orderData, {
+            headers: {
+              Authorization: `Bearer ${token}`,
+              'Content-Type': 'application/json',
+            },
+          });
+
+          showAlert(`Order placed successfully! Order ID: ${response.data._id}`);
+          clearCart();
+          setTimeout(() => navigate('/my-orders'), 2000);
+        } catch (err) {
+          const msg = err.response?.data?.error || 'Failed to place order.';
+          showAlert(`Error: ${msg}`);
+          console.error('Checkout error:', err.response ? err.response.data : err);
+        } finally {
+          setLoading(false);
+        }
+      },
+      () => {
+        setLoading(false);
+        showAlert('Order placement cancelled.');
+      }
+    );
   };
 
   return (
     <div className="p-6 pt-24 max-w-4xl mx-auto">
       <h1 className="text-4xl font-extrabold text-gray-900 mb-8 text-center">Your Cart</h1>
-
-      {orderMessage && (
-        <div className={`p-3 mb-4 rounded-md text-center ${orderMessage.startsWith('Error') ? 'bg-red-100 text-red-700' : 'bg-green-100 text-green-700'}`}>
-          {orderMessage}
+      
+      {/* NEW: Map for location selection */}
+      {cartItems.length > 0 && (
+        <div className="bg-white rounded-xl shadow-lg p-6 mb-6">
+          <h2 className="text-2xl font-bold text-gray-900 mb-4">Select Delivery Location</h2>
+          <p className="text-gray-600 mb-4">Click on the map to set your precise delivery location.</p>
+          <MapComponent onLocationSelect={setDeliveryLocation} />
+          {deliveryLocation && (
+            <p className="mt-4 text-green-700 font-semibold text-sm">
+              Location selected: Longitude: {deliveryLocation.coordinates[0].toFixed(4)}, Latitude: {deliveryLocation.coordinates[1].toFixed(4)}
+            </p>
+          )}
         </div>
       )}
 
@@ -170,7 +182,7 @@ const CartPage = () => {
 
           <button
             onClick={handleCheckout}
-            disabled={loading}
+            disabled={loading || !deliveryLocation}
             className="w-full mt-6 bg-[#ffaa00] text-white p-3 rounded-lg hover:bg-[#e59400] transition disabled:opacity-50 disabled:cursor-not-allowed font-semibold text-lg shadow-md hover:shadow-lg"
           >
             {loading ? 'Processing Order...' : 'Proceed to Checkout'}
