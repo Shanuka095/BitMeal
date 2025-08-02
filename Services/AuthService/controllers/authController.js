@@ -2,14 +2,14 @@ const bcrypt = require('bcrypt');
 const jwt = require('jsonwebtoken');
 const nodemailer = require('nodemailer');
 const Auth = require('../models/authModel');
+const axios = require('axios');
 
-// Generate 6-digit OTP
+const USER_SERVICE_URL = 'http://localhost:3002/api/users';
+
 const generateOTP = () => Math.floor(100000 + Math.random() * 900000).toString();
 
-// Register
 const register = async (req, res) => {
-  // Add 'name' to destructuring
-  const { email, password, phone, name } = req.body; // <-- ADD 'name' here
+  const { email, password, phone, name } = req.body;
   try {
     const existingUser = await Auth.findOne({ email });
     if (existingUser) return res.status(400).json({ error: 'User already exists' });
@@ -17,12 +17,29 @@ const register = async (req, res) => {
     const hashedPassword = await bcrypt.hash(password, 10);
     const otp = generateOTP();
     const hashedOTP = await bcrypt.hash(otp, 10);
-    const otpExpires = new Date(Date.now() + 10 * 60 * 1000); // OTP valid for 10 minutes
-    const otpToken = jwt.sign({ email }, process.env.JWT_SECRET, { expiresIn: '10m' });
+    const otpExpires = new Date(Date.now() + 10 * 60 * 1000);
 
-    // Add 'name' to the user creation
-    const user = new Auth({ email, password: hashedPassword, phone, name, otp: hashedOTP, otpExpires }); // <-- ADD 'name' here
+    const user = new Auth({ email, password: hashedPassword, phone, name, otp: hashedOTP, otpExpires });
     await user.save();
+
+    // Define otpToken immediately after user is saved, before any other async operations
+    const otpToken = jwt.sign({ email }, process.env.JWT_SECRET, { expiresIn: '10m' }); // <-- DEFINED HERE
+
+    // Attempt to create basic profile in UserService
+    try {
+        await axios.post(`${USER_SERVICE_URL}/create-profile`, {
+            userId: user._id,
+            email: user.email,
+            name: user.name,
+            phone: user.phone,
+        });
+        console.log(`Basic profile created in UserService for userId: ${user._id}`);
+    } catch (profileError) {
+        console.error(`Failed to create basic profile in UserService for ${user._id}:`, profileError.response?.data || profileError.message);
+        // Do NOT re-throw or return here.
+        // The AuthService registration itself is successful, even if profile creation fails.
+        // The user can still verify OTP and then update their profile manually later.
+    }
 
     // Nodemailer Setup
     const transporter = nodemailer.createTransport({
@@ -44,16 +61,19 @@ const register = async (req, res) => {
         <p>This code is valid for 10 minutes.</p>
       `,
     };
-    await transporter.sendMail(mailOptions);
+    await transporter.sendMail(mailOptions); // This might also throw an error
 
+    // This line should now always be reached if no unhandled error occurs before it
     res.status(201).json({ message: 'User registered. Please check your email for the OTP code.', otpToken });
   } catch (error) {
     console.error('Register error:', error);
-    res.status(500).json({ error: error.message });
+    // If an error occurs here (e.g., user.save() fails, or nodemailer fails),
+    // then send a 500 response.
+    res.status(500).json({ error: error.message || 'Registration failed due to server error' });
   }
 };
 
-// Verify OTP
+// Verify OTP (no changes needed here)
 const verifyOTP = async (req, res) => {
   const { otp, otpToken } = req.body;
   try {
@@ -82,7 +102,7 @@ const verifyOTP = async (req, res) => {
   }
 };
 
-// Login (Updated to use the user's registered role)
+// Login (no changes needed here)
 const login = async (req, res) => {
   const { email, password } = req.body;
   try {
@@ -100,7 +120,7 @@ const login = async (req, res) => {
   }
 };
 
-// Verify Token
+// Verify Token (no changes needed here)
 const verifyToken = async (req, res) => {
   const token = req.headers.authorization?.split(' ')[1];
   if (!token) return res.status(401).json({ error: 'No token provided' });
