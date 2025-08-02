@@ -1,6 +1,5 @@
 const Joi = require('joi');
 
-// Joi schema for an individual item in an order
 const orderItemSchema = Joi.object({
   menuItemId: Joi.string().hex().length(24).required().messages({
     'string.hex': '"menuItemId" must be a valid hexadecimal string',
@@ -21,12 +20,11 @@ const orderItemSchema = Joi.object({
     'number.min': '"item quantity" must be at least 1',
     'any.required': '"item quantity" is required',
   }),
-  size: Joi.string().valid('normal', 'full').optional().messages({ // FIX: Added 'size' field validation
+  size: Joi.string().valid('normal', 'full').optional().messages({
     'any.only': '"size" must be either "normal" or "full"',
   }),
 });
 
-// Joi schema for creating a new order
 const createOrderSchema = Joi.object({
   restaurantId: Joi.string().hex().length(24).required().messages({
     'string.hex': '"restaurantId" must be a valid hexadecimal string',
@@ -46,9 +44,13 @@ const createOrderSchema = Joi.object({
     'string.max': '"deliveryAddress" cannot exceed 255 characters',
     'any.required': '"deliveryAddress" is required',
   }),
+  // NEW: Add validation for deliveryLocation
+  deliveryLocation: Joi.object({
+    type: Joi.string().valid('Point').required(),
+    coordinates: Joi.array().items(Joi.number()).length(2).required(), // [longitude, latitude]
+  }).required(),
 });
 
-// Joi schema for updating an order status
 const updateOrderStatusSchema = Joi.object({
   status: Joi.string().valid('confirmed', 'preparing', 'out_for_delivery', 'delivered', 'cancelled').required().messages({
     'any.only': 'Invalid order status',
@@ -56,7 +58,6 @@ const updateOrderStatusSchema = Joi.object({
   }),
 });
 
-// Validation middleware factory
 const validate = (schema) => (req, res, next) => {
   const { error } = schema.validate(req.body, { abortEarly: false });
   if (error) {
