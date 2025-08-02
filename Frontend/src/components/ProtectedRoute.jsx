@@ -25,19 +25,34 @@ const ProtectedRoute = ({ children }) => {
   try {
     decoded = jwtDecode(token);
     console.log('Frontend (ProtectedRoute) - Decoded Token:', decoded);
-    const isAdmin = decoded.role === 'restaurant_admin';
-    console.log('Frontend (ProtectedRoute) - Is Admin:', isAdmin);
+    const userRole = decoded.role;
+    console.log('Frontend (ProtectedRoute) - User Role:', userRole);
 
-    if (isAdmin && location.pathname === '/') {
-      return <Navigate to="/admin" replace />;
-    }
-    if (isAdmin && (location.pathname.startsWith('/my-orders') || location.pathname.startsWith('/dashboard') || location.pathname.startsWith('/restaurants') || location.pathname.startsWith('/restaurant/'))) {
-      if (location.pathname.startsWith('/dashboard') || location.pathname.startsWith('/my-orders')) {
-        return <Navigate to="/admin" replace />;
-      }
-    }
-    if (!isAdmin && location.pathname.startsWith('/admin')) {
-      return <Navigate to="/dashboard" replace />;
+    // FIX: Refactor the redirection logic to a more robust switch statement.
+    switch (userRole) {
+      case 'restaurant_admin':
+        // If an admin tries to access a non-admin page, redirect them to the admin dashboard.
+        if (!location.pathname.startsWith('/admin')) {
+          return <Navigate to="/admin" replace />;
+        }
+        break;
+      case 'delivery_personnel':
+        // If a delivery person tries to access a non-delivery page, redirect them to their dashboard.
+        if (!location.pathname.startsWith('/delivery-personnel')) {
+          return <Navigate to="/delivery-personnel" replace />;
+        }
+        break;
+      case 'customer':
+        // If a customer tries to access an admin or delivery page, redirect them to their dashboard.
+        if (location.pathname.startsWith('/admin') || location.pathname.startsWith('/delivery-personnel')) {
+          return <Navigate to="/dashboard" replace />;
+        }
+        break;
+      default:
+        // For any unknown role, redirect to the login page.
+        console.warn('Frontend (ProtectedRoute) - Unknown user role, redirecting to /login.');
+        if (sessionKey) sessionStorage.removeItem(sessionKey);
+        return <Navigate to="/login" replace />;
     }
 
   } catch (err) {
