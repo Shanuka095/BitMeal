@@ -1,5 +1,5 @@
 import { Outlet, useLocation, useNavigate } from 'react-router-dom';
-import { FaUtensils, FaSignOutAlt, FaClipboardList } from 'react-icons/fa';
+import { FaUtensils, FaSignOutAlt, FaClipboardList, FaMotorcycle } from 'react-icons/fa'; // Import FaMotorcycle
 
 const AdminLayout = () => {
   const location = useLocation();
@@ -11,7 +11,6 @@ const AdminLayout = () => {
     if (sessionKey) {
       sessionStorage.removeItem(sessionKey);
     }
-    // No need to remove from localStorage anymore
     navigate('/login');
   };
 
@@ -24,6 +23,15 @@ const AdminLayout = () => {
             <li><button onClick={() => navigate('/admin')} className={`w-full text-left p-3 rounded-lg transition ${location.pathname === '/admin' ? 'bg-yellow-500 font-semibold' : 'hover:bg-yellow-400'}`}><FaUtensils className="inline mr-2" /> Overview</button></li>
             <li><button onClick={() => navigate('/admin/create-restaurant')} className={`w-full text-left p-3 rounded-lg transition ${location.pathname === '/admin/create-restaurant' ? 'bg-yellow-500 font-semibold' : 'hover:bg-yellow-400'}`}><FaUtensils className="inline mr-2" /> Add Restaurant</button></li>
             <li><button onClick={() => navigate('/admin/orders')} className={`w-full text-left p-3 rounded-lg transition ${location.pathname === '/admin/orders' ? 'bg-yellow-500 font-semibold' : 'hover:bg-yellow-400'}`}><FaClipboardList className="inline mr-2" /> Manage Orders</button></li>
+            {/* NEW: Link to Manage Delivery Personnel */}
+            <li>
+                <button
+                    onClick={() => navigate('/admin/delivery-personnel')}
+                    className={`w-full text-left p-3 rounded-lg transition ${location.pathname === '/admin/delivery-personnel' ? 'bg-yellow-500 font-semibold' : 'hover:bg-yellow-400'}`}
+                >
+                    <FaMotorcycle className="inline mr-2" /> Manage Delivery Personnel
+                </button>
+            </li>
             <li><button onClick={handleLogout} className="w-full text-left p-3 rounded-lg hover:bg-yellow-400 mt-6"><FaSignOutAlt className="inline mr-2" /> Logout</button></li>
           </ul>
         </nav>
