@@ -121,7 +121,7 @@ Feel free to open a **Pull Request** or reach out if you'd like to improve **Bit
 
 ## 📬 Contact
 
-Made with ❤️ by **Shanuka Induran**
+Made with by **Shanuka Induran**
 
 - 🔗 [LinkedIn](https://www.linkedin.com/in/shanuka-induran)  
 - 💻 [GitHub](https://github.com/Shanuka095)
