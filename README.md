@@ -91,15 +91,6 @@ BitMeal/
 │   └── DeliveryService/             # Delivery personnel management
 ```
 
-
-✅ Roles Breakdown
-| Role                   | Access Level & Abilities                                                                 |
-| ---------------------- | ---------------------------------------------------------------------------------------- |
-| 🧍 Customer             | Browse restaurants, place orders, view order history                                     |
-| 🧑‍🍳 Restaurant Admin | Manage restaurants, menus, and incoming orders                                           |
-| 🛵 Delivery Person    | View assigned deliveries, update live location, toggle availability                      |
-| 👑 System Admin       | (Dev-only) Assign roles, manage drivers, monitor system via MongoDB or future dashboards |
-
 ## ✅ Roles Breakdown
 
 | Role               | Access Level & Abilities                                                                 |
