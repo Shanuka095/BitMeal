@@ -71,14 +71,14 @@ const DeliveryPersonnelLayout = () => {
       {/* Simulate the driver's location updates */}
       <SimulateLocation userId={userId} token={token} showAlert={showAlert} />
       
-      <aside className="fixed w-64 h-screen bg-gradient-to-br from-purple-600 to-indigo-500 text-white p-6 shadow-lg">
+      <aside className="fixed w-64 h-screen bg-gradient-to-br from-yellow-600 to-orange-500 text-white p-6 shadow-lg">
         <h2 className="text-3xl font-bold mb-8">Driver Dashboard</h2>
         <nav>
           <ul className="space-y-4">
             <li>
               <button
                 onClick={() => navigate('/delivery-personnel')}
-                className={`w-full text-left p-3 rounded-lg transition ${location.pathname === '/delivery-personnel' ? 'bg-purple-500 font-semibold' : 'hover:bg-purple-400'}`}
+                className={`w-full text-left p-3 rounded-lg transition ${location.pathname === '/delivery-personnel' ? 'bg-yellow-500 font-semibold' : 'hover:bg-yellow-400'}`}
               >
                 <FaTachometerAlt className="inline mr-2" /> Dashboard
               </button>
@@ -86,7 +86,7 @@ const DeliveryPersonnelLayout = () => {
             <li>
               <button
                 onClick={() => navigate('/delivery-personnel/my-deliveries')}
-                className={`w-full text-left p-3 rounded-lg transition ${location.pathname === '/delivery-personnel/my-deliveries' ? 'bg-purple-500 font-semibold' : 'hover:bg-purple-400'}`}
+                className={`w-full text-left p-3 rounded-lg transition ${location.pathname === '/delivery-personnel/my-deliveries' ? 'bg-yellow-500 font-semibold' : 'hover:bg-yellow-400'}`}
               >
                 <FaClipboardList className="inline mr-2" /> My Deliveries
               </button>
@@ -94,7 +94,7 @@ const DeliveryPersonnelLayout = () => {
             <li>
               <button
                 onClick={() => navigate('/delivery-personnel/profile')}
-                className={`w-full text-left p-3 rounded-lg transition ${location.pathname === '/delivery-personnel/profile' ? 'bg-purple-500 font-semibold' : 'hover:bg-purple-400'}`}
+                className={`w-full text-left p-3 rounded-lg transition ${location.pathname === '/delivery-personnel/profile' ? 'bg-yellow-500 font-semibold' : 'hover:bg-yellow-400'}`}
               >
                 <FaUserCircle className="inline mr-2" /> My Profile
               </button>
@@ -102,7 +102,7 @@ const DeliveryPersonnelLayout = () => {
             <li>
               <button
                 onClick={handleLogout}
-                className="w-full text-left p-3 rounded-lg hover:bg-purple-400 mt-6"
+                className="w-full text-left p-3 rounded-lg hover:bg-yellow-400 mt-6"
               >
                 <FaSignOutAlt className="inline mr-2" /> Logout
               </button>
