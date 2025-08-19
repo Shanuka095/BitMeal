@@ -1,5 +1,16 @@
 const DeliveryPerson = require('../models/DeliveryPerson');
-const Joi = require('joi');
+const Joi = require('joi'); // Ensure Joi is imported
+
+// Validation Schemas
+const ratingSchema = Joi.object({
+  rating: Joi.number().integer().min(1).max(5).required(),
+  likeStatus: Joi.string().valid('liked', 'disliked').optional().allow(null), // Can be 'liked', 'disliked', or null
+});
+// You might have other validation schemas here, e.g., for create/update delivery person
+// const createDeliveryPersonSchema = Joi.object({...});
+// const updateDeliveryPersonSchema = Joi.object({...});
+// const updateDeliveryPersonStatusSchema = Joi.object({...});
+
 
 // Admin/Internal: Create a new delivery person
 const createDeliveryPerson = async (req, res) => {
@@ -11,7 +22,6 @@ const createDeliveryPerson = async (req, res) => {
     const existingDeliveryPerson = await DeliveryPerson.findOne({ userId });
     if (existingDeliveryPerson) {
       console.warn(`DeliveryService (createDeliveryPerson) - Delivery person profile for userId ${userId} already exists.`);
-      // Optionally return 200 with existing profile if idempotency is desired
       return res.status(409).json({ error: 'A delivery person profile already exists for this user ID.' });
     }
 
@@ -65,7 +75,7 @@ const getAllDeliveryPersons = async (req, res) => {
   }
 };
 
-// Admin/DeliveryPersonnel/Customer: Get a single delivery person by ID - FIX APPLIED HERE
+// Admin/DeliveryPersonnel/Customer: Get a single delivery person by ID
 const getDeliveryPersonById = async (req, res) => {
   try {
     const { id } = req.params; // ID of the DeliveryPerson document, not userId
@@ -79,8 +89,7 @@ const getDeliveryPersonById = async (req, res) => {
     else if (req.user.role === 'delivery_personnel') {
       deliveryPerson = await DeliveryPerson.findOne({ _id: id, userId: req.user.userId });
     }
-    // NEW FIX: Allow customers to fetch *any* delivery person by ID (for tracking purposes)
-    // As long as they are authenticated, they can get public driver info.
+    // Allow customers to fetch *any* delivery person by ID (for tracking purposes)
     else if (req.user.role === 'customer') {
       deliveryPerson = await DeliveryPerson.findById(id);
     }
@@ -222,6 +231,50 @@ const updateMyGeolocation = async (req, res) => {
     }
 };
 
+// Submit a rating for a delivery person - UPDATED FOR LIKES
+const submitRating = async (req, res) => {
+  try {
+    const { id } = req.params; // Delivery Person ID
+    const { rating, likeStatus } = req.body; // The submitted rating (1-5) and likeStatus
+    
+    // Validate the incoming rating (and optional likeStatus)
+    const { error } = ratingSchema.validate({ rating, likeStatus });
+    if (error) {
+      return res.status(400).json({ error: error.details[0].message });
+    }
+    
+    const deliveryPerson = await DeliveryPerson.findById(id);
+    if (!deliveryPerson) return res.status(404).json({ error: 'Delivery person not found.' });
+
+    const currentTotalScore = deliveryPerson.averageRating * deliveryPerson.totalRatings;
+    const newTotalRatings = deliveryPerson.totalRatings + 1;
+    const newAverageRating = (currentTotalScore + rating) / newTotalRatings;
+
+    deliveryPerson.averageRating = newAverageRating;
+    deliveryPerson.totalRatings = newTotalRatings;
+
+    // Update likes/dislikes
+    if (likeStatus === 'liked') {
+        deliveryPerson.totalLikes += 1;
+    } else if (likeStatus === 'disliked') {
+        deliveryPerson.totalDislikes += 1;
+    }
+    
+    await deliveryPerson.save();
+    
+    res.json({
+      message: 'Rating submitted successfully',
+      averageRating: deliveryPerson.averageRating,
+      totalRatings: deliveryPerson.totalRatings,
+      totalLikes: deliveryPerson.totalLikes,
+      totalDislikes: deliveryPerson.totalDislikes,
+    });
+  } catch (error) {
+    console.error('Error submitting driver rating:', error);
+    res.status(500).json({ error: 'Failed to submit driver rating.' });
+  }
+};
+
 module.exports = {
   createDeliveryPerson,
   getAllDeliveryPersons,
@@ -230,4 +283,5 @@ module.exports = {
   updateDeliveryPersonStatus,
   deleteDeliveryPerson,
   updateMyGeolocation,
+  submitRating,
 };
