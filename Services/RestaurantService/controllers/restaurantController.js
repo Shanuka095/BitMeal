@@ -1,9 +1,9 @@
 const Restaurant = require('../models/restaurantModel');
 const Joi = require('joi');
-const axios = require('axios'); // Keep axios for inter-service communication
+const axios = require('axios');
 
 // Base URL for the RestaurantService (can be an environment variable in production)
-const RESTAURANT_SERVICE_URL = 'http://localhost:3003/api/restaurants'; // Used by OrderService
+const RESTAURANT_SERVICE_URL = 'http://localhost:3003/api/restaurants';
 
 // Validation Schemas
 const restaurantSchema = Joi.object({
@@ -14,17 +14,24 @@ const restaurantSchema = Joi.object({
 
 const menuItemSchema = Joi.object({
   name: Joi.string().min(3).max(100).required(),
-  normalPrice: Joi.number().min(0).required(), // Changed from 'price'
-  extraPriceForFull: Joi.number().min(0).default(0), // New field, optional, defaults to 0
+  normalPrice: Joi.number().min(0).required(),
+  extraPriceForFull: Joi.number().min(0).default(0),
   category: Joi.string().min(2).max(50).required(),
   imageUrl: Joi.string().optional().allow(''),
 });
 
-// Customer: Get all restaurants (Public access)
+// Schema for rating submission
+const ratingSchema = Joi.object({
+  rating: Joi.number().integer().min(1).max(5).required(),
+});
+
+// Customer: Get all restaurants (Public access) - UPDATED FOR SORTING AND RATINGS
 const getPublicRestaurants = async (req, res) => {
   try {
-    console.log('getPublicRestaurants: Fetching all restaurants (public access)');
-    const restaurants = await Restaurant.find().lean();
+    console.log('getPublicRestaurants: Fetching all restaurants (public access) and sorting by rating.');
+    // Fetch all restaurants and sort by averageRating in descending order
+    // If averageRating is the same, sort by totalRatings (more ratings means more reliable)
+    const restaurants = await Restaurant.find().sort({ averageRating: -1, totalRatings: -1 }).lean();
     if (!restaurants.length) {
       return res.json({ message: 'No restaurants available', data: [] });
     }
@@ -95,9 +102,6 @@ const createRestaurant = async (req, res) => {
   try {
     const { name, address } = req.body;
     const imageUrl = req.file ? req.file.filename : '';
-    console.log('Request body:', req.body);
-    console.log('Request file:', req.file);
-    console.log('Generated imageUrl:', imageUrl);
     const { error } = restaurantSchema.validate({ name, address, imageUrl });
     if (error) {
       console.error('CreateRestaurant validation error:', error.details[0].message);
@@ -177,9 +181,8 @@ const addMenuItem = async (req, res) => {
     const { name, normalPrice, extraPriceForFull, category } = req.body;
     const imageUrl = req.file ? req.file.filename : '';
 
-    // FIX: Ensure prices are numbers before validation and saving
     const parsedNormalPrice = Number(normalPrice);
-    const parsedExtraPriceForFull = Number(extraPriceForFull || 0); // Default to 0 if empty or undefined
+    const parsedExtraPriceForFull = Number(extraPriceForFull || 0);
 
     const { error } = menuItemSchema.validate({
       name,
@@ -241,9 +244,8 @@ const updateMenuItem = async (req, res) => {
     const { name, normalPrice, extraPriceForFull, category } = req.body;
     const imageUrl = req.file ? req.file.filename : req.body.imageUrl || '';
 
-    // FIX: Ensure prices are numbers before validation and saving
     const parsedNormalPrice = Number(normalPrice);
-    const parsedExtraPriceForFull = Number(extraPriceForFull || 0); // Default to 0 if empty or undefined
+    const parsedExtraPriceForFull = Number(extraPriceForFull || 0);
 
     const { error } = menuItemSchema.validate({
       name,
@@ -308,6 +310,47 @@ const deleteMenuItem = async (req, res) => {
   }
 };
 
+// Submit a rating for a restaurant
+const submitRating = async (req, res) => {
+  try {
+    const { id } = req.params; // Restaurant ID
+    const { rating } = req.body; // The submitted rating (1-5)
+    const userId = req.user.userId; // Customer's user ID from token
+
+    // Validate the incoming rating
+    const { error } = ratingSchema.validate({ rating });
+    if (error) {
+      return res.status(400).json({ error: error.details[0].message });
+    }
+
+    const restaurant = await Restaurant.findById(id);
+    if (!restaurant) {
+      return res.status(404).json({ error: 'Restaurant not found.' });
+    }
+
+    // Calculate new average rating
+    const currentTotalScore = restaurant.averageRating * restaurant.totalRatings;
+    const newTotalRatings = restaurant.totalRatings + 1;
+    const newAverageRating = (currentTotalScore + rating) / newTotalRatings;
+
+    restaurant.averageRating = newAverageRating;
+    restaurant.totalRatings = newTotalRatings;
+
+    await restaurant.save();
+    console.log(`Restaurant ${id} rated ${rating} by user ${userId}. New average: ${newAverageRating.toFixed(2)}`);
+    res.json({
+      message: 'Rating submitted successfully',
+      averageRating: restaurant.averageRating,
+      totalRatings: restaurant.totalRatings,
+    });
+
+  } catch (error) {
+    console.error('Error submitting rating:', error);
+    res.status(500).json({ error: error.message || 'Failed to submit rating' });
+  }
+};
+
+
 module.exports = {
   getPublicRestaurants,
   getPublicRestaurantDetails,
@@ -320,4 +363,5 @@ module.exports = {
   getMenuItem,
   updateMenuItem,
   deleteMenuItem,
+  submitRating,
 };
