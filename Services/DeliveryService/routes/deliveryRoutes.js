@@ -8,6 +8,7 @@ const {
   updateDeliveryPersonStatus,
   deleteDeliveryPerson,
   updateMyGeolocation,
+  submitRating, // NEW: Import submitRating
 } = require('../controllers/deliveryController');
 const { authenticate, restrictTo } = require('../middleware/restrictAccess');
 const {
@@ -75,5 +76,8 @@ router.post(
   restrictTo('delivery_personnel'),
   updateMyGeolocation
 );
+
+// NEW: Customer submits a rating for a delivery person
+router.post('/:id/rate', authenticate, restrictTo('customer'), submitRating);
 
 module.exports = router;
