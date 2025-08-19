@@ -7,7 +7,7 @@ const {
   updateOrderStatus,
   assignOrderToDeliveryPerson,
   markOrderAsRated,
-  getActiveOrder, // NEW
+  getActiveOrder,
 } = require('../controllers/orderController');
 const { authenticate, restrictTo } = require('../middleware/restrictAccess');
 const { validateCreateOrder, validateUpdateOrderStatus } = require('../middleware/validate');
@@ -16,7 +16,9 @@ const { validateCreateOrder, validateUpdateOrderStatus } = require('../middlewar
 router.post('/', authenticate, restrictTo('customer'), validateCreateOrder, createOrder);
 router.get('/my-orders', authenticate, restrictTo('customer'), getCustomerOrders);
 router.patch('/:orderId/mark-rated', authenticate, restrictTo('customer'), markOrderAsRated);
-router.get('/my-active-order', authenticate, restrictTo('customer'), getActiveOrder); // NEW
+router.get('/my-active-order', authenticate, restrictTo('customer'), getActiveOrder); // This route will be used by the banner.
+router.get('/my-active-order-details', authenticate, restrictTo('customer'), getActiveOrder); // Dedicated route for the active order page.
+
 
 // Admin Routes (for restaurant owners)
 router.get('/restaurant/:restaurantId', authenticate, restrictTo('restaurant_admin'), getRestaurantOrders);
