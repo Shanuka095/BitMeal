@@ -1,11 +1,11 @@
 const mongoose = require('mongoose');
 
 const DeliveryPersonSchema = new mongoose.Schema({
-  userId: { // Link to the user in AuthService, if they register through auth service
+  userId: {
     type: mongoose.Schema.Types.ObjectId,
-    ref: 'Auth', // Refers to the Auth model in AuthService, used for authentication
+    ref: 'Auth',
     required: true,
-    unique: true // A user can only be one delivery person
+    unique: true
   },
   name: {
     type: String,
@@ -27,19 +27,22 @@ const DeliveryPersonSchema = new mongoose.Schema({
     required: true,
     unique: true
   },
-  currentLocation: { // For future use with geospatial data
+  currentLocation: {
     type: { type: String, enum: ['Point'], default: 'Point' },
-    coordinates: { type: [Number], default: [0, 0] } // [longitude, latitude]
+    coordinates: { type: [Number], default: [0, 0] }
   },
-  status: { // Available for delivery or not
+  status: {
     type: String,
     enum: ['available', 'on_delivery', 'offline', 'unavailable'],
     default: 'offline',
   },
-  // Optional: profileImage, rating, numberOfDeliveries, etc.
+  averageRating: { type: Number, default: 0, min: 0, max: 5 },
+  totalRatings: { type: Number, default: 0, min: 0 },
+  // NEW: Like/Dislike fields for drivers
+  totalLikes: { type: Number, default: 0, min: 0 },
+  totalDislikes: { type: Number, default: 0, min: 0 },
 }, { timestamps: true });
 
-// Create a geospatial index for location for future proximity searches
 DeliveryPersonSchema.index({ currentLocation: '2dsphere' });
 
 module.exports = mongoose.model('DeliveryPerson', DeliveryPersonSchema);
