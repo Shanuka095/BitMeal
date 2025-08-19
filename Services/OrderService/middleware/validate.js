@@ -39,12 +39,11 @@ const createOrderSchema = Joi.object({
     'number.min': '"totalAmount" cannot be negative',
     'any.required': '"totalAmount" is required',
   }),
-  deliveryAddress: Joi.string().min(5).max(255).required().messages({
-    'string.min': '"deliveryAddress" must be at least 5 characters long',
+  // FIX: Make deliveryAddress optional and allow empty string
+  deliveryAddress: Joi.string().min(0).max(255).allow('').optional().messages({
     'string.max': '"deliveryAddress" cannot exceed 255 characters',
-    'any.required': '"deliveryAddress" is required',
   }),
-  // NEW: Add validation for deliveryLocation
+  
   deliveryLocation: Joi.object({
     type: Joi.string().valid('Point').required(),
     coordinates: Joi.array().items(Joi.number()).length(2).required(), // [longitude, latitude]
