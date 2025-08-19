@@ -1,12 +1,10 @@
 import React, { useState, useEffect } from 'react';
 import { useCart } from '../context/CartContext';
-import { FaTrash, FaPlus, FaMinus } from 'react-icons/fa';
+import { FaTrash, FaPlus, FaMinus, FaMapMarkerAlt } from 'react-icons/fa';
 import axios from 'axios';
 import jwtDecode from 'jwt-decode';
 import { useNavigate } from 'react-router-dom';
 import { useModal } from '../context/ModalContext';
-
-// NEW: Import the map component
 import MapComponent from '../components/MapComponent';
 
 const CartPage = () => {
@@ -14,10 +12,16 @@ const CartPage = () => {
   const [orderMessage, setOrderMessage] = useState('');
   const [loading, setLoading] = useState(false);
   const navigate = useNavigate();
-  const { showAlert, showPrompt } = useModal();
+  const { showAlert, showConfirm } = useModal();
+  const [deliveryLocation, setDeliveryLocation] = useState(null); // Map pin location: { type: 'Point', coordinates: [lng, lat] }
+  const [deliveryAddressInput, setDeliveryAddressInput] = useState(''); // Manual address input from textarea
+  const [showMap, setShowMap] = useState(false); // State to control map visibility
 
-  // NEW state for delivery location
-  const [deliveryLocation, setDeliveryLocation] = useState(null);
+  // DEBUG: Log deliveryLocation whenever it changes
+  useEffect(() => {
+    console.log('CartPage: deliveryLocation state updated:', deliveryLocation);
+  }, [deliveryLocation]);
+
 
   const handleCheckout = async () => {
     setLoading(true);
@@ -45,24 +49,17 @@ const CartPage = () => {
       return;
     }
 
-    // NEW: Check if a delivery location has been selected
-    if (!deliveryLocation) {
-      showAlert('Please select your delivery location on the map.');
+    // Validate map location before proceeding
+    if (!deliveryLocation || !deliveryLocation.coordinates || deliveryLocation.coordinates.length !== 2) {
+      showAlert('Please select your delivery location on the map by clicking on it.');
       setLoading(false);
       return;
     }
 
-    showPrompt(
-      "Confirm Delivery Address",
-      "Please enter your detailed delivery address:",
-      "Your full address",
-      async (deliveryAddress) => {
-        if (!deliveryAddress || deliveryAddress.trim() === '') {
-          showAlert('Delivery address is required to place the order.');
-          setLoading(false);
-          return;
-        }
-
+    // Now, show a simple confirmation modal (no text input needed here)
+    showConfirm(
+      `Confirm your order to the location: "${deliveryAddressInput.trim() || 'No detailed address provided'}"?`, // Use trimmed address or a default message
+      async () => { // onConfirm callback
         const orderItems = cartItems.map(item => ({
           menuItemId: item.menuItemId,
           name: item.name,
@@ -72,14 +69,20 @@ const CartPage = () => {
         }));
 
         const totalAmount = getCartTotal();
-
         const orderData = {
           restaurantId: firstRestaurantId,
           items: orderItems,
           totalAmount: totalAmount,
-          deliveryAddress: deliveryAddress,
-          deliveryLocation: deliveryLocation, // NEW: Add location to order data
+          deliveryAddress: deliveryAddressInput.trim(), // Send the trimmed address (can be empty string)
+          deliveryLocation: { // Use the location from the map state
+            type: 'Point',
+            coordinates: [deliveryLocation.coordinates[0], deliveryLocation.coordinates[1]],
+          },
         };
+
+        // DEBUG: Log the orderData right before sending
+        console.log('CartPage: Order data being sent:', orderData);
+
 
         try {
           const response = await axios.post('http://localhost:3000/api/orders', orderData, {
@@ -100,8 +103,8 @@ const CartPage = () => {
           setLoading(false);
         }
       },
-      () => {
-        setLoading(false);
+      () => { // onCancel callback
+        setLoading(false); // Re-enable button if prompt is cancelled
         showAlert('Order placement cancelled.');
       }
     );
@@ -111,16 +114,45 @@ const CartPage = () => {
     <div className="p-6 pt-24 max-w-4xl mx-auto">
       <h1 className="text-4xl font-extrabold text-gray-900 mb-8 text-center">Your Cart</h1>
       
-      {/* NEW: Map for location selection */}
       {cartItems.length > 0 && (
         <div className="bg-white rounded-xl shadow-lg p-6 mb-6">
-          <h2 className="text-2xl font-bold text-gray-900 mb-4">Select Delivery Location</h2>
-          <p className="text-gray-600 mb-4">Click on the map to set your precise delivery location.</p>
-          <MapComponent onLocationSelect={setDeliveryLocation} />
-          {deliveryLocation && (
-            <p className="mt-4 text-green-700 font-semibold text-sm">
-              Location selected: Longitude: {deliveryLocation.coordinates[0].toFixed(4)}, Latitude: {deliveryLocation.coordinates[1].toFixed(4)}
-            </p>
+          <h2 className="text-2xl font-bold text-gray-900 mb-4">Delivery Details</h2>
+          
+          {/* Manual Address Input (now optional for button enable, but still sent) */}
+          <div className="mb-4">
+            <label htmlFor="deliveryAddress" className="block text-sm font-medium text-gray-700 mb-1">
+              Detailed Delivery Address (Optional):
+            </label>
+            <textarea
+              id="deliveryAddress"
+              rows="3"
+              value={deliveryAddressInput}
+              onChange={(e) => setDeliveryAddressInput(e.target.value)}
+              placeholder="e.g., House No, Street Name, City, Apt/Unit"
+              className="w-full p-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-[#ffaa00]"
+              // removed 'required' attribute from here
+            ></textarea>
+          </div>
+
+          {/* Map Toggle Button */}
+          <button
+            onClick={() => setShowMap(!showMap)}
+            className="bg-blue-500 text-white px-4 py-2 rounded-lg hover:bg-blue-600 transition flex items-center justify-center text-sm font-semibold mb-4"
+          >
+            <FaMapMarkerAlt className="mr-2" /> {showMap ? 'Hide Map' : 'Select/Edit Location on Map'}
+          </button>
+
+          {/* Conditional Map Rendering */}
+          {showMap && (
+            <div className="mb-4">
+              <p className="text-gray-600 mb-2">Click on the map to set your precise delivery location.</p>
+              <MapComponent onLocationSelect={setDeliveryLocation} initialPosition={deliveryLocation ? { lat: deliveryLocation.coordinates[1], lng: deliveryLocation.coordinates[0] } : null} />
+              {deliveryLocation && (
+                <p className="mt-2 text-green-700 font-semibold text-sm">
+                  Location selected: Longitude: {deliveryLocation.coordinates[0].toFixed(4)}, Latitude: {deliveryLocation.coordinates[1].toFixed(4)}
+                </p>
+              )}
+            </div>
           )}
         </div>
       )}
@@ -182,7 +214,7 @@ const CartPage = () => {
 
           <button
             onClick={handleCheckout}
-            disabled={loading || !deliveryLocation}
+            disabled={loading || !deliveryLocation} // Disable if no location or address
             className="w-full mt-6 bg-[#ffaa00] text-white p-3 rounded-lg hover:bg-[#e59400] transition disabled:opacity-50 disabled:cursor-not-allowed font-semibold text-lg shadow-md hover:shadow-lg"
           >
             {loading ? 'Processing Order...' : 'Proceed to Checkout'}
