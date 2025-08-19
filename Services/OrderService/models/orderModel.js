@@ -52,9 +52,9 @@ const orderSchema = new mongoose.Schema({
   },
   deliveryAddress: {
     type: String,
-    required: true,
+    required: false,
+    default: '',
   },
-  // NEW: GeoJSON Point for customer location
   deliveryLocation: {
     type: {
       type: String,
@@ -63,7 +63,7 @@ const orderSchema = new mongoose.Schema({
       default: 'Point',
     },
     coordinates: {
-      type: [Number], // [longitude, latitude]
+      type: [Number],
       required: true,
     },
   },
@@ -75,6 +75,10 @@ const orderSchema = new mongoose.Schema({
   orderDate: {
     type: Date,
     default: Date.now,
+  },
+  isRated: { // NEW: To track if this order has been rated by the customer
+    type: Boolean,
+    default: false,
   },
 }, { timestamps: true });
 
