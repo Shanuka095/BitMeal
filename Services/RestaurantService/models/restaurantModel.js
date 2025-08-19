@@ -14,9 +14,11 @@ const restaurantSchema = new mongoose.Schema({
   owner: { type: mongoose.Schema.Types.ObjectId, ref: 'User', required: true },
   menu: [menuItemSchema],
   imageUrl: { type: String, default: '' },
-  // NEW: Rating fields
   averageRating: { type: Number, default: 0, min: 0, max: 5 },
   totalRatings: { type: Number, default: 0, min: 0 },
+  // NEW: Like/Dislike fields
+  totalLikes: { type: Number, default: 0, min: 0 },
+  totalDislikes: { type: Number, default: 0, min: 0 },
 }, { timestamps: true });
 
 module.exports = mongoose.model('Restaurant', restaurantSchema);
