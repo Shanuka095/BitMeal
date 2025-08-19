@@ -5,7 +5,9 @@ const {
   getCustomerOrders,
   getRestaurantOrders,
   updateOrderStatus,
-  assignOrderToDeliveryPerson, // NEW
+  assignOrderToDeliveryPerson,
+  markOrderAsRated,
+  getActiveOrder, // NEW
 } = require('../controllers/orderController');
 const { authenticate, restrictTo } = require('../middleware/restrictAccess');
 const { validateCreateOrder, validateUpdateOrderStatus } = require('../middleware/validate');
@@ -13,13 +15,12 @@ const { validateCreateOrder, validateUpdateOrderStatus } = require('../middlewar
 // Customer Routes
 router.post('/', authenticate, restrictTo('customer'), validateCreateOrder, createOrder);
 router.get('/my-orders', authenticate, restrictTo('customer'), getCustomerOrders);
+router.patch('/:orderId/mark-rated', authenticate, restrictTo('customer'), markOrderAsRated);
+router.get('/my-active-order', authenticate, restrictTo('customer'), getActiveOrder); // NEW
 
 // Admin Routes (for restaurant owners)
-// Get orders for a specific restaurant owned by the admin
 router.get('/restaurant/:restaurantId', authenticate, restrictTo('restaurant_admin'), getRestaurantOrders);
-// Update status of an order (e.g., confirmed, preparing, delivered)
 router.put('/:orderId/status', authenticate, restrictTo('restaurant_admin'), validateUpdateOrderStatus, updateOrderStatus);
-// NEW: Assign delivery person to an order
 router.put('/:orderId/assign-delivery', authenticate, restrictTo('restaurant_admin'), assignOrderToDeliveryPerson);
 
 module.exports = router;
