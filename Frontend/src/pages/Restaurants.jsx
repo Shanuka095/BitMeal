@@ -1,6 +1,7 @@
 import { useState, useEffect } from 'react';
 import { Link } from 'react-router-dom';
 import axios from 'axios';
+import { FaStar } from 'react-icons/fa'; // Import star icon
 
 const Restaurants = ({ standalone }) => {
   const [restaurants, setRestaurants] = useState([]);
@@ -13,6 +14,7 @@ const Restaurants = ({ standalone }) => {
     const fetchRestaurants = async () => {
       setLoading(true);
       try {
+        // This endpoint now returns restaurants sorted by rating
         const response = await axios.get('http://localhost:3003/api/restaurants/public');
         const data = response.data.data || response.data;
         setRestaurants(Array.isArray(data) ? data : []);
@@ -39,7 +41,7 @@ const Restaurants = ({ standalone }) => {
       }
       if (restaurant.menu && restaurant.menu.some(item =>
         item.name.toLowerCase().includes(lowercasedSearchTerm) ||
-        item.category.toLowerCase().includes(lowercasedSearchTerm) // Also search by category
+        item.category.toLowerCase().includes(lowercasedSearchTerm)
       )) {
         return true;
       }
@@ -82,7 +84,20 @@ const Restaurants = ({ standalone }) => {
               )}
               <h3 className="text-xl font-semibold text-gray-900 mb-2 group-hover:text-[#ffaa00] transition-colors duration-300">{restaurant.name}</h3>
               <p className="text-sm text-gray-600 mb-3">{restaurant.address}</p>
-              <p className="text-sm text-gray-500 font-medium">Menu Items: {restaurant.menu ? restaurant.menu.length : 0}</p>
+              {/* NEW: Display average rating */}
+              {restaurant.totalRatings > 0 ? (
+                <div className="flex items-center mt-2">
+                  <FaStar className="text-yellow-500 mr-1" size={18} />
+                  <span className="text-gray-700 font-semibold">
+                    {restaurant.averageRating.toFixed(1)}
+                  </span>
+                  <span className="text-gray-500 ml-1 text-sm">
+                    ({restaurant.totalRatings})
+                  </span>
+                </div>
+              ) : (
+                <p className="text-gray-500 text-sm mt-2">No ratings yet.</p>
+              )}
             </Link>
           ))}
         </div>
