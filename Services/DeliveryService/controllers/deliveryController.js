@@ -65,17 +65,26 @@ const getAllDeliveryPersons = async (req, res) => {
   }
 };
 
-// Admin/DeliveryPersonnel: Get a single delivery person by ID
+// Admin/DeliveryPersonnel/Customer: Get a single delivery person by ID - FIX APPLIED HERE
 const getDeliveryPersonById = async (req, res) => {
   try {
     const { id } = req.params; // ID of the DeliveryPerson document, not userId
     let deliveryPerson;
 
+    // Allow admins to fetch any delivery person by ID
     if (req.user.role === 'restaurant_admin') {
       deliveryPerson = await DeliveryPerson.findById(id);
-    } else if (req.user.role === 'delivery_personnel') {
+    }
+    // Allow delivery personnel to fetch their own profile by ID
+    else if (req.user.role === 'delivery_personnel') {
       deliveryPerson = await DeliveryPerson.findOne({ _id: id, userId: req.user.userId });
-    } else {
+    }
+    // NEW FIX: Allow customers to fetch *any* delivery person by ID (for tracking purposes)
+    // As long as they are authenticated, they can get public driver info.
+    else if (req.user.role === 'customer') {
+      deliveryPerson = await DeliveryPerson.findById(id);
+    }
+    else { // Fallback for any other unauthorized roles
       return res.status(403).json({ error: 'Access denied: Insufficient role.' });
     }
 
@@ -185,7 +194,7 @@ const deleteDeliveryPerson = async (req, res) => {
   }
 };
 
-// NEW: Delivery Person updates their own location
+// Delivery Person updates their own location
 const updateMyGeolocation = async (req, res) => {
     try {
         const { coordinates } = req.body;
