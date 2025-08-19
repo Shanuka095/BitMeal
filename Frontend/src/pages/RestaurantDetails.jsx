@@ -4,8 +4,8 @@ import axios from 'axios';
 import jwtDecode from 'jwt-decode';
 import MenuItemModal from '../components/MenuItemModal';
 import { useCart } from '../context/CartContext';
-import { FaPlus, FaMinus, FaTrash } from 'react-icons/fa';
-import { useModal } from '../context/ModalContext'; // Import useModal
+import { FaPlus, FaMinus, FaTrash, FaStar } from 'react-icons/fa'; // Import FaStar
+import { useModal } from '../context/ModalContext';
 
 const RestaurantDetails = () => {
   const { id } = useParams();
@@ -21,7 +21,7 @@ const RestaurantDetails = () => {
   const [selectedMenuItem, setSelectedMenuItem] = useState(null);
 
   const { addToCart, cartItems, incrementQuantity, decrementQuantity, removeFromCart } = useCart();
-  const { showAlert, showPrompt } = useModal(); // Use useModal hook
+  const { showAlert, showPrompt } = useModal();
 
   useEffect(() => {
     const fetchDetails = async () => {
@@ -110,7 +110,22 @@ const RestaurantDetails = () => {
     <div className="p-6 pt-24 max-w-7xl mx-auto flex flex-col lg:flex-row">
       {/* Restaurant Header */}
       <div className="w-full lg:w-3/4 lg:pr-8">
-        <h1 className="text-4xl font-extrabold text-gray-900 mb-6 text-center lg:text-left">{restaurant.name}</h1>
+        <h1 className="text-4xl font-extrabold text-gray-900 mb-2 text-center lg:text-left">{restaurant.name}</h1>
+        {/* NEW: Display average rating */}
+        {restaurant.totalRatings > 0 ? (
+          <div className="flex items-center justify-center lg:justify-start mb-4">
+            <FaStar className="text-yellow-500 mr-1" size={20} />
+            <span className="text-gray-700 font-semibold text-lg">
+              {restaurant.averageRating.toFixed(1)}
+            </span>
+            <span className="text-gray-500 ml-2 text-sm">
+              ({restaurant.totalRatings} ratings)
+            </span>
+          </div>
+        ) : (
+          <p className="text-gray-500 text-center lg:text-left mb-4">No ratings yet.</p>
+        )}
+
         {restaurant.imageUrl && (
           <div className="mb-8 flex justify-center lg:justify-start">
             <img
