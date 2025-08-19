@@ -5,7 +5,7 @@ import axios from 'axios';
 import jwtDecode from 'jwt-decode';
 import { useModal } from '../context/ModalContext';
 
-// NEW: Simulate automatic location updates for the driver
+// Simulate automatic location updates for the driver
 const SimulateLocation = ({ userId, token, showAlert }) => {
     useEffect(() => {
         let intervalId;
@@ -23,7 +23,7 @@ const SimulateLocation = ({ userId, token, showAlert }) => {
                 console.log(`Location updated for driver ${userId}: [${longitude.toFixed(4)}, ${latitude.toFixed(4)}]`);
             } catch (err) {
                 console.error('Failed to update location:', err.response?.data || err);
-                showAlert('Failed to update your location. Please check your network.');
+                // showAlert('Failed to update your location. Please check your network.'); // Too frequent alerts
             }
         };
 
