@@ -34,8 +34,9 @@ import ManageDeliveryPersonnel from './pages/ManageDeliveryPersonnel';
 // Import Delivery Personnel components and pages
 import DeliveryPersonnelLayout from './components/DeliveryPersonnelLayout';
 import DeliveryDashboard from './pages/DeliveryDashboard';
+import MyDeliveries from './pages/MyDeliveries'; // NEW: Import MyDeliveries
 
-// NEW: Import ActiveOrderBanner and ActiveOrderPage
+// Import ActiveOrderBanner and ActiveOrderPage
 import ActiveOrderBanner from './components/ActiveOrderBanner';
 import ActiveOrderPage from './pages/ActiveOrderPage';
 
@@ -90,7 +91,6 @@ function App() {
             <CartProvider>
               <ModalProvider showAlert={showAlert} showConfirm={showConfirm} showPrompt={showPrompt}>
                 <Navbar />
-                {/* NEW: Active Order Banner */}
                 <ActiveOrderBanner /> 
                 <div className="flex-grow">
                   <Outlet />
@@ -110,7 +110,6 @@ function App() {
           <Route path="/profile" element={<ProtectedRoute><Profile /></ProtectedRoute>} />
           <Route path="/my-orders" element={<ProtectedRoute><CustomerOrders /></ProtectedRoute>} />
           <Route path="/cart" element={<ProtectedRoute><CartPage /></ProtectedRoute>} />
-          {/* NEW: Route for Active Order Page */}
           <Route path="/my-active-order" element={<ProtectedRoute><ActiveOrderPage /></ProtectedRoute>} />
         </Route>
 
@@ -147,7 +146,7 @@ function App() {
           }
         >
           <Route index element={<DeliveryDashboard />} />
-          <Route path="my-deliveries" element={<div>My Deliveries Page (coming soon)</div>} />
+          <Route path="my-deliveries" element={<MyDeliveries />} /> {/* NEW: Route to MyDeliveries */}
           <Route path="profile" element={<div>My Profile Page (coming soon)</div>} />
         </Route>
 
