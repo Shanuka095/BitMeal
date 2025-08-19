@@ -39,7 +39,7 @@ const orderSchema = new mongoose.Schema({
     ref: 'Restaurant',
     required: true,
   },
-  deliveryPersonId: { // NEW: Field to link to a delivery person
+  deliveryPersonId: { // Field to link to a delivery person
     type: mongoose.Schema.Types.ObjectId,
     ref: 'DeliveryPerson', // Refers to the DeliveryPerson model in DeliveryService
     default: null, // Initially, no delivery person is assigned
@@ -50,11 +50,13 @@ const orderSchema = new mongoose.Schema({
     required: true,
     min: 0,
   },
+  // FIX: Make deliveryAddress NOT required in Mongoose schema
   deliveryAddress: {
     type: String,
-    required: false,
-    default: '',
+    required: false, // Set to false to make it optional
+    default: '', // Provide a default empty string if not provided
   },
+  
   deliveryLocation: {
     type: {
       type: String,
@@ -63,8 +65,8 @@ const orderSchema = new mongoose.Schema({
       default: 'Point',
     },
     coordinates: {
-      type: [Number],
-      required: true,
+      type: [Number], // [longitude, latitude]
+      required: true, // This must remain true as a map pin is mandatory
     },
   },
   status: {
@@ -76,7 +78,7 @@ const orderSchema = new mongoose.Schema({
     type: Date,
     default: Date.now,
   },
-  isRated: { // NEW: To track if this order has been rated by the customer
+  isRated: { // To track if this order has been rated by the customer
     type: Boolean,
     default: false,
   },
