@@ -20,7 +20,7 @@ const menuItemSchema = Joi.object({
   imageUrl: Joi.string().optional().allow(''),
 });
 
-// Schema for rating submission
+// NEW: Schema for rating submission
 const ratingSchema = Joi.object({
   rating: Joi.number().integer().min(1).max(5).required(),
 });
@@ -205,7 +205,10 @@ const addMenuItem = async (req, res) => {
     const restaurant = await Restaurant.findOne({ _id: req.params.id, owner: req.user.userId });
     if (!restaurant) return res.status(404).json({ error: 'Restaurant not found or not owned by user' });
 
-    restaurant.menu.push({
+    const menuItem = restaurant.menu.id(req.params.menuId);
+    if (!menuItem) return res.status(404).json({ error: 'Menu item not found' });
+
+    Object.assign(menuItem, {
       name,
       normalPrice: parsedNormalPrice,
       extraPriceForFull: parsedExtraPriceForFull,
