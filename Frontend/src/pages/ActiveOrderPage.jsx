@@ -64,7 +64,6 @@ const ActiveOrderPage = () => {
                 return;
             }
             
-            // This endpoint now returns driver and restaurant details
             const response = await axios.get('http://localhost:3000/api/orders/my-active-order-details', {
                 headers: { Authorization: `Bearer ${token}` },
             });
@@ -100,8 +99,6 @@ const ActiveOrderPage = () => {
         }
     };
 
-    // FIX: Adjust padding-top to account for Navbar (h-20) and Banner (h-12 approx)
-    // 20 (navbar) + 12 (banner) = 32. pt-32 (8rem) should be sufficient.
     if (loading) return <div className="p-6 text-center pt-32"><p className="text-gray-600">Loading your order details...</p></div>;
     if (error) return <div className="p-6 text-center pt-32"><p className="text-red-600 font-semibold">{error}</p></div>;
     if (!activeOrder) return <div className="p-6 text-center pt-32"><p className="text-gray-600">You don't have any active orders.</p></div>;
@@ -110,12 +107,10 @@ const ActiveOrderPage = () => {
     const driver = order.driver;
     const restaurant = order.restaurant;
 
-    // Check if location data is available
     const driverLocation = driver?.currentLocation?.coordinates?.length === 2 ? [driver.currentLocation.coordinates[1], driver.currentLocation.coordinates[0]] : null;
     const restaurantLocation = restaurant?.location?.coordinates?.length === 2 ? [restaurant.location.coordinates[1], restaurant.location.coordinates[0]] : null;
     const deliveryLocation = order?.deliveryLocation?.coordinates?.length === 2 ? [order.deliveryLocation.coordinates[1], order.deliveryLocation.coordinates[0]] : null;
 
-    // Center the map on the delivery location, if available
     const mapCenter = deliveryLocation || [6.9271, 79.8612];
     const positions = [
         ...(restaurantLocation ? [restaurantLocation] : []),
@@ -203,7 +198,7 @@ const ActiveOrderPage = () => {
 
                     {/* Polyline showing driver's route */}
                     {positions.length > 1 && (
-                        <Polyline positions={positions} color="#0000ff" />
+                        <Polyline positions={positions} color="#ffaa00" />
                     )}
                 </MapContainer>
             </div>
