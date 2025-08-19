@@ -34,11 +34,11 @@ router.get(
   getAllDeliveryPersons
 );
 
-// Admin/Delivery Personnel: Get a specific delivery person by ID
+// Admin/Delivery Personnel/Customer: Get a specific delivery person by ID
 router.get(
   '/:id',
   authenticate,
-  restrictTo('restaurant_admin', 'delivery_personnel'),
+  restrictTo('restaurant_admin', 'delivery_personnel', 'customer'),
   getDeliveryPersonById
 );
 
@@ -68,7 +68,7 @@ router.delete(
   deleteDeliveryPerson
 );
 
-// NEW: Update my own location
+// Update my own location
 router.post(
   '/my-location',
   authenticate,
