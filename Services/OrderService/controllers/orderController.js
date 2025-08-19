@@ -45,13 +45,14 @@ const getCustomerOrders = async (req, res) => {
     const orders = await Order.find({ userId }).sort({ orderDate: -1 }).lean();
     console.log(`Fetched ${orders.length} orders for customer ${userId}`);
     res.json(orders);
-  } catch (error) {
+  }
+  catch (error) {
     console.error('Error fetching customer orders:', error);
     res.status(500).json({ error: error.message || 'Failed to fetch customer orders' });
   }
 };
 
-// Get the single active order for a customer
+// Get the single active order for a customer (for banner and dedicated page)
 const getActiveOrder = async (req, res) => {
   try {
     const userId = req.user.userId;
@@ -112,35 +113,45 @@ const getRestaurantOrders = async (req, res) => {
     const adminId = req.user.userId;
     const adminToken = req.headers.authorization;
 
+    console.log(`OrderService (getRestaurantOrders) - Fetching orders for restaurantId: ${restaurantId} by adminId: ${adminId}`);
+    console.log(`OrderService (getRestaurantOrders) - Admin Token (first 10 chars): ${adminToken ? adminToken.substring(0, 10) : 'N/A'}`);
+
     let restaurant;
     try {
+      // Internal call to RestaurantService to verify ownership
       const restaurantResponse = await axios.get(`${RESTAURANT_SERVICE_URL}/${restaurantId}`, {
         headers: { Authorization: adminToken },
       });
       restaurant = restaurantResponse.data;
+      console.log(`OrderService (getRestaurantOrders) - RestaurantService response for ID ${restaurantId}:`, restaurant);
+
       if (restaurant.owner.toString() !== adminId) {
+        console.warn(`OrderService (getRestaurantOrders) - Access denied: Admin ${adminId} does not own restaurant ${restaurantId}.`);
         return res.status(403).json({ error: 'Access denied: You do not own this restaurant.' });
       }
     } catch (axiosErr) {
-      return res.status(axiosErr.response?.status || 500).json({ error: 'Failed to verify restaurant ownership.' });
+      console.error(`OrderService (getRestaurantOrders) - Error verifying restaurant ownership for ID ${restaurantId}:`, axiosErr.response?.data || axiosErr.message);
+      const statusCode = axiosErr.response?.status || 500;
+      const errorMessage = axiosErr.response?.data?.error || 'Failed to verify restaurant ownership with RestaurantService.';
+      return res.status(statusCode).json({ error: errorMessage });
     }
 
     const orders = await Order.find({ restaurantId }).sort({ orderDate: -1 }).lean();
     console.log(`Fetched ${orders.length} orders for restaurant ${restaurantId} by admin ${adminId}`);
     res.json(orders);
   } catch (error) {
-    console.error('Error fetching restaurant orders:', error);
+    console.error('OrderService (getRestaurantOrders) - Unexpected error:', error);
     res.status(500).json({ error: error.message || 'Failed to fetch restaurant orders' });
   }
 };
 
-// Update order status (Admin/Delivery Personnel) - UPDATED FOR DRIVER STATUS
+// Update order status (Admin/Delivery Personnel)
 const updateOrderStatus = async (req, res) => {
   try {
     const orderId = req.params.orderId;
     const { status } = req.body;
     const userId = req.user.userId;
-    const userToken = req.headers.authorization; // Token of the user making the update (admin or driver)
+    const userToken = req.headers.authorization;
 
     const order = await Order.findById(orderId);
     if (!order) {
@@ -173,7 +184,7 @@ const updateOrderStatus = async (req, res) => {
     }
 
 
-    // NEW: If status is being set to 'delivered', update driver status to 'available'
+    // If status is being set to 'delivered', update driver status to 'available'
     if (status === 'delivered' && order.deliveryPersonId) {
         try {
             await axios.patch(`${DELIVERY_SERVICE_URL}/${order.deliveryPersonId}/status`, { status: 'available' }, {
@@ -196,7 +207,7 @@ const updateOrderStatus = async (req, res) => {
   }
 };
 
-// Assign a delivery person to an order (Admin) - UPDATED
+// Assign a delivery person to an order (Admin)
 const assignOrderToDeliveryPerson = async (req, res) => {
     try {
         const { orderId } = req.params;
@@ -209,12 +220,10 @@ const assignOrderToDeliveryPerson = async (req, res) => {
             return res.status(404).json({ error: 'Order not found.' });
         }
 
-        // Allow assignment only if order is pending or confirmed
-        if (order.status !== 'pending' && order.status !== 'confirmed') {
+        if (order.status !== 'confirmed' && order.status !== 'preparing') {
             return res.status(400).json({ error: `Cannot assign delivery to an order with status "${order.status}". Order must be pending or confirmed.` });
         }
         
-        // Verify restaurant ownership
         let restaurant;
         try {
           const restaurantResponse = await axios.get(`${RESTAURANT_SERVICE_URL}/${order.restaurantId}`, {
@@ -228,7 +237,6 @@ const assignOrderToDeliveryPerson = async (req, res) => {
           return res.status(axiosErr.response?.status || 500).json({ error: 'Failed to verify restaurant ownership.' });
         }
 
-        // Verify the delivery person exists and is available
         let deliveryPerson;
         try {
             const dpResponse = await axios.get(`${DELIVERY_SERVICE_URL}/${deliveryPersonId}`, {
@@ -244,16 +252,13 @@ const assignOrderToDeliveryPerson = async (req, res) => {
         }
 
         order.deliveryPersonId = deliveryPersonId;
-        // NEW: Status remains 'confirmed' or 'pending' after assignment. Driver will change to 'out_for_delivery'
-        // order.status = 'out_for_delivery'; // REMOVED THIS LINE
+        order.status = 'out_for_delivery';
         await order.save();
 
-        // NEW: Set driver status to 'on_delivery' immediately upon assignment
         try {
             await axios.patch(`${DELIVERY_SERVICE_URL}/${deliveryPersonId}/status`, { status: 'on_delivery' }, {
                 headers: { Authorization: userToken },
             });
-            console.log(`Driver ${deliveryPersonId} status set to 'on_delivery' after order assignment.`);
         } catch (axiosErr) {
             console.error('Error updating delivery person status to on_delivery:', axiosErr.response?.data || axiosErr.message);
         }
@@ -267,35 +272,190 @@ const assignOrderToDeliveryPerson = async (req, res) => {
     }
 };
 
-// Mark an order as rated
-const markOrderAsRated = async (req, res) => {
-  try {
-    const { orderId } = req.params;
-    const userId = req.user.userId;
+// Get orders assigned to a specific driver
+const getDriverAssignedOrders = async (req, res) => {
+    try {
+        const driverId = req.user.userId; // The userId of the logged-in driver
+        const orders = await Order.find({ deliveryPersonId: driverId, status: { $nin: ['delivered', 'cancelled'] } })
+                                  .sort({ orderDate: -1 })
+                                  .lean();
 
-    const order = await Order.findById(orderId);
-    if (!order) {
-      return res.status(404).json({ error: 'Order not found.' });
+        // For each order, fetch relevant restaurant and customer details
+        const ordersWithDetails = await Promise.all(orders.map(async (order) => {
+            const userToken = req.headers.authorization;
+            let restaurantDetails = null;
+            let customerDetails = null;
+
+            // Fetch restaurant details
+            try {
+                const resResponse = await axios.get(`${RESTAURANT_SERVICE_URL}/public/${order.restaurantId}`);
+                restaurantDetails = resResponse.data;
+                // Simulate restaurant location
+                const restaurantCoords = [order.deliveryLocation.coordinates[0] - 0.01, order.deliveryLocation.coordinates[1] + 0.01];
+                restaurantDetails.location = { type: 'Point', coordinates: restaurantCoords };
+            } catch (err) {
+                console.warn(`Could not fetch restaurant details for order ${order._id}:`, err.message);
+            }
+
+            // Fetch customer details (only name and phone for driver view)
+            try {
+                // Assuming UserService has a public profile endpoint or specific driver-view endpoint
+                // For now, we'll fetch the full profile and extract what's needed.
+                const userResponse = await axios.get(`http://localhost:3002/api/users/profile`, { 
+                    headers: { Authorization: userToken },
+                });
+                customerDetails = {
+                    name: userResponse.data.name,
+                    phone: userResponse.data.phone,
+                    address: userResponse.data.address, // Include address for driver
+                };
+            } catch (err) {
+                console.warn(`Could not fetch customer details for order ${order._id}:`, err.message);
+            }
+
+            return {
+                ...order,
+                restaurant: restaurantDetails,
+                customer: customerDetails,
+            };
+        }));
+
+        console.log(`Fetched ${ordersWithDetails.length} assigned orders for driver ${driverId}`);
+        res.json(ordersWithDetails);
+    } catch (error) {
+        console.error('Error fetching driver assigned orders:', error);
+        res.status(500).json({ error: error.message || 'Failed to fetch assigned orders' });
     }
-
-    if (order.userId.toString() !== userId) {
-      return res.status(403).json({ error: 'Access denied: You are not authorized to rate this order.' });
-    }
-
-    if (order.isRated) {
-      return res.status(400).json({ error: 'Order has already been rated.' });
-    }
-
-    order.isRated = true;
-    await order.save();
-    console.log(`Order ${orderId} marked as rated by user ${userId}`);
-    res.json({ message: 'Order marked as rated successfully.' });
-
-  } catch (error) {
-    console.error('Error marking order as rated:', error);
-    res.status(500).json({ error: error.message || 'Failed to mark order as rated' });
-  }
 };
+
+// Driver accepts an order
+const driverAcceptOrder = async (req, res) => {
+    try {
+        const { orderId } = req.params;
+        const driverId = req.user.userId;
+        const order = await Order.findById(orderId);
+
+        if (!order) return res.status(404).json({ error: 'Order not found.' });
+        if (order.deliveryPersonId.toString() !== driverId) return res.status(403).json({ error: 'Access denied: Not assigned to this order.' });
+        if (order.status !== 'pending' && order.status !== 'confirmed') return res.status(400).json({ error: `Order status is ${order.status}. Cannot accept.` });
+
+        order.status = 'preparing'; // Driver accepts, status moves to preparing
+        await order.save();
+        console.log(`Driver ${driverId} accepted order ${orderId}. Status: ${order.status}`);
+        res.json(order);
+    } catch (error) {
+        console.error('Error accepting order:', error);
+        res.status(500).json({ error: error.message || 'Failed to accept order' });
+    }
+};
+
+// Driver marks order as picked up
+const driverPickupOrder = async (req, res) => {
+    try {
+        const { orderId } = req.params;
+        const driverId = req.user.userId;
+        const order = await Order.findById(orderId);
+
+        if (!order) return res.status(404).json({ error: 'Order not found.' });
+        if (order.deliveryPersonId.toString() !== driverId) return res.status(403).json({ error: 'Access denied: Not assigned to this order.' });
+        if (order.status !== 'preparing') return res.status(400).json({ error: `Order status is ${order.status}. Cannot pick up.` });
+
+        order.status = 'out_for_delivery'; // Driver picked up
+        await order.save();
+        console.log(`Driver ${driverId} picked up order ${orderId}. Status: ${order.status}`);
+        res.json(order);
+    }
+    catch (error) {
+        console.error('Error picking up order:', error);
+        res.status(500).json({ error: 'Failed to pick up order' });
+    }
+};
+
+// Driver marks order as delivered
+const driverDeliverOrder = async (req, res) => {
+    try {
+        const { orderId } = req.params;
+        const driverId = req.user.userId;
+        const userToken = req.headers.authorization; // Driver's token
+        const order = await Order.findById(orderId);
+
+        if (!order) return res.status(404).json({ error: 'Order not found.' });
+        if (order.deliveryPersonId.toString() !== driverId) return res.status(403).json({ error: 'Access denied: Not assigned to this order.' });
+        if (order.status !== 'out_for_delivery') return res.status(400).json({ error: `Order status is ${order.status}. Cannot deliver.` });
+
+        order.status = 'delivered'; // Driver delivered
+        await order.save();
+        console.log(`Driver ${driverId} delivered order ${orderId}. Status: ${order.status}`);
+
+        // Set driver status to 'available' after delivery
+        try {
+            await axios.patch(`${DELIVERY_SERVICE_URL}/${order.deliveryPersonId}/status`, { status: 'available' }, {
+                headers: { Authorization: userToken },
+            });
+            console.log(`Driver ${order.deliveryPersonId} status updated to 'available' after delivery.`);
+        } catch (axiosErr) {
+            console.error(`Failed to set driver status to 'available' for ${order.deliveryPersonId}:`, axiosErr.response?.data || axiosErr.message);
+        }
+
+        res.json(order);
+    } catch (error) {
+        console.error('Error delivering order:', error);
+        res.status(500).json({ error: 'Failed to deliver order' });
+    }
+};
+
+
+// Customer submits combined rating for restaurant and driver for a specific order
+const submitCombinedOrderRating = async (req, res) => {
+    try {
+        const { orderId } = req.params;
+        const { restaurantRating, driverRating, restaurantLikeStatus, driverLikeStatus } = req.body;
+        const userId = req.user.userId; // Customer's userId
+        const userToken = req.headers.authorization;
+
+        const order = await Order.findById(orderId);
+        if (!order) return res.status(404).json({ error: 'Order not found.' });
+        if (order.userId.toString() !== userId) return res.status(403).json({ error: 'Access denied: You are not authorized to rate this order.' });
+        if (order.status !== 'delivered') return res.status(400).json({ error: 'Only delivered orders can be rated.' });
+
+        // Submit Restaurant Rating
+        if (!order.restaurantRated && restaurantRating) {
+            try {
+                await axios.post(`${RESTAURANT_SERVICE_URL}/${order.restaurantId}/rate`, { rating: restaurantRating, likeStatus: restaurantLikeStatus }, { // Pass likeStatus to RestaurantService
+                    headers: { Authorization: userToken },
+                });
+                order.restaurantRated = true;
+                order.restaurantLikeStatus = restaurantLikeStatus;
+                console.log(`Restaurant ${order.restaurantId} rated by user ${userId}.`);
+            } catch (err) {
+                console.warn(`Failed to submit restaurant rating for order ${orderId}:`, err.response?.data || err.message);
+            }
+        }
+
+        // Submit Driver Rating
+        if (!order.driverRated && driverRating && order.deliveryPersonId) {
+            try {
+                await axios.post(`${DELIVERY_SERVICE_URL}/${order.deliveryPersonId}/rate`, { rating: driverRating, likeStatus: driverLikeStatus }, { // Pass likeStatus to DeliveryService
+                    headers: { Authorization: userToken },
+                });
+                order.driverRated = true;
+                order.driverLikeStatus = driverLikeStatus;
+                console.log(`Driver ${order.deliveryPersonId} rated by user ${userId}.`);
+            } catch (err) {
+                console.warn(`Failed to submit driver rating for order ${orderId}:`, err.response?.data || err.message);
+            }
+        }
+
+        // Save order to update rating flags
+        await order.save();
+        res.json({ message: 'Ratings submitted successfully.' });
+
+    } catch (error) {
+        console.error('Error submitting combined order rating:', error);
+        res.status(500).json({ error: error.message || 'Failed to submit ratings.' });
+    }
+};
+
 
 module.exports = {
   createOrder,
@@ -303,6 +463,11 @@ module.exports = {
   getRestaurantOrders,
   updateOrderStatus,
   assignOrderToDeliveryPerson,
-  markOrderAsRated,
+  // markOrderAsRated, // REMOVED THIS LINE
   getActiveOrder,
+  getDriverAssignedOrders,
+  driverAcceptOrder,
+  driverPickupOrder,
+  driverDeliverOrder,
+  submitCombinedOrderRating, // NEW
 };
