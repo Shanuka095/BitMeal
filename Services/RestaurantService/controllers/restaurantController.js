@@ -2,7 +2,6 @@ const Restaurant = require('../models/restaurantModel');
 const Joi = require('joi');
 const axios = require('axios');
 
-// Base URL for the RestaurantService (can be an environment variable in production)
 const RESTAURANT_SERVICE_URL = 'http://localhost:3003/api/restaurants';
 
 // Validation Schemas
@@ -20,17 +19,16 @@ const menuItemSchema = Joi.object({
   imageUrl: Joi.string().optional().allow(''),
 });
 
-// NEW: Schema for rating submission
+// NEW: Schema for rating submission (now includes optional likeStatus)
 const ratingSchema = Joi.object({
   rating: Joi.number().integer().min(1).max(5).required(),
+  likeStatus: Joi.string().valid('liked', 'disliked').optional().allow(null), // Can be 'liked', 'disliked', or null
 });
 
 // Customer: Get all restaurants (Public access) - UPDATED FOR SORTING AND RATINGS
 const getPublicRestaurants = async (req, res) => {
   try {
     console.log('getPublicRestaurants: Fetching all restaurants (public access) and sorting by rating.');
-    // Fetch all restaurants and sort by averageRating in descending order
-    // If averageRating is the same, sort by totalRatings (more ratings means more reliable)
     const restaurants = await Restaurant.find().sort({ averageRating: -1, totalRatings: -1 }).lean();
     if (!restaurants.length) {
       return res.json({ message: 'No restaurants available', data: [] });
@@ -313,15 +311,15 @@ const deleteMenuItem = async (req, res) => {
   }
 };
 
-// Submit a rating for a restaurant
+// Submit a rating for a restaurant - UPDATED FOR LIKES
 const submitRating = async (req, res) => {
   try {
     const { id } = req.params; // Restaurant ID
-    const { rating } = req.body; // The submitted rating (1-5)
+    const { rating, likeStatus } = req.body; // The submitted rating (1-5) and likeStatus
     const userId = req.user.userId; // Customer's user ID from token
 
-    // Validate the incoming rating
-    const { error } = ratingSchema.validate({ rating });
+    // Validate the incoming rating (and optional likeStatus)
+    const { error } = ratingSchema.validate({ rating, likeStatus });
     if (error) {
       return res.status(400).json({ error: error.details[0].message });
     }
@@ -339,12 +337,21 @@ const submitRating = async (req, res) => {
     restaurant.averageRating = newAverageRating;
     restaurant.totalRatings = newTotalRatings;
 
+    // Update likes/dislikes
+    if (likeStatus === 'liked') {
+        restaurant.totalLikes += 1;
+    } else if (likeStatus === 'disliked') {
+        restaurant.totalDislikes += 1;
+    }
+
     await restaurant.save();
-    console.log(`Restaurant ${id} rated ${rating} by user ${userId}. New average: ${newAverageRating.toFixed(2)}`);
+    console.log(`Restaurant ${id} rated ${rating} (likeStatus: ${likeStatus}) by user ${userId}. New average: ${newAverageRating.toFixed(2)}`);
     res.json({
       message: 'Rating submitted successfully',
       averageRating: restaurant.averageRating,
       totalRatings: restaurant.totalRatings,
+      totalLikes: restaurant.totalLikes,
+      totalDislikes: restaurant.totalDislikes,
     });
 
   } catch (error) {
