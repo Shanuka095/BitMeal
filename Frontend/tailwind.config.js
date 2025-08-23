@@ -7,11 +7,11 @@ export default {
   theme: {
     extend: {
       colors: {
-        // Your primary color (already implicitly available as #ffaa00 if used directly)
-        // Adding a custom name for clarity
-        'primary-orange': '#ffaa00', 
-        // NEW: Define your new secondary color
-        'secondary-dark': '#42423E', 
+        // Define your primary and secondary colors
+        // Primary color: Orange/Yellow from your existing theme
+        // Secondary color: New darker grey
+        'primary-orange': '#ffaa00', // Your main project color
+        'secondary-dark-grey': '#42423E', // The new secondary color
       },
     },
   },
