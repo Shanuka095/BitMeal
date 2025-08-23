@@ -34,7 +34,7 @@ import ManageDeliveryPersonnel from './pages/ManageDeliveryPersonnel';
 // Import Delivery Personnel components and pages
 import DeliveryPersonnelLayout from './components/DeliveryPersonnelLayout';
 import DeliveryDashboard from './pages/DeliveryDashboard';
-import MyDeliveries from './pages/MyDeliveries'; // NEW: Import MyDeliveries
+import MyDeliveries from './pages/MyDeliveries';
 
 // Import ActiveOrderBanner and ActiveOrderPage
 import ActiveOrderBanner from './components/ActiveOrderBanner';
@@ -92,7 +92,8 @@ function App() {
               <ModalProvider showAlert={showAlert} showConfirm={showConfirm} showPrompt={showPrompt}>
                 <Navbar />
                 <ActiveOrderBanner /> 
-                <div className="flex-grow">
+                {/* FIX: Add main-content-wrapper class to ensure content pushes footer */}
+                <div className="main-content-wrapper flex-grow">
                   <Outlet />
                 </div>
                 <Footer />
@@ -146,7 +147,7 @@ function App() {
           }
         >
           <Route index element={<DeliveryDashboard />} />
-          <Route path="my-deliveries" element={<MyDeliveries />} /> {/* NEW: Route to MyDeliveries */}
+          <Route path="my-deliveries" element={<MyDeliveries />} />
           <Route path="profile" element={<div>My Profile Page (coming soon)</div>} />
         </Route>
 
