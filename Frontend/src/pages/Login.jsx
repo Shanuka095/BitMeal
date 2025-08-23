@@ -1,7 +1,8 @@
 import { useState } from 'react';
 import axios from 'axios';
 import { useNavigate, Link } from 'react-router-dom';
-import Footer from '../components/Footer';
+// Removed Footer import as it's handled by App.jsx layout
+// import Footer from '../components/Footer'; 
 
 const Login = () => {
   const [email, setEmail] = useState('');
@@ -24,7 +25,7 @@ const Login = () => {
         navigate('/dashboard', { state: { sessionKey } }); // Pass sessionKey in state
       } else if (role === 'restaurant_admin') {
         navigate('/admin', { state: { sessionKey } }); // Pass sessionKey in state
-      } else if (role === 'delivery_personnel') { // NEW: Add case for delivery personnel
+      } else if (role === 'delivery_personnel') {
         navigate('/delivery-personnel', { state: { sessionKey } });
       } else {
         setError('Unknown role');
@@ -38,53 +39,53 @@ const Login = () => {
   };
 
   return (
-    <div className="w-screen min-h-screen bg-gradient-to-br from-gray-100 to-gray-200 flex flex-col">
-      <div className="flex-grow flex items-center justify-center p-6">
-        <div className="w-full max-w-md bg-white rounded-2xl shadow-2xl p-8 border border-[#ffaa00]/20 transform transition-all duration-300 hover:shadow-3xl">
-          <h2 className="text-4xl font-bold text-gray-800 mb-8 text-center tracking-wide">Welcome Back</h2>
-          <form onSubmit={handleLogin} className="space-y-6">
-            <div>
-              <label htmlFor="email" className="block text-sm font-semibold text-gray-700 mb-2">Email</label>
-              <input
-                type="email"
-                id="email"
-                value={email}
-                onChange={(e) => setEmail(e.target.value)}
-                className="w-full px-5 py-3 bg-gray-50 text-gray-800 rounded-lg border border-[#ffaa00]/20 focus:ring-2 focus:ring-[#ffaa00] focus:border-transparent placeholder-gray-400 transition-all duration-200"
-                placeholder="Enter your email"
-                required
-              />
-            </div>
-            <div>
-              <label htmlFor="password" className="block text-sm font-semibold text-gray-700 mb-2">Password</label>
-              <input
-                type="password"
-                id="password"
-                value={password}
-                onChange={(e) => setPassword(e.target.value)}
-                className="w-full px-5 py-3 bg-gray-50 text-gray-800 rounded-lg border border-[#ffaa00]/20 focus:ring-2 focus:ring-[#ffaa00] focus:border-transparent placeholder-gray-400 transition-all duration-200"
-                placeholder="Enter your password"
-                required
-              />
-            </div>
-            {error && <p className="text-red-600 text-sm text-center font-medium">{error}</p>}
-            <button
-              type="submit"
-              disabled={loading}
-              className={`w-full py-3 px-6 rounded-lg font-semibold text-white bg-[#ffaa00] hover:bg-[#e59400] transition-all duration-300 ${loading ? 'opacity-70 cursor-not-allowed' : 'shadow-md hover:shadow-lg'}`}
-            >
-              {loading ? 'Logging in...' : 'Login'}
-            </button>
-          </form>
-          <p className="text-gray-600 text-sm text-center mt-6">
-            Don’t have an account?{' '}
-            <Link to="/register" className="text-[#ffaa00] hover:text-[#e59400] font-medium transition-all duration-200">
-              Register
-            </Link>
-          </p>
-        </div>
+    // FIX: Removed w-screen, min-h-screen, and flex-col.
+    // Added pt-32 to push content below Navbar and ActiveOrderBanner.
+    // The main layout in App.jsx now manages the overall height and footer.
+    <div className="bg-gradient-to-br from-gray-100 to-gray-200 flex items-center justify-center p-6 pt-32 min-h-[calc(100vh-128px)]"> {/* Adjusted min-h for footer */}
+      <div className="w-full max-w-md bg-white rounded-2xl shadow-2xl p-8 border border-[#ffaa00]/20 transform transition-all duration-300 hover:shadow-3xl">
+        <h2 className="text-4xl font-bold text-gray-800 mb-8 text-center tracking-wide">Welcome Back</h2>
+        <form onSubmit={handleLogin} className="space-y-6">
+          <div>
+            <label htmlFor="email" className="block text-sm font-semibold text-gray-700 mb-2">Email</label>
+            <input
+              type="email"
+              id="email"
+              value={email}
+              onChange={(e) => setEmail(e.target.value)}
+              className="w-full px-5 py-3 bg-gray-50 text-gray-800 rounded-lg border border-[#ffaa00]/20 focus:ring-2 focus:ring-[#ffaa00] focus:border-transparent placeholder-gray-400 transition-all duration-200"
+              placeholder="Enter your email"
+              required
+            />
+          </div>
+          <div>
+            <label htmlFor="password" className="block text-sm font-semibold text-gray-700 mb-2">Password</label>
+            <input
+              type="password"
+              id="password"
+              value={password}
+              onChange={(e) => setPassword(e.target.value)}
+              className="w-full px-5 py-3 bg-gray-50 text-gray-800 rounded-lg border border-[#ffaa00]/20 focus:ring-2 focus:ring-[#ffaa00] focus:border-transparent placeholder-gray-400 transition-all duration-200"
+              placeholder="Enter your password"
+              required
+            />
+          </div>
+          {error && <p className="text-red-600 text-sm text-center font-medium">{error}</p>}
+          <button
+            type="submit"
+            disabled={loading}
+            className={`w-full py-3 px-6 rounded-lg font-semibold text-white bg-[#ffaa00] hover:bg-[#e59400] transition-all duration-300 ${loading ? 'opacity-70 cursor-not-allowed' : 'shadow-md hover:shadow-lg'}`}
+          >
+            {loading ? 'Logging in...' : 'Login'}
+          </button>
+        </form>
+        <p className="text-gray-600 text-sm text-center mt-6">
+          Don’t have an account?{' '}
+          <Link to="/register" className="text-[#ffaa00] hover:text-[#e59400] font-medium transition-all duration-200">
+            Register
+          </Link>
+        </p>
       </div>
-      <Footer />
     </div>
   );
 };
