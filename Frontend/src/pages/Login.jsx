@@ -39,10 +39,8 @@ const Login = () => {
   };
 
   return (
-    // FIX: Removed w-screen, min-h-screen, and flex-col.
-    // Added pt-32 to push content below Navbar and ActiveOrderBanner.
-    // The main layout in App.jsx now manages the overall height and footer.
-    <div className="bg-gradient-to-br from-gray-100 to-gray-200 flex items-center justify-center p-6 pt-32 min-h-[calc(100vh-128px)]"> {/* Adjusted min-h for footer */}
+    // Removed min-h-[calc(100vh-128px)] as footer is gone
+    <div className="bg-gradient-to-br from-gray-100 to-gray-200 flex items-center justify-center p-6 pt-32">
       <div className="w-full max-w-md bg-white rounded-2xl shadow-2xl p-8 border border-[#ffaa00]/20 transform transition-all duration-300 hover:shadow-3xl">
         <h2 className="text-4xl font-bold text-gray-800 mb-8 text-center tracking-wide">Welcome Back</h2>
         <form onSubmit={handleLogin} className="space-y-6">
