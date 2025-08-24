@@ -2,7 +2,7 @@ import { Link } from 'react-router-dom';
 
 const Home = () => {
   return (
-    // FIX: Removed w-screen and min-h-screen to allow parent flex-grow to manage height
+    // Removed min-h-screen as footer is now managed by global App.jsx layout
     // The pt-32 ensures content starts below the Navbar and Active Order Banner
     <div className="bg-gradient-to-br from-gray-100 to-gray-200 flex flex-col items-center justify-center p-6 pt-32">
       <h1 className="text-5xl font-extrabold text-text-dark mb-6 text-center animate-fade-in-down">Welcome to BitMeal!</h1>
@@ -23,7 +23,6 @@ const Home = () => {
           Sign Up
         </Link>
       </div>
-      {/* Optional: Add some engaging content or images for the homepage */}
       <div className="mt-16 text-center animate-fade-in-down delay-300">
         <p className="text-gray-600 text-md max-w-md">
           Explore a world of flavors, from local delights to international cuisines. Fast, fresh, and convenient.
