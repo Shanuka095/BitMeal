@@ -9,8 +9,9 @@ const Footer = () => {
       <div className="absolute inset-0 bg-gradient-to-br from-secondary-dark-grey via-gray-800 to-secondary-dark-grey opacity-70"></div>
       
       <div className="max-w-7xl mx-auto px-6 lg:px-8 relative z-10">
-        <div className="grid grid-cols-1 md:grid-cols-3 lg:grid-cols-4 gap-12 border-b border-primary-orange/40 pb-10 mb-10">
-          {/* Brand Info */}
+        {/* Adjusted grid for 4 columns to accommodate Brand Info again */}
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-12 border-b border-primary-orange/40 pb-10 mb-10">
+          {/* Re-added Brand Info section */}
           <div className="flex flex-col items-center md:items-start text-center md:text-left animate-fade-in-down">
             <h3 className="text-5xl font-extrabold text-primary-orange tracking-tighter mb-4 drop-shadow-md">BitMeal</h3>
             <p className="text-gray-300 text-base leading-relaxed max-w-xs opacity-90">
@@ -61,9 +62,6 @@ const Footer = () => {
                 <FaPhoneAlt className="mr-3 text-primary-orange" />
                 <a href="tel:+94771234567" className="text-gray-300 hover:text-primary-orange transition-colors duration-300">+94 77 123 4567</a>
               </li>
-              <li className="text-gray-400 text-base mt-4">
-                123 Food Street, Colombo, Sri Lanka
-              </li>
             </ul>
           </div>
 
@@ -85,7 +83,7 @@ const Footer = () => {
         </div>
         
         {/* Copyright */}
-        <div className="text-center pt-8">
+        <div className="text-center">
           <p className="text-gray-400 text-sm opacity-80 animate-fade-in-down delay-400">
             © {new Date().getFullYear()} BitMeal. All rights reserved.
           </p>
