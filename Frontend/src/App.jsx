@@ -1,7 +1,7 @@
 import React, { useState } from 'react';
 import { BrowserRouter as Router, Route, Routes, Navigate, Outlet } from 'react-router-dom';
 import Navbar from './components/Navbar';
-import Footer from './components/Footer';
+import Footer from './components/Footer'; // Ensure Footer is imported
 import Dashboard from './pages/Dashboard';
 import Restaurants from './pages/Restaurants';
 import RestaurantDetails from './pages/RestaurantDetails';
@@ -92,11 +92,11 @@ function App() {
               <ModalProvider showAlert={showAlert} showConfirm={showConfirm} showPrompt={showPrompt}>
                 <Navbar />
                 <ActiveOrderBanner /> 
-                {/* FIX: Add main-content-wrapper class to ensure content pushes footer */}
+                {/* CRITICAL FIX: The div wrapping Outlet needs flex-grow to push footer down */}
                 <div className="main-content-wrapper flex-grow">
                   <Outlet />
                 </div>
-                <Footer />
+                <Footer /> {/* Footer component should be here */}
               </ModalProvider>
             </CartProvider>
           }
