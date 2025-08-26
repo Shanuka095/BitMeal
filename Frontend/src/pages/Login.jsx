@@ -39,7 +39,7 @@ const Login = () => {
   };
 
   return (
-    // Removed min-h-[calc(100vh-128px)] as footer is gone
+    // The pt-32 ensures content starts below the Navbar and ActiveOrderBanner.
     <div className="bg-gradient-to-br from-gray-100 to-gray-200 flex items-center justify-center p-6 pt-32">
       <div className="w-full max-w-md bg-white rounded-2xl shadow-2xl p-8 border border-[#ffaa00]/20 transform transition-all duration-300 hover:shadow-3xl">
         <h2 className="text-4xl font-bold text-gray-800 mb-8 text-center tracking-wide">Welcome Back</h2>
