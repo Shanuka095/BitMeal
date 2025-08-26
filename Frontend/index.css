@@ -17,9 +17,10 @@
   box-sizing: border-box;
 }
 
+/* CRITICAL FIX: Ensure html and body take full height */
 html, body {
   width: 100%;
-  height: 100%;
+  height: 100%; /* Important for flexbox to work correctly */
   margin: 0;
   padding: 0;
   overflow-x: hidden;
@@ -110,6 +111,8 @@ html, body, #root, div, input, button, select, textarea {
   /* CRITICAL FIX: flex-grow: 1 makes this div take up all available vertical space,
      pushing the footer to the bottom */
   flex-grow: 1; 
+  /* REMOVED: min-height calculation. Rely on flex-grow and content to define height. */
+  /* min-height: calc(100vh - (64px + 48px)); */ 
 }
 
 /* Specific styling for the fixed Navbar to ensure it stays on top */
