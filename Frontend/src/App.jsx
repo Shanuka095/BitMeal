@@ -1,7 +1,7 @@
 import React, { useState } from 'react';
 import { BrowserRouter as Router, Route, Routes, Navigate, Outlet } from 'react-router-dom';
 import Navbar from './components/Navbar';
-import Footer from './components/Footer'; // Ensure Footer is imported
+import Footer from './components/Footer';
 import Dashboard from './pages/Dashboard';
 import Restaurants from './pages/Restaurants';
 import RestaurantDetails from './pages/RestaurantDetails';
@@ -22,32 +22,22 @@ import CustomerOrders from './pages/CustomerOrders';
 import AdminOrders from './pages/AdminOrders';
 import CartPage from './pages/CartPage';
 import { CartProvider } from './context/CartContext';
-
-// Import new modal components
 import AlertDialog from './components/AlertDialog';
 import ConfirmationModal from './components/ConfirmationModal';
 import PromptModal from './components/PromptModal';
 import { ModalProvider } from './context/ModalContext';
-
 import ManageDeliveryPersonnel from './pages/ManageDeliveryPersonnel';
-
-// Import Delivery Personnel components and pages
 import DeliveryPersonnelLayout from './components/DeliveryPersonnelLayout';
 import DeliveryDashboard from './pages/DeliveryDashboard';
 import MyDeliveries from './pages/MyDeliveries';
-
-// Import ActiveOrderBanner and ActiveOrderPage
 import ActiveOrderBanner from './components/ActiveOrderBanner';
 import ActiveOrderPage from './pages/ActiveOrderPage';
 
-
 function App() {
-  // Global modal states
   const [alertInfo, setAlertInfo] = useState(null);
   const [confirmInfo, setConfirmInfo] = useState(null);
   const [promptInfo, setPromptInfo] = useState(null);
 
-  // Functions to trigger modals
   const showAlert = (message) => setAlertInfo({ message });
   const showConfirm = (message, onConfirmCallback, onCancelCallback) => {
     setConfirmInfo({
@@ -91,12 +81,11 @@ function App() {
             <CartProvider>
               <ModalProvider showAlert={showAlert} showConfirm={showConfirm} showPrompt={showPrompt}>
                 <Navbar />
-                <ActiveOrderBanner /> 
-                {/* CRITICAL FIX: The div wrapping Outlet needs flex-grow to push footer down */}
-                <div className="main-content-wrapper flex-grow">
+                <ActiveOrderBanner />
+                <div className="main-content-wrapper flex-grow min-h-[calc(100vh-112px)]">
                   <Outlet />
                 </div>
-                <Footer /> {/* Footer component should be here */}
+                <Footer />
               </ModalProvider>
             </CartProvider>
           }
@@ -151,7 +140,7 @@ function App() {
           <Route path="profile" element={<div>My Profile Page (coming soon)</div>} />
         </Route>
 
-        {/* Catch-all route for unmatched paths */}
+        {/* Catch-all route */}
         <Route path="*" element={<Navigate to="/login" replace />} />
       </Routes>
     </Router>
