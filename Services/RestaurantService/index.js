@@ -1,3 +1,4 @@
+// index.js
 const express = require('express');
 const dotenv = require('dotenv');
 const cors = require('cors');
@@ -34,18 +35,18 @@ const storage = multer.diskStorage({
 });
 const upload = multer({ storage });
 
-// Use multer middleware to handle single file upload for 'image' field
-// This makes the file available at req.file
-app.use(upload.single('image')); // Changed from upload.fields to upload.single
-
+// Apply express.json() and static files middleware
 app.use(express.json());
-
-// Serve uploaded images statically
 app.use('/uploads', express.static('uploads'));
 
-app.use('/api/restaurants', restaurantRoutes);
-
+// Connect to DB
 connectDB();
+
+// Apply routes
+app.use('/api/restaurants', restaurantRoutes);
 
 const PORT = process.env.PORT || 3003;
 app.listen(PORT, () => console.log(`RestaurantService running on port ${PORT}`));
+
+// Export only app
+module.exports = app;

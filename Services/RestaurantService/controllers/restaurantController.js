@@ -2,6 +2,7 @@ const Restaurant = require('../models/restaurantModel');
 const Joi = require('joi');
 const axios = require('axios');
 
+// Base URL for the RestaurantService (can be an environment variable in production)
 const RESTAURANT_SERVICE_URL = 'http://localhost:3003/api/restaurants';
 
 // Validation Schemas
@@ -29,6 +30,8 @@ const ratingSchema = Joi.object({
 const getPublicRestaurants = async (req, res) => {
   try {
     console.log('getPublicRestaurants: Fetching all restaurants (public access) and sorting by rating.');
+    // Fetch all restaurants and sort by averageRating in descending order
+    // If averageRating is the same, sort by totalRatings (more ratings means more reliable)
     const restaurants = await Restaurant.find().sort({ averageRating: -1, totalRatings: -1 }).lean();
     if (!restaurants.length) {
       return res.json({ message: 'No restaurants available', data: [] });
@@ -173,7 +176,7 @@ const deleteRestaurant = async (req, res) => {
   }
 };
 
-// Admin: Add a menu item (including image)
+// Admin: Add a menu item (including image) - FIX APPLIED HERE
 const addMenuItem = async (req, res) => {
   try {
     const { name, normalPrice, extraPriceForFull, category } = req.body;
@@ -201,12 +204,13 @@ const addMenuItem = async (req, res) => {
     }
 
     const restaurant = await Restaurant.findOne({ _id: req.params.id, owner: req.user.userId });
-    if (!restaurant) return res.status(404).json({ error: 'Restaurant not found or not owned by user' });
+    // FIX: If restaurant is not found, return 404 with a clear message
+    if (!restaurant) {
+      console.warn(`AddMenuItem: Restaurant with ID ${req.params.id} not found or not owned by user ${req.user.userId}.`);
+      return res.status(404).json({ error: 'Restaurant not found or not owned by this admin.' });
+    }
 
-    const menuItem = restaurant.menu.id(req.params.menuId);
-    if (!menuItem) return res.status(404).json({ error: 'Menu item not found' });
-
-    Object.assign(menuItem, {
+    restaurant.menu.push({
       name,
       normalPrice: parsedNormalPrice,
       extraPriceForFull: parsedExtraPriceForFull,
@@ -309,7 +313,7 @@ const deleteMenuItem = async (req, res) => {
     console.error('Error in deleteMenuItem:', err);
     res.status(500).json({ error: 'Failed to delete menu item' });
   }
-};
+  };
 
 // Submit a rating for a restaurant - UPDATED FOR LIKES
 const submitRating = async (req, res) => {
