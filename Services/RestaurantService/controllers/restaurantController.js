@@ -102,7 +102,7 @@ const getMenuItem = async (req, res) => {
 const createRestaurant = async (req, res) => {
   try {
     const { name, address } = req.body;
-    const imageUrl = req.file ? req.file.filename : '';
+    const imageUrl = req.file ? `http://localhost:3003/Uploads/${req.file.filename}` : '';
     const { error } = restaurantSchema.validate({ name, address, imageUrl });
     if (error) {
       console.error('CreateRestaurant validation error:', error.details[0].message);
@@ -132,8 +132,11 @@ const createRestaurant = async (req, res) => {
 // Admin: Update a restaurant (including image)
 const updateRestaurant = async (req, res) => {
   try {
-    const { name, address } = req.body;
-    const imageUrl = req.file ? req.file.filename : req.body.imageUrl || '';
+    const formData = req.body || {};
+    const name = formData.name ? formData.name.trim() : undefined;
+    const address = formData.address ? formData.address.trim() : undefined;
+    const imageUrl = req.file ? `http://localhost:3003/Uploads/${req.file.filename}` : (formData.imageUrl || '');
+
     const { error } = restaurantSchema.validate({ name, address, imageUrl }, { stripUnknown: true });
     if (error) {
       console.error('UpdateRestaurant validation error:', error.details[0].message);
@@ -147,12 +150,15 @@ const updateRestaurant = async (req, res) => {
 
     const restaurant = await Restaurant.findOneAndUpdate(
       { _id: req.params.id, owner: req.user.userId },
-      { name, address, imageUrl },
+      { $set: { name, address, imageUrl } },
       { new: true, runValidators: true }
     );
     if (!restaurant) return res.status(404).json({ error: 'Restaurant not found or not owned by user' });
     console.log('Restaurant updated:', restaurant._id);
-    res.json(restaurant);
+    res.json({
+      ...restaurant.toObject(),
+      imageUrl: restaurant.imageUrl ? `http://localhost:3003/${restaurant.imageUrl}` : '',
+    });
   } catch (err) {
     console.error('Error in updateRestaurant:', err);
     res.status(500).json({ error: 'Failed to update restaurant' });
@@ -176,7 +182,7 @@ const deleteRestaurant = async (req, res) => {
   }
 };
 
-// Admin: Add a menu item (including image) - FIX APPLIED HERE
+// Admin: Add a menu item (including image)
 const addMenuItem = async (req, res) => {
   try {
     const { name, normalPrice, extraPriceForFull, category } = req.body;
@@ -236,7 +242,10 @@ const getRestaurantDetails = async (req, res) => {
     const restaurant = await Restaurant.findOne({ _id: req.params.id, owner: req.user.userId }).lean();
     if (!restaurant) return res.status(404).json({ error: 'Restaurant not found or not owned by user' });
     console.log('Fetched details for restaurant:', restaurant._id);
-    res.json(restaurant);
+    res.json({
+      ...restaurant,
+      imageUrl: restaurant.imageUrl ? `http://localhost:3003/${restaurant.imageUrl}` : '',
+    });
   } catch (err) {
     console.error('Error in getRestaurantDetails:', err);
     res.status(500).json({ error: 'Failed to fetch restaurant details' });
@@ -313,7 +322,7 @@ const deleteMenuItem = async (req, res) => {
     console.error('Error in deleteMenuItem:', err);
     res.status(500).json({ error: 'Failed to delete menu item' });
   }
-  };
+};
 
 // Submit a rating for a restaurant - UPDATED FOR LIKES
 const submitRating = async (req, res) => {
@@ -363,7 +372,6 @@ const submitRating = async (req, res) => {
     res.status(500).json({ error: error.message || 'Failed to submit rating' });
   }
 };
-
 
 module.exports = {
   getPublicRestaurants,

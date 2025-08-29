@@ -29,7 +29,7 @@ const UpdateRestaurant = () => {
           headers: { Authorization: `Bearer ${token}` },
         });
         setForm({ name: response.data.name, address: response.data.address, image: null });
-        setPreview(response.data.imageUrl ? `http://localhost:3003/uploads/${response.data.imageUrl}` : null);
+        setPreview(response.data.imageUrl || null);
       } catch (err) {
         setError(err.response?.data?.error || 'Failed to fetch restaurant for update');
         console.error('Frontend (UpdateRestaurant) - Fetch error:', err.response ? err.response.data : err);
@@ -61,8 +61,8 @@ const UpdateRestaurant = () => {
       }
 
       const formData = new FormData();
-      formData.append('name', form.name);
-      formData.append('address', form.address);
+      formData.append('name', form.name.trim());
+      formData.append('address', form.address.trim());
       if (form.image) {
         formData.append('image', form.image);
       } else if (preview && !preview.startsWith('blob:')) {
@@ -70,13 +70,14 @@ const UpdateRestaurant = () => {
         formData.append('imageUrl', existingFilename);
       }
 
-      await axios.put(`http://localhost:3003/api/restaurants/${id}`, formData, {
+      const response = await axios.put(`http://localhost:3003/api/restaurants/${id}`, formData, {
         headers: {
           Authorization: `Bearer ${token}`,
           'Content-Type': 'multipart/form-data',
         },
       });
       console.log('Frontend (UpdateRestaurant) - Restaurant updated successfully:', form.name);
+      setPreview(response.data.imageUrl || preview);
       navigate(`/admin/restaurant/${id}`);
     } catch (err) {
       setError(err.response?.data?.error || 'Failed to update restaurant');

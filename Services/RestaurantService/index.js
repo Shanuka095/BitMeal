@@ -1,4 +1,3 @@
-// index.js
 const express = require('express');
 const dotenv = require('dotenv');
 const cors = require('cors');
@@ -23,7 +22,7 @@ app.use(cors(corsOptions));
 // Configure multer for file uploads
 const storage = multer.diskStorage({
   destination: (req, file, cb) => {
-    const uploadDir = 'uploads/';
+    const uploadDir = 'Uploads/';
     if (!fs.existsSync(uploadDir)) {
       fs.mkdirSync(uploadDir);
     }
@@ -37,7 +36,7 @@ const upload = multer({ storage });
 
 // Apply express.json() and static files middleware
 app.use(express.json());
-app.use('/uploads', express.static('uploads'));
+app.use('/Uploads', express.static('Uploads'));
 
 // Connect to DB
 connectDB();

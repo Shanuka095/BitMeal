@@ -1,4 +1,3 @@
-// routes/restaurantRoutes.js
 const express = require('express');
 const router = express.Router();
 const {
@@ -22,7 +21,7 @@ const fs = require('fs');
 // Configure multer for file uploads
 const storage = multer.diskStorage({
   destination: (req, file, cb) => {
-    const uploadDir = 'uploads/';
+    const uploadDir = 'Uploads/';
     if (!fs.existsSync(uploadDir)) {
       fs.mkdirSync(uploadDir);
     }
@@ -49,7 +48,7 @@ router.get('/', authenticate, restrictTo('restaurant_admin'), getAdminRestaurant
 router.get('/:id', authenticate, restrictTo('restaurant_admin'), getRestaurantDetails);
 router.get('/:id/menu/:menuId', authenticate, restrictTo('restaurant_admin'), getMenuItem);
 router.post('/', authenticate, restrictTo('restaurant_admin'), upload.single('image'), createRestaurant);
-router.put('/:id', authenticate, restrictTo('restaurant_admin'), updateRestaurant);
+router.put('/:id', authenticate, restrictTo('restaurant_admin'), upload.single('image'), updateRestaurant);
 router.delete('/:id', authenticate, restrictTo('restaurant_admin'), deleteRestaurant);
 router.post('/:id/menu', authenticate, restrictTo('restaurant_admin'), upload.single('image'), addMenuItem);
 router.put('/:id/menu/:menuId', authenticate, restrictTo('restaurant_admin'), upload.single('image'), updateMenuItem);

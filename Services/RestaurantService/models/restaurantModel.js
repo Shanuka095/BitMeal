@@ -16,7 +16,6 @@ const restaurantSchema = new mongoose.Schema({
   imageUrl: { type: String, default: '' },
   averageRating: { type: Number, default: 0, min: 0, max: 5 },
   totalRatings: { type: Number, default: 0, min: 0 },
-  // NEW: Like/Dislike fields
   totalLikes: { type: Number, default: 0, min: 0 },
   totalDislikes: { type: Number, default: 0, min: 0 },
 }, { timestamps: true });
