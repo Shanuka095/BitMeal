@@ -12,9 +12,14 @@ const CreateRestaurant = () => {
 
   const handleFileChange = (e) => {
     const file = e.target.files[0];
-    setForm({ ...form, image: file });
-    setPreview(file ? URL.createObjectURL(file) : null);
-    console.log('Selected file:', file);
+    if (file) {
+      setForm({ ...form, image: file });
+      setPreview(URL.createObjectURL(file));
+      console.log('Selected file:', file.name);
+    } else {
+      setForm({ ...form, image: null });
+      setPreview(null);
+    }
   };
 
   const handleSubmit = async (e) => {
@@ -34,8 +39,8 @@ const CreateRestaurant = () => {
       }
 
       const formData = new FormData();
-      formData.append('name', form.name);
-      formData.append('address', form.address);
+      formData.append('name', form.name.trim());
+      formData.append('address', form.address.trim());
       if (form.image) {
         formData.append('image', form.image);
         console.log('Appending image:', form.image.name);
@@ -44,6 +49,7 @@ const CreateRestaurant = () => {
       const response = await axios.post('http://localhost:3003/api/restaurants', formData, {
         headers: {
           Authorization: `Bearer ${token}`,
+          'Content-Type': 'multipart/form-data',
         },
       });
 
