@@ -15,7 +15,6 @@ import UpdateMenuItem from './pages/UpdateMenuItem';
 import ProtectedRoute from './components/ProtectedRoute';
 import Login from './pages/Login';
 import Register from './pages/Register';
-import Profile from './pages/Profile';
 import Home from './pages/Home';
 import VerifyOTP from './pages/VerifyOTP';
 import CustomerOrders from './pages/CustomerOrders';
@@ -32,6 +31,7 @@ import DeliveryDashboard from './pages/DeliveryDashboard';
 import MyDeliveries from './pages/MyDeliveries';
 import ActiveOrderBanner from './components/ActiveOrderBanner';
 import ActiveOrderPage from './pages/ActiveOrderPage';
+import RateOrder from './pages/RateOrder';
 
 function App() {
   const [alertInfo, setAlertInfo] = useState(null);
@@ -42,40 +42,26 @@ function App() {
   const showConfirm = (message, onConfirmCallback, onCancelCallback) => {
     setConfirmInfo({
       message,
-      onConfirm: () => {
-        onConfirmCallback();
-        setConfirmInfo(null);
-      },
-      onCancel: () => {
-        onCancelCallback();
-        setConfirmInfo(null);
-      },
+      onConfirm: () => { onConfirmCallback(); setConfirmInfo(null); },
+      onCancel: () => { onCancelCallback(); setConfirmInfo(null); },
     });
   };
   const showPrompt = (title, message, placeholder, onConfirmCallback, onCancelCallback) => {
     setPromptInfo({
-      title,
-      message,
-      placeholder,
-      onConfirm: (value) => {
-        onConfirmCallback(value);
-        setPromptInfo(null);
-      },
-      onCancel: () => {
-        onCancelCallback();
-        setPromptInfo(null);
-      },
+      title, message, placeholder,
+      onConfirm: (value) => { onConfirmCallback(value); setPromptInfo(null); },
+      onCancel: () => { onCancelCallback(); setPromptInfo(null); },
     });
   };
 
   return (
-    <Router>
+    // ADDED FUTURE FLAGS HERE TO SILENCE WARNINGS
+    <Router future={{ v7_startTransition: true, v7_relativeSplatPath: true }}>
       {alertInfo && <AlertDialog message={alertInfo.message} onClose={() => setAlertInfo(null)} />}
       {confirmInfo && <ConfirmationModal {...confirmInfo} />}
       {promptInfo && <PromptModal {...promptInfo} />}
 
       <Routes>
-        {/* Customer and Public Routes with Navbar and Footer */}
         <Route
           element={
             <CartProvider>
@@ -97,23 +83,13 @@ function App() {
           <Route path="/dashboard" element={<ProtectedRoute><Dashboard /></ProtectedRoute>} />
           <Route path="/restaurants" element={<ProtectedRoute><Restaurants standalone={true} /></ProtectedRoute>} />
           <Route path="/restaurant/:id" element={<ProtectedRoute><RestaurantDetails /></ProtectedRoute>} />
-          <Route path="/profile" element={<ProtectedRoute><Profile /></ProtectedRoute>} />
           <Route path="/my-orders" element={<ProtectedRoute><CustomerOrders /></ProtectedRoute>} />
           <Route path="/cart" element={<ProtectedRoute><CartPage /></ProtectedRoute>} />
           <Route path="/my-active-order" element={<ProtectedRoute><ActiveOrderPage /></ProtectedRoute>} />
+          <Route path="/rate-order/:orderId" element={<ProtectedRoute><RateOrder /></ProtectedRoute>} />
         </Route>
 
-        {/* Admin Routes with AdminLayout */}
-        <Route
-          path="/admin/*"
-          element={
-            <ProtectedRoute>
-              <ModalProvider showAlert={showAlert} showConfirm={showConfirm} showPrompt={showPrompt}>
-                <AdminLayout />
-              </ModalProvider>
-            </ProtectedRoute>
-          }
-        >
+        <Route path="/admin/*" element={<ProtectedRoute><ModalProvider showAlert={showAlert} showConfirm={showConfirm} showPrompt={showPrompt}><AdminLayout /></ModalProvider></ProtectedRoute>}>
           <Route index element={<RestaurantAdmin />} />
           <Route path="create-restaurant" element={<CreateRestaurant />} />
           <Route path="update-restaurant/:id" element={<UpdateRestaurant />} />
@@ -124,23 +100,12 @@ function App() {
           <Route path="delivery-personnel" element={<ManageDeliveryPersonnel />} />
         </Route>
 
-        {/* Delivery Personnel Routes */}
-        <Route
-          path="/delivery-personnel/*"
-          element={
-            <ProtectedRoute>
-              <ModalProvider showAlert={showAlert} showConfirm={showConfirm} showPrompt={showPrompt}>
-                <DeliveryPersonnelLayout />
-              </ModalProvider>
-            </ProtectedRoute>
-          }
-        >
+        <Route path="/delivery-personnel/*" element={<ProtectedRoute><ModalProvider showAlert={showAlert} showConfirm={showConfirm} showPrompt={showPrompt}><DeliveryPersonnelLayout /></ModalProvider></ProtectedRoute>}>
           <Route index element={<DeliveryDashboard />} />
           <Route path="my-deliveries" element={<MyDeliveries />} />
           <Route path="profile" element={<div>My Profile Page (coming soon)</div>} />
         </Route>
 
-        {/* Catch-all route */}
         <Route path="*" element={<Navigate to="/login" replace />} />
       </Routes>
     </Router>
