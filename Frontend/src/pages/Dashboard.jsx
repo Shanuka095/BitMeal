@@ -1,26 +1,352 @@
-import { useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import { useNavigate } from 'react-router-dom';
-import Restaurants from './Restaurants';
+import axios from 'axios';
+import { 
+  FaStar, FaSearch, FaArrowRight, FaUtensils, FaHamburger, FaCoffee, 
+  FaMotorcycle, FaFilter, FaChevronDown 
+} from 'react-icons/fa';
+import { GiNoodles, GiChickenLeg, GiBowlOfRice } from 'react-icons/gi';
+
+// --- 1. Ultra-Premium Loader ---
+const PageLoader = () => (
+  <div className="fixed inset-0 z-[9999] bg-white flex flex-col items-center justify-center">
+    <div className="relative w-32 h-32 flex items-center justify-center">
+      {/* Spinning Gradient Ring */}
+      <div className="absolute inset-0 rounded-full border-4 border-gray-100"></div>
+      <div className="absolute inset-0 rounded-full border-4 border-t-[#ffaa00] border-r-[#ffaa00] border-b-transparent border-l-transparent animate-spin"></div>
+      
+      {/* Inner Pulse Icon */}
+      <div className="bg-white p-4 rounded-full shadow-none z-10 animate-pulse">
+        <FaUtensils className="text-[#ffaa00] text-4xl" />
+      </div>
+    </div>
+    
+    <div className="mt-8 text-center">
+      <h2 className="text-3xl font-black text-gray-900 tracking-[0.2em]">
+        BIT<span className="text-[#ffaa00]">MEAL</span>
+      </h2>
+      <div className="flex items-center justify-center space-x-1 mt-3">
+        <div className="w-2 h-2 bg-[#ffaa00] rounded-full animate-bounce" style={{ animationDelay: '0s' }}></div>
+        <div className="w-2 h-2 bg-[#ffaa00] rounded-full animate-bounce" style={{ animationDelay: '0.15s' }}></div>
+        <div className="w-2 h-2 bg-[#ffaa00] rounded-full animate-bounce" style={{ animationDelay: '0.3s' }}></div>
+      </div>
+    </div>
+  </div>
+);
 
 const Dashboard = () => {
   const navigate = useNavigate();
+  const resultsRef = useRef(null);
+
+  const [allRestaurants, setAllRestaurants] = useState([]); 
+  const [displayedRestaurants, setDisplayedRestaurants] = useState([]); 
+  const [loading, setLoading] = useState(true); 
+  const [pageReady, setPageReady] = useState(false); 
+  
+  const [searchTerm, setSearchTerm] = useState('');
+  const [selectedCategory, setSelectedCategory] = useState('All');
+  const [minRating, setMinRating] = useState(0);
 
   useEffect(() => {
-    // Get token from sessionStorage
-    const sessionKey = Object.keys(sessionStorage).find(key => key.startsWith('token_'));
-    const token = sessionKey ? sessionStorage.getItem(sessionKey) : null;
-    if (!token) navigate('/login');
-  }, [navigate]);
+    const fetchData = async () => {
+      try {
+        setTimeout(async () => {
+            const response = await axios.get('http://localhost:3000/api/restaurants/public');
+            const data = response.data.data || response.data;
+            if (Array.isArray(data)) {
+              setAllRestaurants(data);
+              setDisplayedRestaurants(data);
+            }
+            setLoading(false);
+            setTimeout(() => setPageReady(true), 100); 
+        }, 2000); // 2s delay for loader showcase
+      } catch (err) {
+        console.error("Failed to fetch dashboard data", err);
+        setLoading(false);
+        setPageReady(true);
+      }
+    };
+    fetchData();
+  }, []);
+
+  // --- Filtering Logic ---
+  useEffect(() => {
+    let result = allRestaurants;
+
+    if (selectedCategory !== 'All') {
+      result = result.filter(restaurant => 
+        restaurant.menu && restaurant.menu.some(item => 
+          (item.category && item.category.toLowerCase().includes(selectedCategory.toLowerCase())) ||
+          (item.name && item.name.toLowerCase().includes(selectedCategory.toLowerCase()))
+        )
+      );
+    }
+
+    if (searchTerm) {
+      const term = searchTerm.toLowerCase();
+      result = result.filter(restaurant => 
+        restaurant.name.toLowerCase().includes(term) ||
+        (restaurant.menu && restaurant.menu.some(item => item.name.toLowerCase().includes(term)))
+      );
+    }
+
+    if (minRating > 0) {
+      result = result.filter(restaurant => (restaurant.averageRating || 0) >= minRating);
+    }
+
+    setDisplayedRestaurants(result);
+  }, [selectedCategory, searchTerm, minRating, allRestaurants]);
+
+  const categories = [
+    { name: 'All', icon: <FaUtensils />, color: 'bg-gray-800' },
+    { name: 'Rice', icon: <GiBowlOfRice />, color: 'bg-green-600' },
+    { name: 'Kottu', icon: <GiNoodles />, color: 'bg-yellow-500' },
+    { name: 'Fast Food', icon: <FaHamburger />, color: 'bg-red-500' },
+    { name: 'Beverages', icon: <FaCoffee />, color: 'bg-blue-500' },
+  ];
+
+  const scrollToResults = () => {
+    if (resultsRef.current) {
+        resultsRef.current.scrollIntoView({ behavior: 'smooth', block: 'start' });
+    }
+  };
+
+  const handleTopRatedClick = () => {
+      setMinRating(4.5); 
+      setSelectedCategory('All');
+      scrollToResults();
+  };
+
+  const handleFreeDeliveryClick = () => {
+      setMinRating(0);
+      setSelectedCategory('All');
+      scrollToResults();
+  };
+
+  if (loading) return <PageLoader />;
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-gray-100 to-gray-300 font-sans">
-      <header className="bg-white shadow-md p-6 pt-20">
-        <h1 className="text-4xl font-extrabold text-gray-900 text-center">Welcome to Your Dashboard</h1>
-        <p className="text-center text-gray-600 mt-2">Explore restaurants and manage your orders easily!</p>
-      </header>
-      <main className="p-6">
-        <Restaurants standalone={false} />
-      </main>
+    <div className={`min-h-screen bg-gray-50 pb-20 transition-opacity duration-1000 ${pageReady ? 'opacity-100' : 'opacity-0'}`}>
+      
+      {/* 1. Hero Section */}
+      <div className="relative bg-gray-900 text-white h-[540px] flex items-center justify-center overflow-hidden">
+        <div className="absolute inset-0 bg-gradient-to-b from-black/80 via-black/50 to-gray-50/5 z-10"></div>
+        <img 
+          src="https://images.unsplash.com/photo-1504674900247-0877df9cc836?ixlib=rb-1.2.1&auto=format&fit=crop&w=1950&q=80" 
+          alt="Food Background" 
+          className="absolute inset-0 w-full h-full object-cover opacity-40 animate-scale-in duration-[40s]"
+        />
+        
+        <div className="relative z-20 text-center px-4 max-w-5xl mx-auto -mt-16 animate-fade-in-down">
+            <span className="inline-block py-1.5 px-4 rounded-full bg-white/10 backdrop-blur-md border border-white/20 text-[#ffaa00] text-xs font-bold tracking-[0.2em] mb-6 shadow-lg">
+                PREMIUM FOOD DELIVERY
+            </span>
+            <h1 className="text-5xl md:text-7xl font-black mb-6 tracking-tight leading-tight drop-shadow-2xl">
+                Taste the <span className="text-[#ffaa00]">Extraordinary</span>
+            </h1>
+            <p className="text-gray-200 text-lg md:text-xl mb-10 max-w-2xl mx-auto font-light drop-shadow-md">
+                From local favorites to gourmet masterpieces, delivered fast.
+            </p>
+          
+            {/* Search Bar */}
+            <div className="relative max-w-2xl mx-auto group mt-10">
+                <div className="absolute inset-y-0 left-0 pl-6 flex items-center pointer-events-none z-10">
+                    <FaSearch className="text-gray-400 text-lg group-focus-within:text-[#ffaa00] transition-colors duration-300" />
+                </div>
+                <input 
+                    type="text" 
+                    placeholder="What are you craving today?" 
+                    className="w-full py-5 pl-14 pr-36 rounded-full text-gray-800 bg-white/95 backdrop-blur-xl shadow-2xl border-4 border-white/10 focus:border-[#ffaa00]/50 focus:outline-none focus:ring-0 text-lg font-medium transition-all duration-300 placeholder-gray-400"
+                    value={searchTerm}
+                    onChange={(e) => setSearchTerm(e.target.value)}
+                    onKeyDown={(e) => e.key === 'Enter' && scrollToResults()}
+                />
+                <button 
+                    onClick={scrollToResults}
+                    className="absolute right-2 top-2 bottom-2 bg-[#ffaa00] text-white px-8 rounded-full font-bold hover:bg-[#e59400] transition-all shadow-lg hover:shadow-orange-500/30 outline-none focus:outline-none focus:ring-0 transform hover:scale-105 active:scale-95"
+                >
+                    Search
+                </button>
+            </div>
+        </div>
+      </div>
+
+      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 relative z-30">
+        
+        {/* 2. Categories Filter - FIXED: Positioning & Clipping */}
+        {/* Changed -mt to -mt-28 to float perfectly between sections */}
+        <div className="-mt-28 mb-20">
+            {/* Added py-8 to container to prevent clipping of active scaled items */}
+            <div className="flex justify-center space-x-6 md:space-x-12 overflow-x-auto py-8 px-4 hide-scrollbar">
+            {categories.map((cat, index) => (
+                <button 
+                    key={index}
+                    onClick={() => { setSelectedCategory(cat.name); scrollToResults(); }}
+                    // Added specific height classes to icon container and ensured outline-none
+                    className={`flex flex-col items-center space-y-3 group min-w-[90px] outline-none focus:outline-none focus:ring-0 active:ring-0 transition-all duration-300 transform ${selectedCategory === cat.name ? '-translate-y-4' : 'hover:-translate-y-2'}`}
+                >
+                <div className={`${selectedCategory === cat.name ? 'ring-4 ring-[#ffaa00] scale-110 shadow-2xl' : 'shadow-xl'} ${cat.color} w-20 h-20 rounded-full flex items-center justify-center text-white text-3xl border-4 border-white transition-all duration-300 group-hover:shadow-2xl relative overflow-hidden`}>
+                    <div className="absolute inset-0 bg-gradient-to-tr from-transparent via-white/30 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-500"></div>
+                    {cat.icon}
+                </div>
+                {/* Text handling */}
+                <span className={`font-bold text-sm tracking-wide transition-colors duration-300 drop-shadow-md ${selectedCategory === cat.name ? 'text-[#ffaa00]' : 'text-gray-500 group-hover:text-[#ffaa00]'}`}>
+                    {cat.name}
+                </span>
+                </button>
+            ))}
+            </div>
+        </div>
+
+        {/* 3. Promotional Banners */}
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-8 mb-20 animate-fade-in-up" style={{ animationDelay: '0.2s' }}>
+          <div 
+            onClick={handleFreeDeliveryClick}
+            className="bg-gradient-to-br from-[#fff7e6] to-[#fff0e0] rounded-[2rem] p-8 flex items-center justify-between shadow-md hover:shadow-2xl transition-all duration-500 cursor-pointer border border-orange-100 group transform hover:-translate-y-2 relative overflow-hidden outline-none"
+          >
+            <div className="absolute -right-10 -top-10 w-48 h-48 bg-[#ffaa00] opacity-10 rounded-full transition-transform group-hover:scale-150 duration-700"></div>
+            <div className="relative z-10">
+              <span className="bg-orange-200 text-orange-900 text-[10px] font-bold px-3 py-1 rounded-full uppercase mb-3 inline-block tracking-wider">Limited Offer</span>
+              <h3 className="text-3xl font-black text-gray-800 mb-2">Free Delivery</h3>
+              <p className="text-gray-600 mb-6 font-medium">On your first 3 orders! <br/>No code needed.</p>
+              <span className="bg-[#ffaa00] text-white px-8 py-3 rounded-full text-sm font-bold group-hover:bg-[#e59400] transition-all shadow-lg hover:shadow-orange-500/40 inline-flex items-center">
+                Order Now <FaArrowRight className="ml-2" />
+              </span>
+            </div>
+            <FaMotorcycle className="text-9xl text-orange-300 opacity-80 group-hover:scale-110 group-hover:rotate-[-8deg] group-hover:-translate-x-4 transition-transform duration-500 relative z-10" />
+          </div>
+
+          <div 
+            onClick={handleTopRatedClick}
+            className="bg-gradient-to-br from-[#e6f7ff] to-[#dff4ff] rounded-[2rem] p-8 flex items-center justify-between shadow-md hover:shadow-2xl transition-all duration-500 cursor-pointer border border-blue-100 group transform hover:-translate-y-2 relative overflow-hidden outline-none"
+          >
+             <div className="absolute -right-10 -top-10 w-48 h-48 bg-blue-500 opacity-10 rounded-full transition-transform group-hover:scale-150 duration-700"></div>
+             <div className="relative z-10">
+              <span className="bg-blue-200 text-blue-900 text-[10px] font-bold px-3 py-1 rounded-full uppercase mb-3 inline-block tracking-wider">Community Choice</span>
+              <h3 className="text-3xl font-black text-gray-800 mb-2">Top Rated</h3>
+              <p className="text-gray-600 mb-6 font-medium">Discover the city's <br/> 5-star winners.</p>
+              <span className="bg-blue-600 text-white px-8 py-3 rounded-full text-sm font-bold group-hover:bg-blue-700 transition-all shadow-lg hover:shadow-blue-500/40 inline-flex items-center">
+                View Winners <FaArrowRight className="ml-2" />
+              </span>
+            </div>
+            <FaStar className="text-9xl text-blue-300 opacity-80 group-hover:scale-110 group-hover:rotate-12 group-hover:-translate-x-4 transition-transform duration-500 relative z-10" />
+          </div>
+        </div>
+
+        {/* 4. Filter Bar & Results Header */}
+        <div ref={resultsRef} className="flex flex-col md:flex-row justify-between items-end md:items-center mb-10 border-b border-gray-200 pb-6 animate-fade-in-up" style={{ animationDelay: '0.3s' }}>
+          <div className="mb-6 md:mb-0">
+            <h2 className="text-4xl font-extrabold text-gray-900 flex items-center">
+              {selectedCategory === 'All' ? 'Restaurants Near You' : `${selectedCategory} Spots`}
+              {minRating > 0 && <span className="ml-4 text-sm font-bold text-[#ffaa00] bg-orange-50 px-4 py-2 rounded-full border border-orange-100 shadow-sm">Rated {minRating}+ ★ Only</span>}
+            </h2>
+            <p className="text-gray-500 mt-2 text-base font-medium">
+              We found {displayedRestaurants.length} {displayedRestaurants.length === 1 ? 'place' : 'places'} for you
+            </p>
+          </div>
+
+          {/* Advanced Rating Filter */}
+          <div className="flex items-center bg-white p-2 rounded-full shadow-lg border border-gray-100">
+             {[0, 3, 4, 4.5].map((rating) => (
+               <button
+                 key={rating}
+                 onClick={() => setMinRating(rating)}
+                 className={`px-6 py-2.5 rounded-full text-sm font-bold transition-all duration-300 focus:outline-none focus:ring-0 outline-none ${
+                   minRating === rating 
+                   ? 'bg-gray-900 text-white shadow-md transform scale-105' 
+                   : 'text-gray-500 hover:bg-gray-100 hover:text-gray-900'
+                 }`}
+               >
+                 {rating === 0 ? 'All' : `${rating}+ ★`}
+               </button>
+             ))}
+          </div>
+        </div>
+
+        {/* Results Grid */}
+        {displayedRestaurants.length > 0 ? (
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-10 pb-20 animate-fade-in-up" style={{ animationDelay: '0.4s' }}>
+            {displayedRestaurants.map((restaurant) => (
+              <div 
+                key={restaurant._id}
+                onClick={() => navigate(`/restaurant/${restaurant._id}`)}
+                className="bg-white rounded-3xl shadow-sm hover:shadow-2xl transition-all duration-500 cursor-pointer group overflow-hidden border border-gray-100 flex flex-col h-full transform hover:-translate-y-2"
+              >
+                {/* Image Area */}
+                <div className="relative h-56 overflow-hidden">
+                   {restaurant.imageUrl ? (
+                    <img 
+                      src={`http://localhost:3003/uploads/${restaurant.imageUrl}`} 
+                      alt={restaurant.name} 
+                      className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-700"
+                    />
+                   ) : (
+                    <div className="w-full h-full bg-gray-100 flex items-center justify-center text-gray-300">
+                      <FaUtensils size={40} />
+                    </div>
+                   )}
+                   <div className="absolute inset-0 bg-gradient-to-t from-black/60 via-transparent to-transparent opacity-80"></div>
+                   
+                   {/* Badges */}
+                   <div className="absolute bottom-4 right-4 bg-white/95 backdrop-blur-md px-3 py-1.5 rounded-xl shadow-lg flex items-center text-sm font-bold text-gray-900">
+                     <FaStar className="text-yellow-400 mr-1.5" size={14} />
+                     {restaurant.averageRating ? restaurant.averageRating.toFixed(1) : "New"}
+                     <span className="text-gray-400 font-normal ml-1 text-xs">({restaurant.totalRatings})</span>
+                   </div>
+                   
+                   {/* Promo Badge */}
+                   <div className="absolute top-4 left-4 bg-[#ffaa00] text-white text-[10px] font-bold px-3 py-1.5 rounded-lg uppercase tracking-wider shadow-lg">
+                     Free Delivery
+                   </div>
+                </div>
+
+                {/* Content Area */}
+                <div className="p-6 flex-grow flex flex-col justify-between">
+                  <div>
+                    <h3 className="text-xl font-extrabold text-gray-900 mb-2 group-hover:text-[#ffaa00] transition-colors line-clamp-1">{restaurant.name}</h3>
+                    <p className="text-gray-500 text-sm mb-4 line-clamp-1 flex items-center">
+                        <FaSearch className="mr-2 text-gray-300 text-xs" />
+                        {restaurant.address}
+                    </p>
+                    
+                    {/* Dynamic Tags */}
+                    <div className="flex flex-wrap gap-2 mb-4">
+                        {restaurant.menu && restaurant.menu.slice(0, 2).map((item, idx) => (
+                            <span key={idx} className="text-[11px] font-bold bg-gray-50 text-gray-600 px-3 py-1 rounded-full border border-gray-200">
+                                {item.category}
+                            </span>
+                        ))}
+                    </div>
+                  </div>
+                  
+                  <div className="flex items-center justify-between pt-4 border-t border-gray-100 mt-auto">
+                    <div className="flex items-center text-gray-400 text-xs font-bold uppercase tracking-wide">
+                        <FaMotorcycle className="mr-2 text-[#ffaa00] text-lg" /> 20-30 min
+                    </div>
+                    <button className="text-[#ffaa00] text-sm font-bold group-hover:translate-x-2 transition-transform flex items-center">
+                        View Menu <FaArrowRight className="ml-2 text-xs" />
+                    </button>
+                  </div>
+                </div>
+              </div>
+            ))}
+          </div>
+        ) : (
+            <div className="text-center py-32 bg-white rounded-[2.5rem] border border-gray-100 shadow-sm animate-fade-in-up">
+                <div className="bg-orange-50 w-32 h-32 rounded-full flex items-center justify-center mx-auto mb-6 text-[#ffaa00] text-5xl shadow-inner">
+                    <FaSearch />
+                </div>
+                <h3 className="text-3xl font-black text-gray-800 mb-3">No restaurants found</h3>
+                <p className="text-gray-500 max-w-md mx-auto text-lg">We couldn't find any matches for "<strong>{searchTerm}</strong>" with your current filters.</p>
+                <button 
+                    onClick={() => { setSelectedCategory('All'); setSearchTerm(''); setMinRating(0); }}
+                    className="mt-10 bg-[#ffaa00] text-white px-10 py-4 rounded-full font-bold hover:bg-[#e59400] transition-all shadow-xl hover:shadow-orange-500/30 transform hover:-translate-y-1 outline-none focus:outline-none focus:ring-0"
+                >
+                    Clear All Filters
+                </button>
+            </div>
+        )}
+      </div>
     </div>
   );
 };
