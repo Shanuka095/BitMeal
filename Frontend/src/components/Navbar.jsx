@@ -1,17 +1,21 @@
 // src/components/Navbar.jsx
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useRef } from 'react'; // Added useRef
 import { useNavigate, Link, useLocation } from 'react-router-dom';
-import { FaUserCircle, FaBars, FaTimes, FaShoppingCart, FaClipboardList } from 'react-icons/fa';
+import { FaUserCircle, FaBars, FaTimes, FaShoppingCart } from 'react-icons/fa';
 import { useCart } from '../context/CartContext';
 import jwtDecode from 'jwt-decode';
 
 const Navbar = () => {
   const [isMenuOpen, setIsMenuOpen] = useState(false);
   const [isProfileOpen, setIsProfileOpen] = useState(false);
-  const [userRole, setUserRole] = useState(null); // To display role-specific links
+  const [userRole, setUserRole] = useState(null); 
+  
   const navigate = useNavigate();
   const location = useLocation();
   const { getTotalItemsInCart } = useCart();
+  
+  // Ref to detect clicks outside the profile menu
+  const profileMenuRef = useRef(null);
 
   useEffect(() => {
     const sessionKey = Object.keys(sessionStorage).find(key => key.startsWith('token_'));
@@ -27,7 +31,23 @@ const Navbar = () => {
     } else {
       setUserRole(null);
     }
-  }, [location.pathname]); // Re-evaluate role on route change
+  }, [location.pathname]);
+
+  // Handle clicks outside the profile dropdown
+  useEffect(() => {
+    const handleClickOutside = (event) => {
+      if (profileMenuRef.current && !profileMenuRef.current.contains(event.target)) {
+        setIsProfileOpen(false);
+      }
+    };
+
+    // Bind the event listener
+    document.addEventListener("mousedown", handleClickOutside);
+    return () => {
+      // Unbind the event listener on clean up
+      document.removeEventListener("mousedown", handleClickOutside);
+    };
+  }, [profileMenuRef]);
 
   const handleLogout = () => {
     const sessionKey = Object.keys(sessionStorage).find(key => key.startsWith('token_'));
@@ -35,7 +55,7 @@ const Navbar = () => {
       sessionStorage.removeItem(sessionKey);
     }
     sessionStorage.removeItem('bitmeal_cart');
-    setUserRole(null); // Clear role on logout
+    setUserRole(null);
     navigate('/login');
   };
 
@@ -49,7 +69,6 @@ const Navbar = () => {
   ];
 
   const profileLinks = [
-    { name: 'Profile', path: '/profile', roles: ['customer', 'restaurant_admin', 'delivery_personnel'] },
     { name: 'My Orders', path: '/my-orders', roles: ['customer'] },
     { name: 'Admin Dashboard', path: '/admin', roles: ['restaurant_admin'] },
     { name: 'Driver Dashboard', path: '/delivery-personnel', roles: ['delivery_personnel'] },
@@ -84,7 +103,7 @@ const Navbar = () => {
 
         {/* Right Corner - Icons */}
         <div className="flex items-center space-x-5">
-          {userRole === 'customer' && ( // Only show cart for customers
+          {userRole === 'customer' && ( 
             <div className="relative">
               <Link to="/cart" className="text-text-light hover:text-primary-orange transition-colors duration-300 transform hover:scale-110 active:scale-95">
                 <FaShoppingCart className="h-7 w-7" />
@@ -97,7 +116,8 @@ const Navbar = () => {
             </div>
           )}
           
-          <div className="relative">
+          {/* Profile Dropdown Area - Referenced by profileMenuRef */}
+          <div className="relative" ref={profileMenuRef}>
             <button
               onClick={() => setIsProfileOpen(!isProfileOpen)}
               className="text-text-light hover:text-primary-orange focus:outline-none transition-colors duration-300 transform hover:scale-110 active:scale-95"
