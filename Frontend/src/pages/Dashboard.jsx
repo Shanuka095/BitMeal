@@ -7,32 +7,8 @@ import {
 } from 'react-icons/fa';
 import { GiNoodles, GiChickenLeg, GiBowlOfRice } from 'react-icons/gi';
 
-// --- 1. Ultra-Premium Loader ---
-const PageLoader = () => (
-  <div className="fixed inset-0 z-[9999] bg-white flex flex-col items-center justify-center">
-    <div className="relative w-32 h-32 flex items-center justify-center">
-      {/* Spinning Gradient Ring */}
-      <div className="absolute inset-0 rounded-full border-4 border-gray-100"></div>
-      <div className="absolute inset-0 rounded-full border-4 border-t-[#ffaa00] border-r-[#ffaa00] border-b-transparent border-l-transparent animate-spin"></div>
-      
-      {/* Inner Pulse Icon */}
-      <div className="bg-white p-4 rounded-full shadow-none z-10 animate-pulse">
-        <FaUtensils className="text-[#ffaa00] text-4xl" />
-      </div>
-    </div>
-    
-    <div className="mt-8 text-center">
-      <h2 className="text-3xl font-black text-gray-900 tracking-[0.2em]">
-        BIT<span className="text-[#ffaa00]">MEAL</span>
-      </h2>
-      <div className="flex items-center justify-center space-x-1 mt-3">
-        <div className="w-2 h-2 bg-[#ffaa00] rounded-full animate-bounce" style={{ animationDelay: '0s' }}></div>
-        <div className="w-2 h-2 bg-[#ffaa00] rounded-full animate-bounce" style={{ animationDelay: '0.15s' }}></div>
-        <div className="w-2 h-2 bg-[#ffaa00] rounded-full animate-bounce" style={{ animationDelay: '0.3s' }}></div>
-      </div>
-    </div>
-  </div>
-);
+// Use the loader you already have
+import PageLoader from '../components/PageLoader'; 
 
 const Dashboard = () => {
   const navigate = useNavigate();
@@ -50,6 +26,7 @@ const Dashboard = () => {
   useEffect(() => {
     const fetchData = async () => {
       try {
+        // Keeping the animation delay as requested
         setTimeout(async () => {
             const response = await axios.get('http://localhost:3000/api/restaurants/public');
             const data = response.data.data || response.data;
@@ -59,7 +36,7 @@ const Dashboard = () => {
             }
             setLoading(false);
             setTimeout(() => setPageReady(true), 100); 
-        }, 2000); // 2s delay for loader showcase
+        }, 2000); 
       } catch (err) {
         console.error("Failed to fetch dashboard data", err);
         setLoading(false);
@@ -69,7 +46,6 @@ const Dashboard = () => {
     fetchData();
   }, []);
 
-  // --- Filtering Logic ---
   useEffect(() => {
     let result = allRestaurants;
 
@@ -171,33 +147,46 @@ const Dashboard = () => {
         </div>
       </div>
 
-      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 relative z-30">
-        
-        {/* 2. Categories Filter - FIXED: Positioning & Clipping */}
-        {/* Changed -mt to -mt-28 to float perfectly between sections */}
-        <div className="-mt-28 mb-20">
-            {/* Added py-8 to container to prevent clipping of active scaled items */}
-            <div className="flex justify-center space-x-6 md:space-x-12 overflow-x-auto py-8 px-4 hide-scrollbar">
+      {/* 2. Categories Filter - NEW DESIGN: Floating Capsules */}
+      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 relative z-30 -mt-28 mb-16">
+          <div className="flex justify-center items-center space-x-4 md:space-x-8 overflow-x-auto pb-8 pt-4 px-4 hide-scrollbar">
             {categories.map((cat, index) => (
                 <button 
                     key={index}
                     onClick={() => { setSelectedCategory(cat.name); scrollToResults(); }}
-                    // Added specific height classes to icon container and ensured outline-none
-                    className={`flex flex-col items-center space-y-3 group min-w-[90px] outline-none focus:outline-none focus:ring-0 active:ring-0 transition-all duration-300 transform ${selectedCategory === cat.name ? '-translate-y-4' : 'hover:-translate-y-2'}`}
+                    // NEW DESIGN: Individual White Cards
+                    className={`
+                      group flex flex-col items-center justify-center
+                      min-w-[110px] h-36 rounded-[2.5rem]
+                      bg-white shadow-xl shadow-orange-500/5 border border-gray-50
+                      transition-all duration-300 ease-out
+                      transform hover:-translate-y-3 hover:shadow-2xl
+                      outline-none focus:outline-none focus:ring-0 active:ring-0
+                      ${selectedCategory === cat.name 
+                        ? 'ring-4 ring-[#ffaa00] ring-opacity-50 scale-105 z-10' 
+                        : 'hover:scale-105'}
+                    `}
                 >
-                <div className={`${selectedCategory === cat.name ? 'ring-4 ring-[#ffaa00] scale-110 shadow-2xl' : 'shadow-xl'} ${cat.color} w-20 h-20 rounded-full flex items-center justify-center text-white text-3xl border-4 border-white transition-all duration-300 group-hover:shadow-2xl relative overflow-hidden`}>
-                    <div className="absolute inset-0 bg-gradient-to-tr from-transparent via-white/30 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-500"></div>
-                    {cat.icon}
-                </div>
-                {/* Text handling */}
-                <span className={`font-bold text-sm tracking-wide transition-colors duration-300 drop-shadow-md ${selectedCategory === cat.name ? 'text-[#ffaa00]' : 'text-gray-500 group-hover:text-[#ffaa00]'}`}>
-                    {cat.name}
-                </span>
+                  {/* Icon Circle */}
+                  <div className={`
+                    w-14 h-14 rounded-full flex items-center justify-center text-white text-2xl mb-3 shadow-md transition-transform duration-500 group-hover:rotate-12
+                    ${cat.color}
+                  `}>
+                      {cat.icon}
+                  </div>
+                  {/* Text */}
+                  <span className={`
+                    font-bold text-sm tracking-wide transition-colors duration-300
+                    ${selectedCategory === cat.name ? 'text-[#ffaa00]' : 'text-gray-600 group-hover:text-[#ffaa00]'}
+                  `}>
+                      {cat.name}
+                  </span>
                 </button>
             ))}
-            </div>
-        </div>
+          </div>
+      </div>
 
+      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 mt-8">
         {/* 3. Promotional Banners */}
         <div className="grid grid-cols-1 md:grid-cols-2 gap-8 mb-20 animate-fade-in-up" style={{ animationDelay: '0.2s' }}>
           <div 
