@@ -15,12 +15,15 @@ const ActiveOrderBanner = () => {
     try {
       const sessionKey = Object.keys(sessionStorage).find(key => key.startsWith('token_'));
       const token = sessionKey ? sessionStorage.getItem(sessionKey) : null;
-      let decoded = null;
-      if (token) {
-        decoded = jwtDecode(token);
-      }
       
-      if (!token || decoded?.role !== 'customer') {
+      if (!token) {
+        setActiveOrder(null);
+        setLoading(false);
+        return;
+      }
+
+      const decoded = jwtDecode(token);
+      if (decoded?.role !== 'customer') {
         setActiveOrder(null);
         setLoading(false);
         return;
@@ -32,12 +35,13 @@ const ActiveOrderBanner = () => {
 
       setActiveOrder(response.data || null);
     } catch (err) {
-      // --- FIX: Silently handle 404 errors (No Active Order) ---
+      // --- SILENT ERROR HANDLING ---
+      // Do not log 404s because they just mean "No Active Order"
       if (err.response && err.response.status === 404) {
-        setActiveOrder(null); // No active order, just clear state
+        setActiveOrder(null);
       } else {
-        // Only log unexpected errors
-        console.warn('Background active order fetch failed:', err.message);
+        // Log other errors that might actually be bugs
+        console.warn('Fetch Active Order Warning:', err.message);
       }
     } finally {
       setLoading(false);
@@ -46,7 +50,8 @@ const ActiveOrderBanner = () => {
 
   useEffect(() => {
     fetchActiveOrder();
-    const intervalId = setInterval(fetchActiveOrder, 5000);
+    // Reduce polling frequency to 10s to reduce network traffic
+    const intervalId = setInterval(fetchActiveOrder, 10000);
     return () => clearInterval(intervalId);
   }, []);
 
