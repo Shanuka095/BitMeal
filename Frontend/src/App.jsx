@@ -5,6 +5,7 @@ import Footer from './components/Footer';
 import Dashboard from './pages/Dashboard';
 import Restaurants from './pages/Restaurants';
 import RestaurantDetails from './pages/RestaurantDetails';
+import MenuItemDetails from './pages/MenuItemDetails';
 import AdminLayout from './components/AdminLayout';
 import RestaurantAdmin from './pages/RestaurantAdmin';
 import CreateRestaurant from './pages/CreateRestaurant';
@@ -55,13 +56,14 @@ function App() {
   };
 
   return (
-    // ADDED FUTURE FLAGS HERE TO SILENCE WARNINGS
+    // Future flags enabled to silence React Router v7 warnings
     <Router future={{ v7_startTransition: true, v7_relativeSplatPath: true }}>
       {alertInfo && <AlertDialog message={alertInfo.message} onClose={() => setAlertInfo(null)} />}
       {confirmInfo && <ConfirmationModal {...confirmInfo} />}
       {promptInfo && <PromptModal {...promptInfo} />}
 
       <Routes>
+        {/* Customer and Public Routes with Navbar and Footer */}
         <Route
           element={
             <CartProvider>
@@ -80,16 +82,32 @@ function App() {
           <Route path="/login" element={<Login />} />
           <Route path="/register" element={<Register />} />
           <Route path="/verify-otp" element={<VerifyOTP />} />
+          
+          {/* Protected Customer Routes */}
           <Route path="/dashboard" element={<ProtectedRoute><Dashboard /></ProtectedRoute>} />
           <Route path="/restaurants" element={<ProtectedRoute><Restaurants standalone={true} /></ProtectedRoute>} />
           <Route path="/restaurant/:id" element={<ProtectedRoute><RestaurantDetails /></ProtectedRoute>} />
+          
+          {/* NEW ROUTE: Menu Item Details Page */}
+          <Route path="/restaurant/:id/menu/:menuId" element={<ProtectedRoute><MenuItemDetails /></ProtectedRoute>} />
+          
           <Route path="/my-orders" element={<ProtectedRoute><CustomerOrders /></ProtectedRoute>} />
           <Route path="/cart" element={<ProtectedRoute><CartPage /></ProtectedRoute>} />
           <Route path="/my-active-order" element={<ProtectedRoute><ActiveOrderPage /></ProtectedRoute>} />
           <Route path="/rate-order/:orderId" element={<ProtectedRoute><RateOrder /></ProtectedRoute>} />
         </Route>
 
-        <Route path="/admin/*" element={<ProtectedRoute><ModalProvider showAlert={showAlert} showConfirm={showConfirm} showPrompt={showPrompt}><AdminLayout /></ModalProvider></ProtectedRoute>}>
+        {/* Admin Routes with AdminLayout */}
+        <Route
+          path="/admin/*"
+          element={
+            <ProtectedRoute>
+              <ModalProvider showAlert={showAlert} showConfirm={showConfirm} showPrompt={showPrompt}>
+                <AdminLayout />
+              </ModalProvider>
+            </ProtectedRoute>
+          }
+        >
           <Route index element={<RestaurantAdmin />} />
           <Route path="create-restaurant" element={<CreateRestaurant />} />
           <Route path="update-restaurant/:id" element={<UpdateRestaurant />} />
@@ -100,12 +118,23 @@ function App() {
           <Route path="delivery-personnel" element={<ManageDeliveryPersonnel />} />
         </Route>
 
-        <Route path="/delivery-personnel/*" element={<ProtectedRoute><ModalProvider showAlert={showAlert} showConfirm={showConfirm} showPrompt={showPrompt}><DeliveryPersonnelLayout /></ModalProvider></ProtectedRoute>}>
+        {/* Delivery Personnel Routes */}
+        <Route
+          path="/delivery-personnel/*"
+          element={
+            <ProtectedRoute>
+              <ModalProvider showAlert={showAlert} showConfirm={showConfirm} showPrompt={showPrompt}>
+                <DeliveryPersonnelLayout />
+              </ModalProvider>
+            </ProtectedRoute>
+          }
+        >
           <Route index element={<DeliveryDashboard />} />
           <Route path="my-deliveries" element={<MyDeliveries />} />
           <Route path="profile" element={<div>My Profile Page (coming soon)</div>} />
         </Route>
 
+        {/* Catch-all route */}
         <Route path="*" element={<Navigate to="/login" replace />} />
       </Routes>
     </Router>
