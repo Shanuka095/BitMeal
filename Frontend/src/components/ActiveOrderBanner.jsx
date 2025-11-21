@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import axios from 'axios';
-import { FaMotorcycle, FaCheckCircle, FaHourglassHalf, FaTimesCircle, FaPhone } from 'react-icons/fa';
+import { FaMotorcycle, FaCheckCircle, FaHourglassHalf, FaTimesCircle } from 'react-icons/fa';
 import { useModal } from '../context/ModalContext';
 import jwtDecode from 'jwt-decode';
 
@@ -32,11 +32,11 @@ const ActiveOrderBanner = () => {
 
       setActiveOrder(response.data || null);
     } catch (err) {
-      // SILENTLY handle 404 (No active order) to prevent console spam
+      // --- FIX: Silently handle 404 errors (No Active Order) ---
       if (err.response && err.response.status === 404) {
-        setActiveOrder(null);
+        setActiveOrder(null); // No active order, just clear state
       } else {
-        // Only log real errors (like network issues or 500s)
+        // Only log unexpected errors
         console.warn('Background active order fetch failed:', err.message);
       }
     } finally {
