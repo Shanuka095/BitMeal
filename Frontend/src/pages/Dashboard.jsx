@@ -7,7 +7,7 @@ import {
 } from 'react-icons/fa';
 import { GiNoodles, GiChickenLeg, GiBowlOfRice } from 'react-icons/gi';
 
-// Import your premium loader
+// CORRECT IMPORT PATH
 import PageLoader from '../components/PageLoader'; 
 
 const Dashboard = () => {
@@ -26,7 +26,6 @@ const Dashboard = () => {
   useEffect(() => {
     const fetchData = async () => {
       try {
-        // 1.5s delay for premium feel
         setTimeout(async () => {
             const response = await axios.get('http://localhost:3000/api/restaurants/public');
             const data = response.data.data || response.data;
@@ -105,7 +104,7 @@ const Dashboard = () => {
   return (
     <div className={`min-h-screen bg-[#f8f9fa] pb-20 transition-opacity duration-1000 ${pageReady ? 'opacity-100' : 'opacity-0'}`}>
       
-      {/* 1. Hero Section (Mobile Optimized) */}
+      {/* 1. Hero Section */}
       <div className="relative bg-gray-900 text-white h-[600px] md:h-[550px] flex items-center justify-center overflow-hidden">
         <div className="absolute inset-0 bg-gradient-to-b from-black/80 via-black/60 to-transparent z-10"></div>
         <img 
@@ -148,27 +147,33 @@ const Dashboard = () => {
         </div>
       </div>
 
-      {/* 2. Categories Filter - Floating Card (Mobile Responsive) */}
+      {/* 2. Categories Filter - Floating Individual Cards (No Big White Box) */}
       <div className="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 relative z-30 -mt-24 md:-mt-28 mb-16">
-          <div className="bg-white rounded-[2rem] shadow-2xl shadow-gray-200/50 border border-gray-100 p-6 md:p-8">
-            {/* Horizontal Scroll Container */}
-            <div className="flex justify-between items-center md:justify-center space-x-4 md:space-x-12 overflow-x-auto pb-4 pt-2 px-2 hide-scrollbar w-full snap-x">
-              {categories.map((cat, index) => (
-                  <button 
-                      key={index}
-                      onClick={() => { setSelectedCategory(cat.name); scrollToResults(); }}
-                      className={`flex flex-col items-center space-y-3 group min-w-[80px] md:min-w-[90px] outline-none focus:outline-none focus:ring-0 active:ring-0 transition-all duration-300 transform hover:-translate-y-2 snap-center`}
-                  >
-                  <div className={`${selectedCategory === cat.name ? 'ring-4 ring-[#ffaa00] scale-110 shadow-2xl' : 'shadow-lg bg-opacity-90'} ${cat.color} w-16 h-16 md:w-20 md:h-20 rounded-full flex items-center justify-center text-white text-2xl md:text-3xl border-4 border-white transition-all duration-300 group-hover:shadow-2xl relative overflow-hidden`}>
-                      <div className="absolute inset-0 bg-gradient-to-tr from-transparent via-white/30 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-500"></div>
-                      {cat.icon}
-                  </div>
-                  <span className={`font-bold text-xs md:text-sm tracking-wide transition-colors duration-300 ${selectedCategory === cat.name ? 'text-[#ffaa00]' : 'text-gray-600 group-hover:text-[#ffaa00]'}`}>
-                      {cat.name}
-                  </span>
-                  </button>
-              ))}
-            </div>
+          {/* We removed the outer white bg and shadow, now using individual cards */}
+          <div className="flex justify-between items-center md:justify-center space-x-4 md:space-x-8 overflow-x-auto pb-8 pt-4 px-2 hide-scrollbar w-full snap-x">
+            {categories.map((cat, index) => (
+                <button 
+                    key={index}
+                    onClick={() => { setSelectedCategory(cat.name); scrollToResults(); }}
+                    // Individual Card Styling
+                    className={`
+                      group flex flex-col items-center justify-center
+                      min-w-[100px] md:min-w-[120px] h-32 md:h-40 
+                      bg-white rounded-[2rem] shadow-xl shadow-black/5 border border-white/50 backdrop-blur-sm
+                      outline-none focus:outline-none focus:ring-0 active:ring-0 
+                      transition-all duration-300 transform hover:-translate-y-3 hover:shadow-2xl snap-center
+                      ${selectedCategory === cat.name ? 'ring-4 ring-[#ffaa00] ring-opacity-60 scale-105 z-10' : ''}
+                    `}
+                >
+                <div className={`${selectedCategory === cat.name ? '' : 'bg-opacity-90'} ${cat.color} w-12 h-12 md:w-16 md:h-16 rounded-full flex items-center justify-center text-white text-xl md:text-3xl shadow-md transition-transform duration-500 group-hover:scale-110 relative overflow-hidden`}>
+                    <div className="absolute inset-0 bg-gradient-to-tr from-transparent via-white/30 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-500"></div>
+                    {cat.icon}
+                </div>
+                <span className={`font-bold text-xs md:text-sm tracking-wide mt-3 transition-colors duration-300 ${selectedCategory === cat.name ? 'text-[#ffaa00]' : 'text-gray-600 group-hover:text-[#ffaa00]'}`}>
+                    {cat.name}
+                </span>
+                </button>
+            ))}
           </div>
       </div>
 
@@ -245,7 +250,7 @@ const Dashboard = () => {
               <div 
                 key={restaurant._id}
                 onClick={() => navigate(`/restaurant/${restaurant._id}`)}
-                className="bg-white rounded-[2rem] shadow-md hover:shadow-2xl transition-all duration-500 cursor-pointer group overflow-hidden border border-gray-100 flex flex-col h-full transform hover:-translate-y-2"
+                className="bg-white rounded-3xl shadow-md hover:shadow-2xl transition-all duration-500 cursor-pointer group overflow-hidden border border-gray-100 flex flex-col h-full transform hover:-translate-y-2"
               >
                 {/* Image Area */}
                 <div className="relative h-52 md:h-56 overflow-hidden">
@@ -276,7 +281,7 @@ const Dashboard = () => {
                 </div>
 
                 {/* Content Area */}
-                <div className="p-5 md:p-6 flex-grow flex flex-col justify-between">
+                <div className="p-6 flex-grow flex flex-col justify-between">
                   <div>
                     <h3 className="text-xl font-extrabold text-gray-900 mb-2 group-hover:text-[#ffaa00] transition-colors line-clamp-1">{restaurant.name}</h3>
                     <p className="text-gray-500 text-sm mb-4 line-clamp-1 flex items-center">
