@@ -1,14 +1,12 @@
 import React, { useState, useEffect } from 'react';
-import { FaTimes } from 'react-icons/fa';
-import { useCart } from '../context/CartContext'; // Import useCart hook
+import { FaTimes, FaMinus, FaPlus, FaShoppingCart } from 'react-icons/fa';
+import { useCart } from '../context/CartContext';
 
-// Accept restaurantId as a prop
 const MenuItemModal = ({ item, onClose, restaurantId }) => {
   const { addToCart, cartItems, incrementQuantity, decrementQuantity, removeFromCart } = useCart();
   const [selectedSize, setSelectedSize] = useState('normal');
   const [quantity, setQuantity] = useState(1);
 
-  // Find if this item (with current size) is already in the cart
   const cartItem = cartItems.find(
     cartIt => cartIt.menuItemId === item._id && cartIt.size === selectedSize
   );
@@ -16,6 +14,8 @@ const MenuItemModal = ({ item, onClose, restaurantId }) => {
   useEffect(() => {
     setSelectedSize('normal');
     setQuantity(1);
+    document.body.style.overflow = 'hidden'; // Prevent background scroll
+    return () => { document.body.style.overflow = 'unset'; };
   }, [item]);
 
   useEffect(() => {
@@ -26,7 +26,6 @@ const MenuItemModal = ({ item, onClose, restaurantId }) => {
     }
   }, [cartItem, selectedSize]);
 
-
   const getPrice = () => {
     const normalPrice = item.normalPrice || 0;
     const extraPriceForFull = item.extraPriceForFull || 0;
@@ -34,24 +33,19 @@ const MenuItemModal = ({ item, onClose, restaurantId }) => {
   };
 
   const handleAddToCart = () => {
-    // FIX: Pass restaurantId as the fourth argument to addToCart
     addToCart(item, quantity, selectedSize, restaurantId);
     onClose();
   };
 
   const handleIncrement = () => {
     setQuantity(prev => prev + 1);
-    if (cartItem) {
-      incrementQuantity(item._id, selectedSize);
-    }
+    if (cartItem) incrementQuantity(item._id, selectedSize);
   };
 
   const handleDecrement = () => {
     if (quantity > 1) {
       setQuantity(prev => prev - 1);
-      if (cartItem) {
-        decrementQuantity(item._id, selectedSize);
-      }
+      if (cartItem) decrementQuantity(item._id, selectedSize);
     } else {
       removeFromCart(item._id, selectedSize);
       setQuantity(0);
@@ -59,97 +53,120 @@ const MenuItemModal = ({ item, onClose, restaurantId }) => {
     }
   };
 
-  const handleRemoveFromCart = () => {
-    removeFromCart(item._id, selectedSize);
-    setQuantity(0);
-    onClose();
-  };
-
-
   if (!item) return null;
 
   return (
-    <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
-      <div className="bg-white rounded-xl shadow-2xl p-6 w-full max-w-md relative animate-fade-in-up">
+    <div className="fixed inset-0 z-[9999] flex items-center justify-center p-4 sm:p-6">
+      {/* Backdrop */}
+      <div 
+        className="absolute inset-0 bg-black/70 backdrop-blur-sm transition-opacity" 
+        onClick={onClose}
+      ></div>
+
+      {/* Modal Container - Constrained Height with Flex Column */}
+      <div className="relative bg-white rounded-3xl shadow-2xl w-full max-w-md max-h-[90vh] flex flex-col overflow-hidden transform transition-all scale-100 animate-fade-in-up">
+        
+        {/* Close Button */}
         <button
           onClick={onClose}
-          className="absolute top-4 right-4 text-gray-500 hover:text-gray-800 transition"
+          className="absolute top-3 right-3 z-20 bg-white/90 p-2 rounded-full text-gray-600 hover:text-red-500 shadow-sm backdrop-blur-md transition-colors"
         >
-          <FaTimes size={24} />
+          <FaTimes size={18} />
         </button>
 
-        <h2 className="text-3xl font-bold text-gray-800 mb-4 border-b pb-2">{item.name}</h2>
+        {/* 1. Header Image (Fixed at top) */}
+        <div className="relative h-48 sm:h-56 flex-shrink-0">
+          {item.imageUrl ? (
+            <img
+              src={`http://localhost:3003/uploads/${item.imageUrl}`}
+              alt={item.name}
+              className="w-full h-full object-cover"
+            />
+          ) : (
+            <div className="w-full h-full bg-gray-100 flex items-center justify-center text-gray-400">
+              <span className="text-sm font-medium">No Image</span>
+            </div>
+          )}
+          <div className="absolute inset-0 bg-gradient-to-t from-black/70 to-transparent"></div>
+          <div className="absolute bottom-4 left-6 pr-4">
+             <h2 className="text-2xl sm:text-3xl font-bold text-white drop-shadow-md leading-tight">{item.name}</h2>
+             <p className="text-gray-200 text-xs sm:text-sm font-medium mt-1">{item.category}</p>
+          </div>
+        </div>
 
-        {item.imageUrl && (
-          <img
-            src={`http://localhost:3003/uploads/${item.imageUrl}`}
-            alt={item.name}
-            className="w-full h-48 object-cover rounded-lg mb-4 shadow-md"
-          />
-        )}
-
-        <div className="space-y-3 mb-6">
-          <p className="text-gray-700"><strong>Category:</strong> {item.category}</p>
-          <div className="flex items-center space-x-4">
-            <label className="inline-flex items-center">
-              <input
-                type="radio"
-                name="size"
-                value="normal"
-                checked={selectedSize === 'normal'}
-                onChange={() => setSelectedSize('normal')}
-                className="form-radio h-5 w-5 text-[#ffaa00] focus:ring-[#ffaa00]"
-              />
-              <span className="ml-2 text-gray-800 font-medium">Normal (Rs. {(item.normalPrice || 0).toFixed(2)})</span>
-            </label>
-            {(item.extraPriceForFull || 0) > 0 && (
-              <label className="inline-flex items-center">
-                <input
-                  type="radio"
-                  name="size"
-                  value="full"
-                  checked={selectedSize === 'full'}
-                  onChange={() => setSelectedSize('full')}
-                  className="form-radio h-5 w-5 text-[#ffaa00] focus:ring-[#ffaa00]"
-                />
-                <span className="ml-2 text-gray-800 font-medium">Full (+Rs. {(item.extraPriceForFull || 0).toFixed(2)})</span>
+        {/* 2. Scrollable Body (Options) */}
+        <div className="p-6 overflow-y-auto custom-scrollbar">
+          <div className="space-y-4">
+            <label className="text-xs font-bold text-gray-400 uppercase tracking-wider">Select Portion Size</label>
+            
+            <div className="space-y-3">
+              {/* Normal Size */}
+              <label 
+                className={`flex items-center justify-between p-4 rounded-xl border-2 cursor-pointer transition-all ${
+                  selectedSize === 'normal' 
+                    ? 'border-[#ffaa00] bg-orange-50/50' 
+                    : 'border-gray-100 hover:border-gray-200'
+                }`}
+              >
+                <div className="flex items-center">
+                  <div className={`w-5 h-5 rounded-full border-2 flex items-center justify-center mr-3 ${selectedSize === 'normal' ? 'border-[#ffaa00]' : 'border-gray-300'}`}>
+                    {selectedSize === 'normal' && <div className="w-2.5 h-2.5 rounded-full bg-[#ffaa00]"></div>}
+                  </div>
+                  <span className={`font-bold ${selectedSize === 'normal' ? 'text-gray-900' : 'text-gray-600'}`}>Normal</span>
+                </div>
+                <span className="text-sm font-semibold text-gray-700">Rs. {(item.normalPrice || 0).toFixed(0)}</span>
+                <input type="radio" name="size" className="hidden" checked={selectedSize === 'normal'} onChange={() => setSelectedSize('normal')} />
               </label>
-            )}
+
+              {/* Full Size */}
+              {(item.extraPriceForFull || 0) > 0 && (
+                <label 
+                  className={`flex items-center justify-between p-4 rounded-xl border-2 cursor-pointer transition-all ${
+                    selectedSize === 'full' 
+                      ? 'border-[#ffaa00] bg-orange-50/50' 
+                      : 'border-gray-100 hover:border-gray-200'
+                  }`}
+                >
+                  <div className="flex items-center">
+                    <div className={`w-5 h-5 rounded-full border-2 flex items-center justify-center mr-3 ${selectedSize === 'full' ? 'border-[#ffaa00]' : 'border-gray-300'}`}>
+                      {selectedSize === 'full' && <div className="w-2.5 h-2.5 rounded-full bg-[#ffaa00]"></div>}
+                    </div>
+                    <span className={`font-bold ${selectedSize === 'full' ? 'text-gray-900' : 'text-gray-600'}`}>Full</span>
+                  </div>
+                  <span className="text-sm font-semibold text-gray-700">+ Rs. {item.extraPriceForFull}</span>
+                  <input type="radio" name="size" className="hidden" checked={selectedSize === 'full'} onChange={() => setSelectedSize('full')} />
+                </label>
+              )}
+            </div>
           </div>
-          <p className="text-2xl font-bold text-gray-900">Current Price: Rs. {getPrice().toFixed(2)}</p>
         </div>
 
-        <div className="flex items-center justify-between mt-6">
-          <div className="flex items-center space-x-2 bg-gray-100 rounded-lg p-2">
+        {/* 3. Sticky Footer (Price & Add Button) */}
+        <div className="p-4 sm:p-6 border-t border-gray-100 bg-white flex-shrink-0">
+          <div className="flex items-center justify-between mb-4">
+             <span className="text-gray-500 font-medium text-sm">Total Amount</span>
+             <span className="text-2xl font-black text-gray-900">Rs. {(getPrice() * quantity).toFixed(2)}</span>
+          </div>
+
+          <div className="flex gap-3">
+            {/* Quantity */}
+            <div className="flex items-center bg-gray-100 rounded-xl px-1">
+              <button onClick={handleDecrement} className="w-10 h-12 flex items-center justify-center text-gray-500 hover:text-red-600 transition text-lg font-bold">-</button>
+              <span className="w-8 text-center font-bold text-lg text-gray-800">{quantity}</span>
+              <button onClick={handleIncrement} className="w-10 h-12 flex items-center justify-center text-gray-500 hover:text-green-600 transition text-lg font-bold">+</button>
+            </div>
+
+            {/* Button */}
             <button
-              onClick={handleDecrement}
-              className="bg-gray-200 text-gray-700 w-8 h-8 rounded-md flex items-center justify-center hover:bg-gray-300 transition"
+              onClick={handleAddToCart}
+              className="flex-1 bg-[#ffaa00] text-white h-12 rounded-xl font-bold text-base shadow-lg hover:bg-[#e59400] transition-all transform active:scale-95 flex items-center justify-center"
             >
-              -
-            </button>
-            <span className="font-semibold text-lg text-gray-800 w-8 text-center">{quantity}</span>
-            <button
-              onClick={handleIncrement}
-              className="bg-gray-200 text-gray-700 w-8 h-8 rounded-md flex items-center justify-center hover:bg-gray-300 transition"
-            >
-              +
+              <FaShoppingCart className="mr-2 text-sm" />
+              {cartItem ? 'Update Cart' : 'Add to Cart'}
             </button>
           </div>
-          <button
-            onClick={handleAddToCart}
-            className="bg-[#ffaa00] text-white px-6 py-3 rounded-lg hover:bg-[#e59400] transition font-semibold text-lg shadow-md"
-          >
-            {cartItem ? 'Update Cart' : 'Add to Cart'}
-          </button>
         </div>
-        {cartItem && (
-          <button
-            onClick={handleRemoveFromCart}
-            className="w-full mt-4 bg-red-500 text-white px-6 py-3 rounded-lg hover:bg-red-600 transition font-semibold text-lg shadow-md"
-          >
-            Remove from Cart
-          </button>
-        )}
+
       </div>
     </div>
   );
