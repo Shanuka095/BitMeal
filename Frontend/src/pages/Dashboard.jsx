@@ -7,7 +7,7 @@ import {
 } from 'react-icons/fa';
 import { GiNoodles, GiChickenLeg, GiBowlOfRice } from 'react-icons/gi';
 
-// CORRECT IMPORT PATH
+// Import the global loader
 import PageLoader from '../components/PageLoader'; 
 
 const Dashboard = () => {
@@ -147,31 +147,40 @@ const Dashboard = () => {
         </div>
       </div>
 
-      {/* 2. Categories Filter - Floating Individual Cards (No Big White Box) */}
+      {/* 2. Categories Filter - SMALLER, SLEEKER CARDS */}
       <div className="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 relative z-30 -mt-24 md:-mt-28 mb-16">
-          {/* We removed the outer white bg and shadow, now using individual cards */}
-          <div className="flex justify-between items-center md:justify-center space-x-4 md:space-x-8 overflow-x-auto pb-8 pt-4 px-2 hide-scrollbar w-full snap-x">
+          <div className="flex justify-between items-center md:justify-center space-x-3 md:space-x-6 overflow-x-auto pb-8 pt-4 px-2 hide-scrollbar w-full snap-x">
             {categories.map((cat, index) => (
                 <button 
                     key={index}
                     onClick={() => { setSelectedCategory(cat.name); scrollToResults(); }}
-                    // Individual Card Styling
+                    // REDUCED SIZES HERE: min-w-[85px], h-28
                     className={`
                       group flex flex-col items-center justify-center
-                      min-w-[100px] md:min-w-[120px] h-32 md:h-40 
-                      bg-white rounded-[2rem] shadow-xl shadow-black/5 border border-white/50 backdrop-blur-sm
-                      outline-none focus:outline-none focus:ring-0 active:ring-0 
-                      transition-all duration-300 transform hover:-translate-y-3 hover:shadow-2xl snap-center
-                      ${selectedCategory === cat.name ? 'ring-4 ring-[#ffaa00] ring-opacity-60 scale-105 z-10' : ''}
+                      min-w-[85px] md:min-w-[110px] h-28 md:h-36 
+                      bg-white rounded-[2rem] shadow-xl shadow-orange-500/5 border border-gray-50
+                      transition-all duration-300 ease-out
+                      transform hover:-translate-y-2 hover:shadow-2xl snap-center
+                      outline-none focus:outline-none focus:ring-0 active:ring-0
+                      ${selectedCategory === cat.name 
+                        ? 'ring-4 ring-[#ffaa00] ring-opacity-50 scale-105 z-10' 
+                        : 'hover:scale-105'}
                     `}
                 >
-                <div className={`${selectedCategory === cat.name ? '' : 'bg-opacity-90'} ${cat.color} w-12 h-12 md:w-16 md:h-16 rounded-full flex items-center justify-center text-white text-xl md:text-3xl shadow-md transition-transform duration-500 group-hover:scale-110 relative overflow-hidden`}>
-                    <div className="absolute inset-0 bg-gradient-to-tr from-transparent via-white/30 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-500"></div>
-                    {cat.icon}
-                </div>
-                <span className={`font-bold text-xs md:text-sm tracking-wide mt-3 transition-colors duration-300 ${selectedCategory === cat.name ? 'text-[#ffaa00]' : 'text-gray-600 group-hover:text-[#ffaa00]'}`}>
-                    {cat.name}
-                </span>
+                  {/* REDUCED ICON SIZES: w-12 h-12 */}
+                  <div className={`
+                    w-12 h-12 md:w-14 md:h-14 rounded-full flex items-center justify-center text-white text-xl md:text-2xl mb-2 shadow-md transition-transform duration-500 group-hover:rotate-12
+                    ${cat.color}
+                  `}>
+                      {cat.icon}
+                  </div>
+                  {/* REDUCED TEXT SIZE */}
+                  <span className={`
+                    font-bold text-[10px] md:text-sm tracking-wide transition-colors duration-300
+                    ${selectedCategory === cat.name ? 'text-[#ffaa00]' : 'text-gray-600 group-hover:text-[#ffaa00]'}
+                  `}>
+                      {cat.name}
+                  </span>
                 </button>
             ))}
           </div>
