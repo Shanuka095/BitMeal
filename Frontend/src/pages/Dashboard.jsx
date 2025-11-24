@@ -73,12 +73,13 @@ const Dashboard = () => {
     setDisplayedRestaurants(result);
   }, [selectedCategory, searchTerm, minRating, allRestaurants]);
 
+  // UPDATED: All categories now use the Main Brand Color (#ffaa00)
   const categories = [
     { name: 'All', icon: <FaUtensils />, color: 'bg-gray-800' },
-    { name: 'Rice', icon: <GiBowlOfRice />, color: 'bg-green-600' },
-    { name: 'Kottu', icon: <GiNoodles />, color: 'bg-yellow-500' },
-    { name: 'Fast Food', icon: <FaHamburger />, color: 'bg-red-500' },
-    { name: 'Beverages', icon: <FaCoffee />, color: 'bg-blue-500' },
+    { name: 'Rice', icon: <GiBowlOfRice />, color: 'bg-[#ffaa00]' },
+    { name: 'Kottu', icon: <GiNoodles />, color: 'bg-[#ffaa00]' },
+    { name: 'Fast Food', icon: <FaHamburger />, color: 'bg-[#ffaa00]' },
+    { name: 'Beverages', icon: <FaCoffee />, color: 'bg-[#ffaa00]' },
   ];
 
   const scrollToResults = () => {
@@ -147,14 +148,13 @@ const Dashboard = () => {
         </div>
       </div>
 
-      {/* 2. Categories Filter - SMALLER, SLEEKER CARDS */}
+      {/* 2. Categories Filter - Updated Colors */}
       <div className="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 relative z-30 -mt-24 md:-mt-28 mb-16">
           <div className="flex justify-between items-center md:justify-center space-x-3 md:space-x-6 overflow-x-auto pb-8 pt-4 px-2 hide-scrollbar w-full snap-x">
             {categories.map((cat, index) => (
                 <button 
                     key={index}
                     onClick={() => { setSelectedCategory(cat.name); scrollToResults(); }}
-                    // REDUCED SIZES HERE: min-w-[85px], h-28
                     className={`
                       group flex flex-col items-center justify-center
                       min-w-[85px] md:min-w-[110px] h-28 md:h-36 
@@ -167,14 +167,14 @@ const Dashboard = () => {
                         : 'hover:scale-105'}
                     `}
                 >
-                  {/* REDUCED ICON SIZES: w-12 h-12 */}
+                  {/* Icon Circle (Now Uniform Orange) */}
                   <div className={`
                     w-12 h-12 md:w-14 md:h-14 rounded-full flex items-center justify-center text-white text-xl md:text-2xl mb-2 shadow-md transition-transform duration-500 group-hover:rotate-12
                     ${cat.color}
                   `}>
                       {cat.icon}
                   </div>
-                  {/* REDUCED TEXT SIZE */}
+                  {/* Text */}
                   <span className={`
                     font-bold text-[10px] md:text-sm tracking-wide transition-colors duration-300
                     ${selectedCategory === cat.name ? 'text-[#ffaa00]' : 'text-gray-600 group-hover:text-[#ffaa00]'}
@@ -252,14 +252,15 @@ const Dashboard = () => {
           </div>
         </div>
 
-        {/* Results Grid */}
+        {/* Results Grid - Updated Shadow to match Menu Page */}
         {displayedRestaurants.length > 0 ? (
           <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-8 md:gap-10 pb-20 animate-fade-in-up" style={{ animationDelay: '0.4s' }}>
             {displayedRestaurants.map((restaurant) => (
               <div 
                 key={restaurant._id}
                 onClick={() => navigate(`/restaurant/${restaurant._id}`)}
-                className="bg-white rounded-3xl shadow-md hover:shadow-2xl transition-all duration-500 cursor-pointer group overflow-hidden border border-gray-100 flex flex-col h-full transform hover:-translate-y-2"
+                // UPDATED SHADOW HERE: shadow-orange-500/10 on hover
+                className="bg-white rounded-3xl shadow-md hover:shadow-2xl hover:shadow-orange-500/10 transition-all duration-500 cursor-pointer group overflow-hidden border border-gray-100 flex flex-col h-full transform hover:-translate-y-2"
               >
                 {/* Image Area */}
                 <div className="relative h-52 md:h-56 overflow-hidden">
