@@ -1,15 +1,13 @@
 import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import axios from 'axios';
-import { FaMotorcycle, FaCheckCircle, FaHourglassHalf, FaTimesCircle } from 'react-icons/fa';
-import { useModal } from '../context/ModalContext';
+import { FaMotorcycle, FaUtensils, FaChevronRight, FaClock, FaCheckCircle } from 'react-icons/fa';
 import jwtDecode from 'jwt-decode';
 
 const ActiveOrderBanner = () => {
   const [activeOrder, setActiveOrder] = useState(null);
   const [loading, setLoading] = useState(true);
   const navigate = useNavigate();
-  const { showAlert } = useModal();
 
   const fetchActiveOrder = async () => {
     try {
@@ -35,13 +33,8 @@ const ActiveOrderBanner = () => {
 
       setActiveOrder(response.data || null);
     } catch (err) {
-      // --- SILENT ERROR HANDLING ---
-      // Do not log 404s because they just mean "No Active Order"
       if (err.response && err.response.status === 404) {
         setActiveOrder(null);
-      } else {
-        // Log other errors that might actually be bugs
-        console.warn('Fetch Active Order Warning:', err.message);
       }
     } finally {
       setLoading(false);
@@ -50,53 +43,57 @@ const ActiveOrderBanner = () => {
 
   useEffect(() => {
     fetchActiveOrder();
-    // Reduce polling frequency to 10s to reduce network traffic
     const intervalId = setInterval(fetchActiveOrder, 10000);
     return () => clearInterval(intervalId);
   }, []);
-
-  const getStatusIcon = (status) => {
-    switch (status) {
-      case 'pending': return <FaHourglassHalf className="inline mr-2 text-white" />;
-      case 'confirmed': return <FaCheckCircle className="inline mr-2 text-green-300" />;
-      case 'preparing': return <FaCheckCircle className="inline mr-2 text-green-300" />;
-      case 'out_for_delivery': return <FaMotorcycle className="inline mr-2 text-white" />;
-      case 'delivered': return <FaCheckCircle className="inline mr-2 text-green-300" />;
-      case 'cancelled': return <FaTimesCircle className="inline mr-2 text-red-300" />;
-      default: return null;
-    }
-  };
 
   if (loading || !activeOrder || activeOrder.status === 'delivered' || activeOrder.status === 'cancelled') {
     return null;
   }
 
-  const driver = activeOrder.driver;
+  const getStatusConfig = () => {
+    switch (activeOrder.status) {
+      case 'out_for_delivery': return { color: 'bg-green-500', text: 'text-green-400', icon: <FaMotorcycle />, label: 'Order is on the way', progress: 'w-[80%]' };
+      case 'preparing': return { color: 'bg-orange-500', text: 'text-orange-400', icon: <FaUtensils />, label: 'Chef is preparing food', progress: 'w-[50%]' };
+      case 'confirmed': return { color: 'bg-blue-500', text: 'text-blue-400', icon: <FaCheckCircle />, label: 'Order Confirmed', progress: 'w-[25%]' };
+      default: return { color: 'bg-gray-500', text: 'text-gray-400', icon: <FaClock />, label: 'Processing Order', progress: 'w-[10%]' };
+    }
+  };
+
+  const config = getStatusConfig();
 
   return (
-    <div
-      className="fixed top-20 left-0 right-0 bg-[#058522] text-white p-3 shadow-lg z-40 cursor-pointer transition-all duration-300 hover:shadow-xl"
-      onClick={() => navigate('/my-active-order')}
-    >
-      <div className="max-w-7xl mx-auto flex items-center justify-between">
-        <div className="flex items-center space-x-4">
-          <span className="text-lg font-semibold flex items-center">
-            {getStatusIcon(activeOrder.status)}
-            Order #{activeOrder._id.substring(0, 8)} is {activeOrder.status.replace(/_/g, ' ')}
-          </span>
-          {driver && activeOrder.status === 'out_for_delivery' && (
-            <div className="hidden md:flex items-center space-x-2 bg-black bg-opacity-20 rounded-full px-3 py-1">
-              <span className="text-sm font-medium">Driver:</span>
-              <span className="text-sm font-bold flex items-center space-x-1">
-                <span>{driver.name}</span>
-                <span className="text-xs text-gray-200">({driver.vehicleType})</span>
-              </span>
-            </div>
-          )}
+    <div className="fixed top-24 left-0 right-0 z-50 flex justify-center pointer-events-none px-4 animate-fade-in-down">
+      <div 
+        onClick={() => navigate('/my-active-order')}
+        className="relative bg-[#0f0f0f]/90 backdrop-blur-2xl text-white pl-2 pr-6 py-2 rounded-full shadow-[0_10px_40px_-10px_rgba(0,0,0,0.5)] border border-white/10 pointer-events-auto cursor-pointer hover:scale-[1.02] hover:shadow-[#ffaa00]/10 transition-all duration-500 group max-w-md w-full md:w-auto overflow-hidden"
+      >
+        {/* Progress Bar Background */}
+        <div className="absolute bottom-0 left-0 h-[2px] bg-white/10 w-full">
+             <div className={`h-full ${config.color} ${config.progress} transition-all duration-1000`}></div>
         </div>
-        <button className="bg-white text-[#058522] px-4 py-1 rounded-full font-bold text-sm hover:bg-gray-100 transition">
-          Track
-        </button>
+
+        <div className="flex items-center gap-4">
+            {/* Left: Floating Icon */}
+            <div className="w-11 h-11 rounded-full bg-white/5 border border-white/10 flex items-center justify-center relative flex-shrink-0">
+                <div className={`absolute inset-0 rounded-full opacity-20 animate-ping ${config.color}`}></div>
+                <div className={`${config.text} text-lg drop-shadow-md`}>{config.icon}</div>
+            </div>
+
+            {/* Middle: Info */}
+            <div className="flex flex-col min-w-0 flex-1">
+                <div className="flex items-center gap-2 mb-0.5">
+                    <span className={`w-1.5 h-1.5 rounded-full ${config.color} shadow-[0_0_10px_currentColor]`}></span>
+                    <span className="text-[10px] font-bold uppercase tracking-widest text-gray-400">Live Update</span>
+                </div>
+                <span className="text-sm font-bold text-white truncate leading-tight">{config.label}</span>
+            </div>
+
+            {/* Right: Action */}
+            <div className="flex items-center justify-center w-8 h-8 rounded-full bg-white/10 group-hover:bg-[#ffaa00] transition-colors duration-300">
+                <FaChevronRight className="text-xs text-gray-400 group-hover:text-black" />
+            </div>
+        </div>
       </div>
     </div>
   );
