@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useLayoutEffect } from 'react'; // Added useLayoutEffect
 import { useParams, useNavigate, useLocation } from 'react-router-dom';
 import axios from 'axios';
 import { FaStar, FaThumbsUp, FaThumbsDown, FaArrowLeft, FaUtensils, FaMotorcycle } from 'react-icons/fa';
@@ -19,6 +19,13 @@ const RateOrder = () => {
   const [driverLikeStatus, setDriverLikeStatus] = useState(null);
   const [submitting, setSubmitting] = useState(false);
 
+  // --- FIX: Force Scroll to Top on Load ---
+  // useLayoutEffect runs synchronously before the browser paints, 
+  // ensuring the user sees the top of the page immediately.
+  useLayoutEffect(() => {
+    window.scrollTo(0, 0);
+  }, []);
+
   useEffect(() => {
     if (!order) {
       const fetchOrder = async () => {
@@ -30,7 +37,6 @@ const RateOrder = () => {
             return;
           }
 
-          // Fetch all orders to find this one
           const response = await axios.get('http://localhost:3000/api/orders/my-orders', {
             headers: { Authorization: `Bearer ${token}` }
           });
@@ -38,12 +44,10 @@ const RateOrder = () => {
           const foundOrder = response.data.find(o => o._id === orderId);
           
           if (foundOrder) {
-             // Fetch Restaurant Details if missing
              if (!foundOrder.restaurantDetails) {
                  const resRes = await axios.get(`http://localhost:3000/api/restaurants/public/${foundOrder.restaurantId}`);
                  foundOrder.restaurantDetails = resRes.data;
              }
-             // Fetch Driver Details if missing
              if (foundOrder.deliveryPersonId && !foundOrder.driverDetails) {
                  const driverRes = await axios.get(`http://localhost:3000/api/delivery/${foundOrder.deliveryPersonId}`, {
                     headers: { Authorization: `Bearer ${token}` }
@@ -77,7 +81,6 @@ const RateOrder = () => {
         driverLikeStatus: order.driverRated ? null : driverLikeStatus,
     };
 
-    // Validation: Ensure user rated what they haven't rated yet
     if ((!order.restaurantRated && restaurantRating === 0) || 
         (order.deliveryPersonId && !order.driverRated && driverRating === 0)) {
         showAlert('Please provide a star rating before submitting.');
@@ -97,7 +100,7 @@ const RateOrder = () => {
     }
   };
 
-  if (loading) return <div className="min-h-screen flex items-center justify-center bg-gray-50 text-gray-500">Loading order details...</div>;
+  if (loading) return <div className="min-h-screen flex items-center justify-center bg-gray-50 text-gray-500">Loading...</div>;
   if (!order) return null;
 
   return (
