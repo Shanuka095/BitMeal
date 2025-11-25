@@ -1,13 +1,15 @@
 import React, { useState, useEffect, useRef } from 'react';
 import axios from 'axios';
-import { FaMotorcycle, FaCheckCircle, FaClock, FaPhone, FaMapMarkerAlt, FaUtensils, FaReceipt } from 'react-icons/fa';
+import { FaMotorcycle, FaCheckCircle, FaUtensils, FaReceipt, FaMapMarkerAlt, FaPhone, FaClock } from 'react-icons/fa';
+import { useModal } from '../context/ModalContext';
+import jwtDecode from 'jwt-decode';
 import { useNavigate } from 'react-router-dom';
 import { MapContainer, TileLayer, Marker, Popup, Polyline } from 'react-leaflet';
 import 'leaflet/dist/leaflet.css';
 import L from 'leaflet';
 import PageLoader from '../components/PageLoader';
 
-// Fix Leaflet Icons
+// Fix for default marker icon missing in Leaflet
 delete L.Icon.Default.prototype._getIconUrl;
 L.Icon.Default.mergeOptions({
   iconRetinaUrl: 'https://unpkg.com/leaflet@1.7.1/dist/images/marker-icon-2x.png',
@@ -15,6 +17,7 @@ L.Icon.Default.mergeOptions({
   shadowUrl: 'https://unpkg.com/leaflet@1.7.1/dist/images/marker-shadow.png',
 });
 
+// Custom icons for map markers
 const createIcon = (url) => new L.Icon({ iconUrl: url, iconSize: [38, 38], iconAnchor: [19, 38], popupAnchor: [0, -38] });
 const restaurantIcon = createIcon('https://cdn-icons-png.flaticon.com/512/3448/3448609.png');
 const driverIcon = createIcon('https://cdn-icons-png.flaticon.com/512/1256/1256515.png');
@@ -37,6 +40,7 @@ const ActiveOrderPage = () => {
             
             if (!token) {
                 setActiveOrder(null);
+                setLoading(false);
                 return;
             }
             
@@ -49,6 +53,8 @@ const ActiveOrderPage = () => {
         } catch (err) {
             if (err.response && err.response.status === 404) {
                 setActiveOrder(null);
+            } else {
+                console.error("Active Order Fetch Error:", err);
             }
         } finally {
             setLoading(false);
@@ -58,6 +64,7 @@ const ActiveOrderPage = () => {
 
     useEffect(() => {
         fetchActiveOrder(false);
+        // Poll every 6 seconds for live updates
         const intervalId = setInterval(() => fetchActiveOrder(true), 6000);
         return () => clearInterval(intervalId);
     }, []);
@@ -89,32 +96,40 @@ const ActiveOrderPage = () => {
 
     if (!activeOrder) return (
         <div className="min-h-screen flex flex-col items-center justify-center bg-[#f8f9fa] text-center px-4">
-            <div className="bg-white w-28 h-28 rounded-full flex items-center justify-center text-[#ffaa00] text-5xl mb-6 shadow-lg">
+            <div className="bg-white w-28 h-28 rounded-full flex items-center justify-center text-[#ffaa00] text-5xl mb-6 shadow-lg animate-bounce">
                 <FaReceipt />
             </div>
             <h2 className="text-3xl font-black text-gray-900 mb-2">No Active Order</h2>
-            <p className="text-gray-500 mb-8 max-w-md">You don't have any orders currently in progress. Start a new food adventure today!</p>
-            <button onClick={() => navigate('/restaurants')} className="bg-[#ffaa00] text-white px-10 py-4 rounded-full font-bold shadow-xl hover:bg-[#e59400] transition transform hover:-translate-y-1">Browse Menu</button>
+            <p className="text-gray-500 mb-8 max-w-md text-lg">You don't have any orders currently in progress. Start a new food adventure today!</p>
+            <button 
+                onClick={() => navigate('/restaurants')} 
+                className="bg-gray-900 text-white px-10 py-4 rounded-full font-bold shadow-xl hover:bg-[#ffaa00] transition-all transform hover:-translate-y-1"
+            >
+                Browse Menu
+            </button>
         </div>
     );
 
     const { driver, restaurant, deliveryLocation, status, items, totalAmount } = activeOrder;
 
+    // Map Coordinates Calculation
     const driverLoc = driver?.currentLocation?.coordinates ? [driver.currentLocation.coordinates[1], driver.currentLocation.coordinates[0]] : null;
     const restaurantLoc = restaurant?.location?.coordinates ? [restaurant.location.coordinates[1], restaurant.location.coordinates[0]] : null;
     const userLoc = deliveryLocation?.coordinates ? [deliveryLocation.coordinates[1], deliveryLocation.coordinates[0]] : null;
     
+    // Center map on driver if available, else user location, else default
     const mapCenter = driverLoc || userLoc || [6.9271, 79.8612];
 
     return (
         <div className="min-h-screen bg-[#f8f9fa] pt-28 pb-10 px-4 sm:px-6 lg:px-8">
             <div className="max-w-7xl mx-auto grid grid-cols-1 lg:grid-cols-3 gap-8 h-full animate-fade-in-up">
                 
-                {/* LEFT COLUMN */}
+                {/* LEFT COLUMN: Status & Details */}
                 <div className="lg:col-span-1 space-y-6">
                     
                     {/* Status Card */}
                     <div className="bg-white rounded-[2.5rem] shadow-xl shadow-gray-200/50 p-6 md:p-8 border border-gray-100 relative overflow-hidden">
+                        {/* Progress Bar at Top */}
                         <div className="absolute top-0 left-0 w-full h-1.5 bg-gray-100">
                             <div className={`h-full bg-[#ffaa00] transition-all duration-1000 ${refreshing ? 'animate-pulse' : ''}`} style={{ width: '100%' }}></div>
                         </div>
@@ -131,6 +146,7 @@ const ActiveOrderPage = () => {
                             )}
                         </div>
 
+                        {/* Status Stepper */}
                         <div className="flex justify-between relative mb-6">
                             <div className="absolute top-5 left-0 w-full h-0.5 bg-gray-200 -z-0"></div>
                             <StatusStep currentStatus={status} stepStatus="confirmed" label="Confirmed" icon={<FaCheckCircle size={12}/>} />
@@ -140,7 +156,7 @@ const ActiveOrderPage = () => {
                         </div>
                     </div>
 
-                    {/* Driver Card */}
+                    {/* Driver Card (Only shows if driver assigned) */}
                     {driver && (
                         <div className="bg-[#1a1a1a] rounded-[2.5rem] p-6 text-white shadow-2xl shadow-gray-900/20 relative overflow-hidden group transition-transform hover:-translate-y-1">
                             <div className="absolute top-0 right-0 w-32 h-32 bg-white/5 rounded-full -mr-10 -mt-10 group-hover:scale-150 transition-transform duration-700"></div>
@@ -162,7 +178,7 @@ const ActiveOrderPage = () => {
                         </div>
                     )}
 
-                    {/* Summary */}
+                    {/* Order Summary */}
                     <div className="bg-white rounded-[2.5rem] shadow-lg shadow-gray-200/50 border border-gray-100 overflow-hidden">
                         <div className="p-6 border-b border-gray-100">
                             <h3 className="text-xs font-extrabold text-gray-900 uppercase tracking-wide flex items-center">
@@ -193,16 +209,20 @@ const ActiveOrderPage = () => {
 
                 </div>
 
-                {/* RIGHT COLUMN: Map */}
+                {/* RIGHT COLUMN: Live Map */}
                 <div className="lg:col-span-2 h-[500px] lg:h-auto bg-white rounded-[2.5rem] overflow-hidden shadow-2xl shadow-gray-200/50 relative border-4 border-white">
                      <MapContainer center={mapCenter} zoom={13} style={{ height: '100%', width: '100%' }} ref={mapRef}>
                         <TileLayer url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png" />
+                        
                         {restaurantLoc && <Marker position={restaurantLoc} icon={restaurantIcon}><Popup>Restaurant</Popup></Marker>}
                         {userLoc && <Marker position={userLoc} icon={customerIcon}><Popup>You</Popup></Marker>}
                         {driverLoc && <Marker position={driverLoc} icon={driverIcon}><Popup>Driver</Popup></Marker>}
+                        
+                        {/* Draw line between driver and user if both exist */}
                         {driverLoc && userLoc && <Polyline positions={[driverLoc, userLoc]} color="#ffaa00" dashArray="10, 10" />}
                      </MapContainer>
                      
+                     {/* Floating ETA Overlay */}
                      <div className="absolute bottom-6 left-6 right-6 bg-white/95 backdrop-blur-xl p-5 rounded-3xl shadow-2xl border border-white/50 flex flex-col sm:flex-row items-center justify-between z-[400] gap-4">
                         <div className="flex items-center gap-4 w-full sm:w-auto">
                             <div className="w-14 h-14 bg-green-50 rounded-2xl flex items-center justify-center text-green-600 text-2xl">
