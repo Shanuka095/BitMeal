@@ -312,4 +312,4 @@ module.exports = {
   driverPickupOrder,
   driverDeliverOrder,
   submitCombinedOrderRating,
-};
+}
