@@ -22,15 +22,14 @@ router.get('/my-orders', authenticate, restrictTo('customer'), getCustomerOrders
 router.get('/my-active-order', authenticate, restrictTo('customer'), getActiveOrder);
 router.get('/my-active-order-details', authenticate, restrictTo('customer'), getActiveOrder);
 
-// Route for customer to submit combined restaurant and driver rating
 router.post('/:orderId/submit-rating', authenticate, restrictTo('customer'), submitCombinedOrderRating);
 
-// Admin Routes (for restaurant owners)
+// Admin Routes
 router.get('/restaurant/:restaurantId', authenticate, restrictTo('restaurant_admin'), getRestaurantOrders);
 router.put('/:orderId/status', authenticate, restrictTo('restaurant_admin'), validateUpdateOrderStatus, updateOrderStatus);
 router.put('/:orderId/assign-delivery', authenticate, restrictTo('restaurant_admin'), assignOrderToDeliveryPerson);
 
-// Driver-specific routes
+// Driver Routes
 router.get('/driver-assigned', authenticate, restrictTo('delivery_personnel'), getDriverAssignedOrders);
 router.patch('/:orderId/driver-accept', authenticate, restrictTo('delivery_personnel'), driverAcceptOrder);
 router.patch('/:orderId/driver-pickup', authenticate, restrictTo('delivery_personnel'), driverPickupOrder);
