@@ -27,6 +27,7 @@ const CartPage = () => {
      setTimeout(() => setIsMapReady(true), 500);
   }, []);
 
+  // -- FEE CALCULATIONS --
   const subtotal = getCartTotal();
   const deliveryFee = isPriority ? 150 : 0;
   const serviceFee = subtotal * 0.05; 
@@ -75,9 +76,10 @@ const CartPage = () => {
           restaurantId: firstRestaurantId,
           items: orderItems,
           totalAmount: finalTotal,
-          deliveryFee,
-          serviceFee,
-          tip,
+          // SENDING BREAKDOWN TO BACKEND TO MATCH CALCULATIONS
+          deliveryFee: deliveryFee,
+          serviceFee: serviceFee,
+          tip: tip,
           deliveryAddress: fullAddress,
           deliveryLocation: {
             type: 'Point',
@@ -105,6 +107,7 @@ const CartPage = () => {
 
   if (!isMapReady) return <PageLoader />;
 
+  // --- PROFESSIONAL EMPTY STATE ---
   if (cartItems.length === 0) {
     return (
         <div className="min-h-screen bg-[#f8f9fa] flex flex-col items-center justify-center px-4">
@@ -116,7 +119,7 @@ const CartPage = () => {
                 <p className="text-gray-500 text-lg">Looks like you haven't added any food yet.</p>
                 <button 
                     onClick={() => navigate('/restaurants')}
-                    className="mt-10 bg-gray-900 text-white px-10 py-4 rounded-full font-bold hover:bg-[#e59400] transition-all shadow-xl hover:shadow-orange-500/30 transform hover:-translate-y-1 outline-none focus:outline-none focus:ring-0"
+                    className="mt-10 bg-gray-900 text-white px-10 py-4 rounded-full font-bold hover:bg-[#ffaa00] hover:text-white transition-all shadow-xl hover:shadow-orange-500/30 transform hover:-translate-y-1 outline-none focus:outline-none focus:ring-0"
                 >
                     Browse Restaurants
                 </button>
@@ -167,7 +170,7 @@ const CartPage = () => {
                                             <button onClick={() => incrementQuantity(item.menuItemId, item.size)} className="w-8 h-8 flex items-center justify-center text-gray-400 hover:text-black hover:bg-white rounded-lg transition shadow-sm font-bold">+</button>
                                         </div>
                                         
-                                        {/* FIXED DELETE BUTTON: Visible Red */}
+                                        {/* VISIBLE RED DELETE BUTTON */}
                                         <button 
                                             onClick={() => removeFromCart(item.menuItemId, item.size)} 
                                             className="w-10 h-10 rounded-xl bg-red-50 text-red-500 flex items-center justify-center hover:bg-red-500 hover:text-white transition-all shadow-sm hover:shadow-red-500/30"
@@ -262,6 +265,21 @@ const CartPage = () => {
                          />
                          <FaTicketAlt className="absolute left-4 top-1/2 transform -translate-y-1/2 text-gray-400" />
                          <button className="absolute right-2 top-2 bottom-2 bg-gray-200 text-gray-600 px-4 rounded-xl text-xs font-bold hover:bg-[#ffaa00] hover:text-white transition-colors">Apply</button>
+                    </div>
+
+                    <div className="mb-8">
+                        <label className="block text-xs font-extrabold text-gray-400 uppercase tracking-widest mb-3">Driver Tip</label>
+                        <div className="flex justify-between gap-2">
+                            {[0, 100, 200, 500].map((amount) => (
+                                <button
+                                    key={amount}
+                                    onClick={() => setTip(amount)}
+                                    className={`flex-1 py-2 rounded-xl text-xs font-bold border-2 transition-all ${tip === amount ? 'border-[#ffaa00] bg-orange-50 text-[#ffaa00]' : 'border-gray-100 text-gray-500 hover:border-gray-300'}`}
+                                >
+                                    {amount === 0 ? 'None' : `Rs.${amount}`}
+                                </button>
+                            ))}
+                        </div>
                     </div>
 
                     <div className="space-y-3 mb-8 border-b border-gray-100 pb-8">
