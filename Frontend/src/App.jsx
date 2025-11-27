@@ -26,6 +26,7 @@ import AlertDialog from './components/AlertDialog';
 import ConfirmationModal from './components/ConfirmationModal';
 import PromptModal from './components/PromptModal';
 import { ModalProvider } from './context/ModalContext';
+import { ThemeProvider } from './context/ThemeContext';
 import ManageDeliveryPersonnel from './pages/ManageDeliveryPersonnel';
 import DeliveryPersonnelLayout from './components/DeliveryPersonnelLayout';
 import DeliveryDashboard from './pages/DeliveryDashboard';
@@ -33,6 +34,10 @@ import MyDeliveries from './pages/MyDeliveries';
 import ActiveOrderBanner from './components/ActiveOrderBanner';
 import ActiveOrderPage from './pages/ActiveOrderPage';
 import RateOrder from './pages/RateOrder';
+// --- ADDED MISSING IMPORTS ---
+import Services from './pages/Services';
+import AboutUs from './pages/AboutUs';
+import ContactUs from './pages/ContactUs';
 
 function App() {
   const [alertInfo, setAlertInfo] = useState(null);
@@ -56,87 +61,68 @@ function App() {
   };
 
   return (
-    // Future flags enabled to silence React Router v7 warnings
     <Router future={{ v7_startTransition: true, v7_relativeSplatPath: true }}>
-      {alertInfo && <AlertDialog message={alertInfo.message} onClose={() => setAlertInfo(null)} />}
-      {confirmInfo && <ConfirmationModal {...confirmInfo} />}
-      {promptInfo && <PromptModal {...promptInfo} />}
+      <ThemeProvider>
+        <CartProvider>
+          <ModalProvider showAlert={showAlert} showConfirm={showConfirm} showPrompt={showPrompt}>
+            {alertInfo && <AlertDialog message={alertInfo.message} onClose={() => setAlertInfo(null)} />}
+            {confirmInfo && <ConfirmationModal {...confirmInfo} />}
+            {promptInfo && <PromptModal {...promptInfo} />}
+            
+            <Navbar />
+            <ActiveOrderBanner />
+            
+            <div className="main-content-wrapper flex-grow min-h-[calc(100vh-112px)]">
+              <Routes>
+                {/* Public Routes */}
+                <Route path="/" element={<Home />} />
+                <Route path="/login" element={<Login />} />
+                <Route path="/register" element={<Register />} />
+                <Route path="/verify-otp" element={<VerifyOTP />} />
+                
+                {/* --- ADDED THESE ROUTES --- */}
+                <Route path="/services" element={<Services />} />
+                <Route path="/about" element={<AboutUs />} />
+                <Route path="/contact" element={<ContactUs />} />
+                
+                {/* Protected Customer Routes */}
+                <Route path="/dashboard" element={<ProtectedRoute><Dashboard /></ProtectedRoute>} />
+                <Route path="/restaurants" element={<ProtectedRoute><Restaurants standalone={true} /></ProtectedRoute>} />
+                <Route path="/restaurant/:id" element={<ProtectedRoute><RestaurantDetails /></ProtectedRoute>} />
+                <Route path="/restaurant/:id/menu/:menuId" element={<ProtectedRoute><MenuItemDetails /></ProtectedRoute>} />
+                <Route path="/my-orders" element={<ProtectedRoute><CustomerOrders /></ProtectedRoute>} />
+                <Route path="/cart" element={<ProtectedRoute><CartPage /></ProtectedRoute>} />
+                <Route path="/my-active-order" element={<ProtectedRoute><ActiveOrderPage /></ProtectedRoute>} />
+                <Route path="/rate-order/:orderId" element={<ProtectedRoute><RateOrder /></ProtectedRoute>} />
+                
+                {/* Admin Routes */}
+                <Route path="/admin/*" element={<ProtectedRoute><AdminLayout /></ProtectedRoute>}>
+                  <Route index element={<RestaurantAdmin />} />
+                  <Route path="create-restaurant" element={<CreateRestaurant />} />
+                  <Route path="update-restaurant/:id" element={<UpdateRestaurant />} />
+                  <Route path="restaurant/:id/add-menu-item" element={<AddMenuItem />} />
+                  <Route path="restaurant/:id" element={<AdminRestaurantDetails />} />
+                  <Route path="restaurant/:id/menu/:menuId/edit" element={<UpdateMenuItem />} />
+                  <Route path="orders" element={<AdminOrders />} />
+                  <Route path="delivery-personnel" element={<ManageDeliveryPersonnel />} />
+                </Route>
 
-      <Routes>
-        {/* Customer and Public Routes with Navbar and Footer */}
-        <Route
-          element={
-            <CartProvider>
-              <ModalProvider showAlert={showAlert} showConfirm={showConfirm} showPrompt={showPrompt}>
-                <Navbar />
-                <ActiveOrderBanner />
-                <div className="main-content-wrapper flex-grow min-h-[calc(100vh-112px)]">
-                  <Outlet />
-                </div>
-                <Footer />
-              </ModalProvider>
-            </CartProvider>
-          }
-        >
-          <Route path="/" element={<Home />} />
-          <Route path="/login" element={<Login />} />
-          <Route path="/register" element={<Register />} />
-          <Route path="/verify-otp" element={<VerifyOTP />} />
-          
-          {/* Protected Customer Routes */}
-          <Route path="/dashboard" element={<ProtectedRoute><Dashboard /></ProtectedRoute>} />
-          <Route path="/restaurants" element={<ProtectedRoute><Restaurants standalone={true} /></ProtectedRoute>} />
-          <Route path="/restaurant/:id" element={<ProtectedRoute><RestaurantDetails /></ProtectedRoute>} />
-          
-          {/* NEW ROUTE: Menu Item Details Page */}
-          <Route path="/restaurant/:id/menu/:menuId" element={<ProtectedRoute><MenuItemDetails /></ProtectedRoute>} />
-          
-          <Route path="/my-orders" element={<ProtectedRoute><CustomerOrders /></ProtectedRoute>} />
-          <Route path="/cart" element={<ProtectedRoute><CartPage /></ProtectedRoute>} />
-          <Route path="/my-active-order" element={<ProtectedRoute><ActiveOrderPage /></ProtectedRoute>} />
-          <Route path="/rate-order/:orderId" element={<ProtectedRoute><RateOrder /></ProtectedRoute>} />
-        </Route>
+                {/* Delivery Routes */}
+                <Route path="/delivery-personnel/*" element={<ProtectedRoute><DeliveryPersonnelLayout /></ProtectedRoute>}>
+                  <Route index element={<DeliveryDashboard />} />
+                  <Route path="my-deliveries" element={<MyDeliveries />} />
+                  <Route path="profile" element={<div>My Profile Page (coming soon)</div>} />
+                </Route>
 
-        {/* Admin Routes with AdminLayout */}
-        <Route
-          path="/admin/*"
-          element={
-            <ProtectedRoute>
-              <ModalProvider showAlert={showAlert} showConfirm={showConfirm} showPrompt={showPrompt}>
-                <AdminLayout />
-              </ModalProvider>
-            </ProtectedRoute>
-          }
-        >
-          <Route index element={<RestaurantAdmin />} />
-          <Route path="create-restaurant" element={<CreateRestaurant />} />
-          <Route path="update-restaurant/:id" element={<UpdateRestaurant />} />
-          <Route path="restaurant/:id/add-menu-item" element={<AddMenuItem />} />
-          <Route path="restaurant/:id" element={<AdminRestaurantDetails />} />
-          <Route path="restaurant/:id/menu/:menuId/edit" element={<UpdateMenuItem />} />
-          <Route path="orders" element={<AdminOrders />} />
-          <Route path="delivery-personnel" element={<ManageDeliveryPersonnel />} />
-        </Route>
-
-        {/* Delivery Personnel Routes */}
-        <Route
-          path="/delivery-personnel/*"
-          element={
-            <ProtectedRoute>
-              <ModalProvider showAlert={showAlert} showConfirm={showConfirm} showPrompt={showPrompt}>
-                <DeliveryPersonnelLayout />
-              </ModalProvider>
-            </ProtectedRoute>
-          }
-        >
-          <Route index element={<DeliveryDashboard />} />
-          <Route path="my-deliveries" element={<MyDeliveries />} />
-          <Route path="profile" element={<div>My Profile Page (coming soon)</div>} />
-        </Route>
-
-        {/* Catch-all route */}
-        <Route path="*" element={<Navigate to="/login" replace />} />
-      </Routes>
+                <Route path="*" element={<Navigate to="/login" replace />} />
+              </Routes>
+            </div>
+            
+            <Footer />
+            
+          </ModalProvider>
+        </CartProvider>
+      </ThemeProvider>
     </Router>
   );
 }
