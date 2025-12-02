@@ -5,6 +5,7 @@ import { useCart } from '../context/CartContext';
 import { useTheme } from '../context/ThemeContext';
 import jwtDecode from 'jwt-decode';
 
+// Import Logos
 import logoLight from '../assets/BitMeal6.png';
 import logoDark from '../assets/BitMeal7.png';
 
@@ -59,7 +60,7 @@ const Navbar = () => {
     setIsMenuOpen(false);
   };
 
-  // Theme-based Styles
+  // --- THEME STYLES ---
   const navBgClass = isDark 
     ? 'bg-[#0a0a0a]/80 border-white/10' 
     : 'bg-white/70 border-gray-200/50';
@@ -124,17 +125,21 @@ const Navbar = () => {
         {/* 3. Right Side Icons */}
         <div className="flex items-center space-x-4 z-50">
           
-          {/* Advanced Theme Toggle Animation */}
+          {/* PROFESSIONAL THEME TOGGLE */}
           <button 
             onClick={toggleTheme} 
             className={`
-                p-2.5 rounded-full transition-all duration-500 transform hover:rotate-180 active:scale-90 focus:outline-none
-                ${isDark 
-                    ? 'bg-white/10 text-yellow-400 shadow-[0_0_15px_rgba(250,204,21,0.3)] border border-white/20' 
-                    : 'bg-gray-100 text-gray-600 hover:bg-gray-200 shadow-inner'}
+                relative w-14 h-8 rounded-full p-1 flex items-center transition-all duration-500 shadow-inner
+                ${isDark ? 'bg-gray-800 border border-white/10' : 'bg-gray-100 border border-gray-200'}
             `}
           >
-            {isDark ? <FaSun size={16} /> : <FaMoon size={16} />}
+            {/* The Moving Circle */}
+            <div className={`
+                w-6 h-6 rounded-full shadow-md transform transition-transform duration-500 flex items-center justify-center
+                ${isDark ? 'translate-x-6 bg-[#1a1a1a] text-yellow-400' : 'translate-x-0 bg-white text-orange-500'}
+            `}>
+                {isDark ? <FaMoon size={12} /> : <FaSun size={12} />}
+            </div>
           </button>
 
           {/* Cart Icon */}

@@ -2,10 +2,13 @@ import React, { useState, useEffect } from 'react';
 import { FaUtensils, FaUsers, FaGlobeAmericas, FaAward, FaQuoteLeft, FaLeaf, FaBolt, FaHandshake } from 'react-icons/fa';
 import PageLoader from '../components/PageLoader';
 import { useNavigate } from 'react-router-dom';
+import { useTheme } from '../context/ThemeContext'; // Theme Context
 
 const AboutUs = () => {
   const [loading, setLoading] = useState(true);
   const navigate = useNavigate();
+  const { theme } = useTheme();
+  const isDark = theme === 'dark';
 
   useEffect(() => {
     setTimeout(() => setLoading(false), 1500);
@@ -26,26 +29,26 @@ const AboutUs = () => {
       title: "Lightning Fast",
       desc: "We value your time. Our logistics engine is optimized to get hot food to your door in record time.",
       color: "text-yellow-500",
-      bg: "bg-yellow-50"
+      bg: isDark ? "bg-yellow-500/10" : "bg-yellow-50"
     },
     {
       icon: <FaLeaf />,
       title: "Fresh & Quality",
       desc: "We partner only with restaurants that maintain the highest hygiene and quality standards.",
       color: "text-green-500",
-      bg: "bg-green-50"
+      bg: isDark ? "bg-green-500/10" : "bg-green-50"
     },
     {
       icon: <FaHandshake />,
       title: "Community First",
       desc: "Fair commissions for restaurants and fair wages for our riders. We grow together.",
       color: "text-blue-500",
-      bg: "bg-blue-50"
+      bg: isDark ? "bg-blue-500/10" : "bg-blue-50"
     }
   ];
 
   return (
-    <div className="min-h-screen bg-white pb-20">
+    <div className={`min-h-screen pb-20 transition-colors duration-500 ${isDark ? 'bg-[#0f0f0f]' : 'bg-white'}`}>
         
         {/* 1. Cinematic Hero Section */}
         <div className="relative h-[600px] flex items-center justify-center overflow-hidden bg-gray-900">
@@ -54,7 +57,7 @@ const AboutUs = () => {
                 alt="About Background" 
                 className="absolute inset-0 w-full h-full object-cover opacity-40 animate-scale-in duration-[60s]"
             />
-            <div className="absolute inset-0 bg-gradient-to-b from-black/80 via-black/40 to-white z-10"></div>
+            <div className={`absolute inset-0 bg-gradient-to-b z-10 ${isDark ? 'from-black/80 via-black/40 to-[#0f0f0f]' : 'from-black/80 via-black/40 to-white'}`}></div>
             
             <div className="relative z-20 text-center px-4 max-w-5xl mx-auto pt-10">
                 <span className="inline-block py-2 px-6 rounded-full bg-[#ffaa00]/20 backdrop-blur-md border border-[#ffaa00]/40 text-[#ffaa00] text-xs font-extrabold tracking-[0.3em] uppercase mb-8 shadow-2xl animate-fade-in-down">
@@ -77,23 +80,23 @@ const AboutUs = () => {
                     <div 
                         key={i} 
                         style={{ animationDelay: `${i * 0.1}s` }}
-                        className="bg-white p-8 rounded-[2rem] text-center shadow-xl shadow-gray-200/50 border border-gray-100 hover:-translate-y-2 transition-transform duration-500 group animate-fade-in-up"
+                        className={`p-8 rounded-[2rem] text-center shadow-xl border hover:-translate-y-2 transition-all duration-500 group animate-fade-in-up ${isDark ? 'bg-[#1a1a1a] border-white/10 shadow-black/50' : 'bg-white border-gray-100 shadow-gray-200/50'}`}
                     >
-                        <div className="text-gray-300 text-4xl mb-4 flex justify-center group-hover:text-[#ffaa00] transition-colors duration-300 filter drop-shadow-sm">{stat.icon}</div>
-                        <h4 className="text-3xl md:text-5xl font-black text-gray-900 mb-2 group-hover:scale-110 transition-transform origin-bottom">{stat.val}</h4>
-                        <p className="text-gray-400 font-bold uppercase text-[10px] tracking-widest">{stat.label}</p>
+                        <div className={`text-3xl mb-4 flex justify-center group-hover:text-[#ffaa00] transition-colors duration-300 filter drop-shadow-sm ${isDark ? 'text-gray-500' : 'text-gray-300'}`}>{stat.icon}</div>
+                        <h4 className={`text-3xl md:text-5xl font-black mb-2 group-hover:scale-110 transition-transform origin-bottom ${isDark ? 'text-white' : 'text-gray-900'}`}>{stat.val}</h4>
+                        <p className={`font-bold uppercase text-[10px] tracking-widest ${isDark ? 'text-gray-500' : 'text-gray-400'}`}>{stat.label}</p>
                     </div>
                 ))}
             </div>
 
             {/* 3. Our Story (Split Layout) */}
-            <div className="flex flex-col lg:flex-row items-center gap-16 mb-32 animate-fade-in-up">
+            <div className={`flex flex-col lg:flex-row items-center gap-16 mb-32 animate-fade-in-up rounded-[3rem] p-8 md:p-12 border shadow-2xl ${isDark ? 'bg-[#111] border-white/5 shadow-black/50' : 'bg-white border-gray-100 shadow-orange-500/10'}`}>
                 <div className="w-full lg:w-1/2">
-                    <div className="relative rounded-[3rem] overflow-hidden shadow-2xl shadow-orange-500/20 group">
+                    <div className="relative rounded-[2rem] overflow-hidden shadow-2xl group">
                         <img 
                             src="https://images.unsplash.com/photo-1519389950473-47ba0277781c?ixlib=rb-1.2.1&auto=format&fit=crop&w=1350&q=80" 
                             alt="Our Team working" 
-                            className="w-full h-[600px] object-cover transform transition-transform duration-[2s] group-hover:scale-105"
+                            className="w-full h-[500px] object-cover transform transition-transform duration-[2s] group-hover:scale-105"
                         />
                         <div className="absolute inset-0 bg-gradient-to-t from-black/60 to-transparent flex items-end p-10">
                             <div className="text-white">
@@ -105,23 +108,20 @@ const AboutUs = () => {
                 </div>
                 <div className="w-full lg:w-1/2">
                     <h4 className="text-[#ffaa00] font-bold uppercase tracking-widest mb-4 text-sm">Who We Are</h4>
-                    <h2 className="text-4xl md:text-6xl font-black text-gray-900 mb-8 leading-tight">
+                    <h2 className={`text-4xl md:text-6xl font-black mb-8 leading-tight ${isDark ? 'text-white' : 'text-gray-900'}`}>
                         More Than Just <br/> An App.
                     </h2>
-                    <div className="space-y-6 text-lg text-gray-500 leading-relaxed font-medium">
+                    <div className={`space-y-6 text-lg leading-relaxed font-medium ${isDark ? 'text-gray-400' : 'text-gray-500'}`}>
                         <p>
                             BitMeal started in a small room with a big idea: **Good food shouldn't be hard to get.** What began as a simple project has evolved into a robust platform connecting thousands of hungry customers with the best local chefs.
                         </p>
                         <p>
                             We believe in technology that serves people. From our AI-driven dispatch system to our user-friendly interface, every line of code is written with one goal: **Delivering Joy.**
                         </p>
-                        <p>
-                            But we are not just about technology. We are about community. We support local businesses, ensure fair wages for our riders, and bring families together over the dining table.
-                        </p>
                     </div>
                     <button 
                         onClick={() => navigate('/contact')}
-                        className="mt-10 px-10 py-4 bg-gray-900 text-white rounded-full font-bold text-lg shadow-xl hover:bg-[#ffaa00] hover:text-white hover:shadow-orange-500/30 transition-all transform hover:-translate-y-1"
+                        className="mt-10 px-10 py-4 bg-[#ffaa00] text-white rounded-full font-bold text-lg shadow-xl hover:bg-orange-600 transition-all transform hover:-translate-y-1"
                     >
                         Get in Touch
                     </button>
@@ -131,26 +131,26 @@ const AboutUs = () => {
             {/* 4. Core Values */}
             <div className="mb-32">
                 <div className="text-center mb-16">
-                    <h2 className="text-4xl md:text-5xl font-black text-gray-900 mb-4">Our Core Values</h2>
-                    <p className="text-gray-500 max-w-2xl mx-auto text-lg">The principles that drive every decision we make.</p>
+                    <h2 className={`text-4xl md:text-5xl font-black mb-4 ${isDark ? 'text-white' : 'text-gray-900'}`}>Our Core Values</h2>
+                    <p className={`max-w-2xl mx-auto text-lg ${isDark ? 'text-gray-400' : 'text-gray-500'}`}>The principles that drive every decision we make.</p>
                 </div>
                 <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
                     {values.map((val, i) => (
                         <div 
                             key={i} 
-                            className="bg-[#f8f9fa] p-10 rounded-[2.5rem] hover:bg-white hover:shadow-2xl hover:shadow-gray-200/50 transition-all duration-500 group"
+                            className={`p-10 rounded-[2.5rem] transition-all duration-500 group border ${isDark ? 'bg-[#1a1a1a] border-white/5 hover:bg-[#222]' : 'bg-[#f8f9fa] border-transparent hover:bg-white hover:shadow-2xl hover:shadow-gray-200/50'}`}
                         >
                             <div className={`w-16 h-16 ${val.bg} ${val.color} rounded-2xl flex items-center justify-center text-2xl mb-8 group-hover:scale-110 transition-transform duration-300`}>
                                 {val.icon}
                             </div>
-                            <h3 className="text-2xl font-bold text-gray-900 mb-4">{val.title}</h3>
-                            <p className="text-gray-500 leading-relaxed">{val.desc}</p>
+                            <h3 className={`text-2xl font-bold mb-4 ${isDark ? 'text-white' : 'text-gray-900'}`}>{val.title}</h3>
+                            <p className={`${isDark ? 'text-gray-400' : 'text-gray-500'} leading-relaxed`}>{val.desc}</p>
                         </div>
                     ))}
                 </div>
             </div>
 
-            {/* 5. Founder Spotlight (Glassmorphism) */}
+            {/* 5. Founder Spotlight */}
             <div className="relative rounded-[3rem] overflow-hidden bg-gradient-to-br from-[#ffaa00] to-orange-600 shadow-2xl p-10 md:p-20 text-white text-center md:text-left flex flex-col md:flex-row items-center gap-12">
                 <div className="absolute inset-0 bg-[url('https://www.transparenttextures.com/patterns/cubes.png')] opacity-10"></div>
                 
