@@ -36,8 +36,29 @@ const CustomerOrders = () => {
             const response = await axios.get('http://localhost:3000/api/orders/my-orders', {
                 headers: { Authorization: `Bearer ${token}` },
             });
-            // ... (Keep existing enrichment logic if needed, simplified here for brevity)
-            setOrders(response.data);
+
+            const ordersWithDetails = await Promise.all(response.data.map(async order => {
+                // Ensure we fetch details for delivered/completed orders too
+                if (order.status === 'delivered') {
+                    if (!order.restaurantDetails) {
+                        try {
+                            const restaurantRes = await axios.get(`http://localhost:3000/api/restaurants/public/${order.restaurantId}`);
+                            order.restaurantDetails = restaurantRes.data;
+                        } catch (err) { console.warn('Restaurant fetch failed'); }
+                    }
+                    if (order.deliveryPersonId && !order.driverDetails) {
+                        try {
+                            const driverRes = await axios.get(`http://localhost:3000/api/delivery/${order.deliveryPersonId}`, {
+                                headers: { Authorization: `Bearer ${token}` }
+                            });
+                            order.driverDetails = driverRes.data;
+                        } catch (err) { console.warn('Driver fetch failed'); }
+                    }
+                }
+                return order;
+            }));
+
+            setOrders(ordersWithDetails);
         } catch (err) {
             setError(err.response?.data?.error || 'Failed to fetch your orders.');
         } finally {
@@ -94,6 +115,15 @@ const CustomerOrders = () => {
         );
     };
 
+    const getEmptyMessage = () => {
+        switch(filter) {
+            case 'active': return "You don't have any active orders yet.";
+            case 'completed': return "You haven't completed any orders yet.";
+            case 'cancelled': return "You don't have any cancelled orders.";
+            default: return "You haven't placed any orders yet.";
+        }
+    };
+
     if (loading) return <PageLoader />;
     if (error) return <div className={`min-h-screen flex items-center justify-center p-4 ${isDark ? 'bg-[#0f0f0f]' : 'bg-[#f8f9fa]'}`}><div className={`p-10 rounded-[2rem] shadow-xl text-center max-w-md border ${isDark ? 'bg-[#1a1a1a] border-white/10' : 'bg-white border-gray-100'}`}><p className={`font-medium ${isDark ? 'text-gray-400' : 'text-gray-500'}`}>{error}</p></div></div>;
 
@@ -141,7 +171,7 @@ const CustomerOrders = () => {
                                     ? 'bg-[#ffaa00] text-black border-[#ffaa00] shadow-lg transform -translate-y-0.5' 
                                     : isDark 
                                         ? 'bg-[#1a1a1a] text-gray-400 border-white/10 hover:text-white hover:bg-white/5' 
-                                        : 'bg-white text-gray-500 border-gray-200 hover:text-gray-700'
+                                        : 'bg-white text-gray-500 border-gray-200 hover:text-gray-700 hover:shadow-sm'
                                 }`}
                             >
                                 {f}
@@ -157,7 +187,7 @@ const CustomerOrders = () => {
                             <FaSearch />
                         </div>
                         <h3 className={`text-2xl font-black mb-2 ${isDark ? 'text-white' : 'text-gray-800'}`}>No {filter === 'all' ? '' : filter} orders found</h3>
-                        <p className={`mb-8 font-medium ${isDark ? 'text-gray-400' : 'text-gray-500'}`}>Nothing to see here yet.</p>
+                        <p className={`mb-8 font-medium ${isDark ? 'text-gray-400' : 'text-gray-500'}`}>{getEmptyMessage()}</p>
                         <Link 
                             to="/restaurants" 
                             className={`mt-10 inline-block px-10 py-3.5 rounded-2xl font-bold shadow-xl hover:shadow-orange-500/40 transition transform hover:-translate-y-1 ${isDark ? 'bg-white text-black hover:bg-[#ffaa00] hover:text-white' : 'bg-gray-900 text-white hover:bg-[#ffaa00]'}`}
@@ -206,19 +236,36 @@ const CustomerOrders = () => {
                                         </div>
                                     </div>
 
-                                    <div className={`flex flex-row md:flex-col items-center md:items-end justify-between md:justify-center gap-5 border-t md:border-t-0 pt-5 md:pt-0 ${isDark ? 'border-white/5' : 'border-gray-100'}`}>
-                                        <div className="text-right">
-                                            <p className={`text-[10px] font-bold uppercase tracking-wider mb-1 ${isDark ? 'text-gray-500' : 'text-gray-400'}`}>Total Amount</p>
-                                            <p className={`text-2xl font-black ${isDark ? 'text-white' : 'text-gray-900'}`}>Rs. {order.totalAmount.toFixed(2)}</p>
+                                    <div className={`flex flex-col gap-4 border-t md:border-t-0 pt-5 md:pt-0 min-w-[200px] ${isDark ? 'border-white/5' : 'border-gray-100'}`}>
+                                        <div className="flex flex-row md:flex-col justify-between md:justify-center items-center md:items-end w-full">
+                                            <p className={`text-[10px] font-bold uppercase tracking-wider mb-0 md:mb-1 ${isDark ? 'text-gray-500' : 'text-gray-400'}`}>Total Amount</p>
+                                            <p className={`text-xl md:text-2xl font-black ${isDark ? 'text-white' : 'text-gray-900'}`}>Rs. {order.totalAmount.toFixed(2)}</p>
                                         </div>
 
-                                        <div className="flex gap-3">
+                                        <div className="flex flex-row gap-3 w-full">
+                                            {/* RATE BUTTON LOGIC */}
+                                            {order.status === 'delivered' && (
+                                                !order.restaurantRated || (order.deliveryPersonId && !order.driverRated) ? (
+                                                    <button
+                                                        onClick={() => navigate(`/rate-order/${order._id}`, { state: { order } })}
+                                                        className="flex-1 group px-4 py-3 bg-[#ffaa00] text-white rounded-xl font-bold text-xs uppercase tracking-wide shadow-lg transition-all duration-300 transform hover:-translate-y-1 hover:shadow-orange-500/40 flex justify-center items-center gap-2 outline-none focus:outline-none"
+                                                    >
+                                                        <FaStar className="text-white group-hover:rotate-[360deg] transition-transform duration-500" /> Rate
+                                                    </button>
+                                                ) : (
+                                                    <div className={`flex-1 px-4 py-2.5 rounded-xl font-bold text-xs uppercase tracking-wide border flex justify-center items-center shadow-sm ${isDark ? 'bg-green-500/10 text-green-400 border-green-500/20' : 'bg-green-50 text-green-700 border-green-100'}`}>
+                                                        <FaCheck className="mr-2" size={14} /> Rated
+                                                    </div>
+                                                )
+                                            )}
+                                            
+                                            {/* VIEW MENU BUTTON LOGIC */}
                                             {order.status !== 'cancelled' && (
                                                 <button 
-                                                    className={`px-5 py-3 border-2 rounded-xl font-bold text-xs uppercase tracking-wide hover:border-[#ffaa00] hover:text-[#ffaa00] transition-all transform hover:-translate-y-0.5 active:scale-95 ${isDark ? 'bg-transparent text-gray-300 border-white/10' : 'bg-white text-gray-600 border-gray-100'}`}
+                                                    className={`flex-1 px-4 py-3 border-2 rounded-xl font-bold text-xs uppercase tracking-wide transition-all transform hover:-translate-y-0.5 active:scale-95 flex justify-center items-center ${isDark ? 'bg-transparent text-gray-300 border-white/10 hover:border-[#ffaa00] hover:text-[#ffaa00]' : 'bg-white text-gray-600 border-gray-200 hover:border-[#ffaa00] hover:text-[#ffaa00]'}`}
                                                     onClick={() => navigate(`/restaurant/${order.restaurantId}`)}
                                                 >
-                                                    Menu
+                                                    View Menu
                                                 </button>
                                             )}
                                         </div>
