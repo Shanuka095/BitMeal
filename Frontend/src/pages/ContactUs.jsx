@@ -1,9 +1,12 @@
 import React, { useState, useEffect } from 'react';
 import { FaPhoneAlt, FaEnvelope, FaMapMarkerAlt, FaPaperPlane, FaFacebook, FaTwitter, FaInstagram } from 'react-icons/fa';
 import PageLoader from '../components/PageLoader';
+import { useTheme } from '../context/ThemeContext';
 
 const ContactUs = () => {
   const [loading, setLoading] = useState(true);
+  const { theme } = useTheme();
+  const isDark = theme === 'dark';
 
   useEffect(() => {
     setTimeout(() => setLoading(false), 1500);
@@ -12,23 +15,22 @@ const ContactUs = () => {
   if (loading) return <PageLoader />;
 
   return (
-    <div className="min-h-screen bg-[#f8f9fa] pt-28 pb-20 px-4 sm:px-6 lg:px-8">
+    <div className={`min-h-screen pt-28 pb-20 px-4 sm:px-6 lg:px-8 transition-colors duration-500 ${isDark ? 'bg-[#0f0f0f]' : 'bg-[#f8f9fa]'}`}>
       <div className="max-w-7xl mx-auto">
         
         <div className="text-center mb-16 animate-fade-in-down">
-          <h1 className="text-5xl md:text-7xl font-black text-gray-900 mb-6 tracking-tight">
+          <h1 className={`text-5xl md:text-7xl font-black mb-6 tracking-tight ${isDark ? 'text-white' : 'text-gray-900'}`}>
             Get in <span className="text-[#ffaa00]">Touch</span>
           </h1>
-          <p className="text-gray-500 text-lg max-w-xl mx-auto font-medium">
+          <p className={`text-lg max-w-xl mx-auto font-medium ${isDark ? 'text-gray-400' : 'text-gray-500'}`}>
             Have a question, feedback, or just want to say hello? We'd love to hear from you.
           </p>
         </div>
 
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-8 items-stretch">
             
-            {/* Left: Contact Info (Dark Theme) */}
-            <div className="bg-[#1a1a1a] text-white rounded-[3rem] p-10 md:p-16 shadow-2xl relative overflow-hidden animate-fade-in-up">
-                {/* Decor Circles */}
+            {/* Left: Contact Info (Always Dark for Contrast) */}
+            <div className={`rounded-[3rem] p-10 md:p-16 shadow-2xl relative overflow-hidden animate-fade-in-up ${isDark ? 'bg-[#1a1a1a] text-white' : 'bg-[#111] text-white'}`}>
                 <div className="absolute top-0 right-0 w-64 h-64 bg-[#ffaa00] opacity-5 rounded-full -mr-20 -mt-20 blur-3xl"></div>
                 <div className="absolute bottom-0 left-0 w-48 h-48 bg-blue-600 opacity-5 rounded-full -ml-10 -mb-10 blur-3xl"></div>
 
@@ -75,29 +77,29 @@ const ContactUs = () => {
                 </div>
             </div>
 
-            {/* Right: Contact Form (Light Theme) */}
-            <div className="bg-white rounded-[3rem] p-10 md:p-16 shadow-xl shadow-gray-200/50 border border-gray-100 animate-fade-in-up" style={{ animationDelay: '0.2s' }}>
-                <h2 className="text-3xl font-bold text-gray-900 mb-8">Send a Message</h2>
+            {/* Right: Contact Form (Adaptive) */}
+            <div className={`rounded-[3rem] p-10 md:p-16 shadow-xl animate-fade-in-up border ${isDark ? 'bg-[#1a1a1a] border-white/10' : 'bg-white border-gray-100 shadow-gray-200/50'}`} style={{ animationDelay: '0.2s' }}>
+                <h2 className={`text-3xl font-bold mb-8 ${isDark ? 'text-white' : 'text-gray-900'}`}>Send a Message</h2>
                 <form className="space-y-6">
                     <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                         <div>
-                            <label className="block text-xs font-bold text-gray-400 uppercase tracking-widest mb-2 ml-1">Your Name</label>
-                            <input type="text" className="w-full p-4 bg-gray-50 rounded-2xl border-2 border-transparent focus:bg-white focus:border-[#ffaa00] focus:ring-0 outline-none transition-all font-medium text-gray-700 placeholder-gray-400" placeholder="John Doe" />
+                            <label className={`block text-xs font-bold uppercase tracking-widest mb-2 ml-1 ${isDark ? 'text-gray-400' : 'text-gray-400'}`}>Your Name</label>
+                            <input type="text" className={`w-full p-4 rounded-2xl border-2 focus:border-[#ffaa00] focus:ring-0 outline-none transition-all font-medium ${isDark ? 'bg-white/5 border-transparent text-white focus:bg-black' : 'bg-gray-50 border-transparent focus:bg-white text-gray-700'}`} placeholder="John Doe" />
                         </div>
                         <div>
-                            <label className="block text-xs font-bold text-gray-400 uppercase tracking-widest mb-2 ml-1">Email Address</label>
-                            <input type="email" className="w-full p-4 bg-gray-50 rounded-2xl border-2 border-transparent focus:bg-white focus:border-[#ffaa00] focus:ring-0 outline-none transition-all font-medium text-gray-700 placeholder-gray-400" placeholder="john@example.com" />
+                            <label className={`block text-xs font-bold uppercase tracking-widest mb-2 ml-1 ${isDark ? 'text-gray-400' : 'text-gray-400'}`}>Email Address</label>
+                            <input type="email" className={`w-full p-4 rounded-2xl border-2 focus:border-[#ffaa00] focus:ring-0 outline-none transition-all font-medium ${isDark ? 'bg-white/5 border-transparent text-white focus:bg-black' : 'bg-gray-50 border-transparent focus:bg-white text-gray-700'}`} placeholder="john@example.com" />
                         </div>
                     </div>
                     <div>
-                        <label className="block text-xs font-bold text-gray-400 uppercase tracking-widest mb-2 ml-1">Subject</label>
-                        <input type="text" className="w-full p-4 bg-gray-50 rounded-2xl border-2 border-transparent focus:bg-white focus:border-[#ffaa00] focus:ring-0 outline-none transition-all font-medium text-gray-700 placeholder-gray-400" placeholder="How can we help?" />
+                        <label className={`block text-xs font-bold uppercase tracking-widest mb-2 ml-1 ${isDark ? 'text-gray-400' : 'text-gray-400'}`}>Subject</label>
+                        <input type="text" className={`w-full p-4 rounded-2xl border-2 focus:border-[#ffaa00] focus:ring-0 outline-none transition-all font-medium ${isDark ? 'bg-white/5 border-transparent text-white focus:bg-black' : 'bg-gray-50 border-transparent focus:bg-white text-gray-700'}`} placeholder="How can we help?" />
                     </div>
                     <div>
-                        <label className="block text-xs font-bold text-gray-400 uppercase tracking-widest mb-2 ml-1">Message</label>
-                        <textarea rows="4" className="w-full p-4 bg-gray-50 rounded-2xl border-2 border-transparent focus:bg-white focus:border-[#ffaa00] focus:ring-0 outline-none transition-all font-medium text-gray-700 resize-none placeholder-gray-400" placeholder="Write your message here..."></textarea>
+                        <label className={`block text-xs font-bold uppercase tracking-widest mb-2 ml-1 ${isDark ? 'text-gray-400' : 'text-gray-400'}`}>Message</label>
+                        <textarea rows="4" className={`w-full p-4 rounded-2xl border-2 focus:border-[#ffaa00] focus:ring-0 outline-none transition-all font-medium resize-none ${isDark ? 'bg-white/5 border-transparent text-white focus:bg-black' : 'bg-gray-50 border-transparent focus:bg-white text-gray-700'}`} placeholder="Write your message here..."></textarea>
                     </div>
-                    <button className="w-full py-4 bg-gray-900 text-white rounded-2xl font-bold text-lg shadow-xl hover:bg-[#ffaa00] transition-all transform active:scale-95 flex items-center justify-center gap-2 mt-4">
+                    <button className="w-full py-4 bg-[#ffaa00] text-white rounded-2xl font-bold text-lg shadow-xl hover:bg-orange-600 transition-all transform active:scale-95 flex items-center justify-center gap-2 mt-4">
                         <FaPaperPlane /> Send Message
                     </button>
                 </form>
