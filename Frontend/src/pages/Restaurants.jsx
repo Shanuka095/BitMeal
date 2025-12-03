@@ -3,8 +3,13 @@ import { Link } from 'react-router-dom';
 import axios from 'axios';
 import { 
   FaStar, FaSearch, FaMapMarkerAlt, FaMotorcycle, FaArrowRight, FaUtensils, 
-  FaSortAmountDown, FaChevronDown, FaCheck, FaFilter 
+  FaSortAmountDown, FaChevronDown, FaCheck, FaFilter,
+  // NEW: Imported icons for background animation
+  FaPizzaSlice, FaHamburger, FaIceCream, FaLeaf 
 } from 'react-icons/fa';
+// NEW: Import for Donut icon
+import { GiDonut } from 'react-icons/gi';
+
 import PageLoader from '../components/PageLoader';
 import { useTheme } from '../context/ThemeContext'; // Theme Context
 
@@ -86,10 +91,37 @@ const Restaurants = () => {
   if (loading) return <PageLoader />;
 
   return (
-    <div className={`min-h-screen pb-24 transition-colors duration-500 ${isDark ? 'bg-[#0f0f0f]' : 'bg-[#f8f9fa]'} ${pageReady ? 'opacity-100' : 'opacity-0'}`}>
+    <div className={`min-h-screen pb-24 transition-colors duration-500 relative overflow-x-hidden ${isDark ? 'bg-[#0f0f0f]' : 'bg-[#f8f9fa]'} ${pageReady ? 'opacity-100' : 'opacity-0'}`}>
+      
+      {/* --- NEW: ANIMATION STYLES --- */}
+      <style>{`
+        @keyframes drift {
+          0% { transform: translate(0, 0) rotate(0deg); }
+          33% { transform: translate(30px, -30px) rotate(10deg); }
+          66% { transform: translate(-20px, 20px) rotate(-5deg); }
+          100% { transform: translate(0, 0) rotate(0deg); }
+        }
+        .animate-drift-slow { animation: drift 20s ease-in-out infinite; }
+        .animate-drift-medium { animation: drift 15s ease-in-out infinite; }
+        .animate-drift-fast { animation: drift 12s ease-in-out infinite; }
+      `}</style>
+
+      {/* --- NEW: COLORFUL FLOATING BACKGROUND --- */}
+      <div className="fixed inset-0 pointer-events-none z-0 overflow-hidden">
+          {/* Pizza */}
+          <FaPizzaSlice className={`absolute text-6xl animate-drift-slow top-24 left-[5%] ${isDark ? 'text-white/5' : 'text-orange-500/10'}`} />
+          {/* Burger */}
+          <FaHamburger className={`absolute text-9xl animate-drift-medium bottom-10 right-[5%] ${isDark ? 'text-white/5' : 'text-[#ffaa00]/10'}`} style={{ animationDelay: '1s' }} />
+          {/* Ice Cream */}
+          <FaIceCream className={`absolute text-5xl animate-drift-fast top-[40%] right-[15%] ${isDark ? 'text-white/5' : 'text-pink-500/10'}`} style={{ animationDelay: '2s' }} />
+          {/* Donut */}
+          <GiDonut className={`absolute text-8xl animate-drift-slow bottom-[15%] left-[8%] ${isDark ? 'text-white/5' : 'text-purple-500/10'}`} style={{ animationDelay: '3s' }} />
+          {/* Leaf */}
+          <FaLeaf className={`absolute text-4xl animate-drift-fast top-[15%] right-[40%] ${isDark ? 'text-white/5' : 'text-green-500/10'}`} style={{ animationDelay: '0.5s' }} />
+      </div>
       
       {/* 1. Hero Header */}
-      <div className={`relative pt-32 pb-16 px-4 overflow-hidden border-b transition-colors duration-500 ${isDark ? 'bg-[#111] border-white/5' : 'bg-white border-gray-100'}`}>
+      <div className={`relative pt-32 pb-16 px-4 overflow-hidden border-b transition-colors duration-500 z-10 ${isDark ? 'bg-[#111]/90 border-white/5' : 'bg-white/90 border-gray-100'}`}>
         <div className={`absolute inset-0 opacity-[0.03] ${isDark ? 'bg-[radial-gradient(white_1px,transparent_1px)]' : 'bg-[radial-gradient(black_1px,transparent_1px)]'}`} style={{ backgroundSize: '24px 24px' }}></div>
         
         <div className="relative max-w-7xl mx-auto text-center z-10">
@@ -163,7 +195,7 @@ const Restaurants = () => {
       </div>
 
       {/* 3. Grid */}
-      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 mt-10">
+      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 mt-10 relative z-10">
         {filteredRestaurants.length > 0 ? (
           <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-8">
             {filteredRestaurants.map((restaurant) => (
@@ -201,7 +233,7 @@ const Restaurants = () => {
 
                 <div className="p-6 flex flex-col flex-grow">
                     <div className="mb-5">
-                        <h3 className={`text-xl font-extrabold mb-1.5 group-hover:text-[#ffaa00] transition-colors line-clamp-1 ${isDark ? 'text-white' : 'text-gray-900'}`}>{restaurant.name}</h3>
+                        <h3 className={`text-xl font-extrabold mb-1.5 group-hover:text-[#ffaa00] transition-colors duration-300 line-clamp-1 ${isDark ? 'text-white' : 'text-gray-900'}`}>{restaurant.name}</h3>
                         <p className={`text-sm font-medium flex items-center line-clamp-1 ${isDark ? 'text-gray-400' : 'text-gray-500'}`}>
                             <FaMapMarkerAlt className="mr-1.5 text-gray-400 text-xs" />
                             {restaurant.address}
