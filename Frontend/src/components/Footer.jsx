@@ -1,38 +1,43 @@
 import { Link } from 'react-router-dom';
 import { FaFacebookF, FaTwitter, FaInstagram, FaEnvelope, FaPhoneAlt, FaMapMarkerAlt, FaPaperPlane } from 'react-icons/fa';
 import { useTheme } from '../context/ThemeContext';
-// IMPORT BOTH LOGOS
 import logoLight from '../assets/BitMeal6.png'; 
 import logoDark from '../assets/BitMeal7.png'; 
 
 const Footer = () => {
   const { theme } = useTheme();
-  
-  // Dynamic Logo Selection
   const currentLogo = theme === 'dark' ? logoDark : logoLight;
-
-  // Dynamic Theme Classes
+  
   const footerBg = theme === 'dark' ? 'bg-[#0a0a0a] border-white/5' : 'bg-white border-gray-200';
   const textColor = theme === 'dark' ? 'text-gray-400' : 'text-gray-600';
   const titleColor = theme === 'dark' ? 'text-white' : 'text-gray-900';
   const inputBg = theme === 'dark' ? 'bg-white/5 text-white border-white/10 focus:bg-black' : 'bg-gray-100 text-gray-800 border-gray-200 focus:bg-white';
-  
-  // Animation Opacity (Visible in both modes now)
-  const glowOpacity = theme === 'dark' ? 'opacity-[0.04]' : 'opacity-[0.4]'; // Increased opacity for light mode visibility
+  const glowOpacity = theme === 'dark' ? 'opacity-[0.04]' : 'opacity-[0.4]';
+
+  // Helper to get correct path
+  const getPath = (item) => {
+    switch (item) {
+      case 'Home': return '/dashboard'; // or '/' if public
+      case 'Menu': return '/restaurants';
+      case 'Services': return '/services';
+      case 'About Us': return '/about';     // <--- FIXED: Points to /about
+      case 'Contact Us': return '/contact'; // <--- FIXED: Points to /contact
+      default: return '/';
+    }
+  };
 
   return (
     <footer className={`${footerBg} ${textColor} pt-24 pb-10 relative overflow-hidden border-t font-sans transition-colors duration-500`}>
       
-      {/* Animated Background Mesh - VISIBLE IN BOTH MODES */}
-      <div className="absolute top-0 left-1/4 w-96 h-96 bg-[#ffaa00] rounded-full blur-[120px] pointer-events-none animate-pulse" style={{ opacity: theme === 'dark' ? 0.04 : 0.15 }}></div>
-      <div className="absolute bottom-0 right-0 w-80 h-80 bg-blue-600 rounded-full blur-[100px] pointer-events-none animate-pulse delay-1000" style={{ opacity: theme === 'dark' ? 0.03 : 0.1 }}></div>
+      {/* Animated Background Mesh */}
+      <div className={`absolute top-0 left-1/4 w-96 h-96 bg-[#ffaa00] rounded-full blur-[120px] pointer-events-none animate-pulse ${glowOpacity}`}></div>
+      <div className={`absolute bottom-0 right-0 w-80 h-80 bg-blue-600 rounded-full blur-[100px] pointer-events-none animate-pulse delay-1000 ${glowOpacity}`}></div>
 
       <div className="max-w-7xl mx-auto px-6 lg:px-8 relative z-10">
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-12 gap-12 lg:gap-16 mb-20">
           
           {/* 1. Brand Column */}
           <div className="lg:col-span-4 space-y-6">
-            {/* Logo Container (Glass effect adapted for theme) */}
             <div className={`p-3 rounded-2xl inline-block shadow-lg transition-all ${theme === 'dark' ? 'bg-white/5 border border-white/10' : 'bg-white border border-gray-100'}`}>
                 <img src={currentLogo} alt="BitMeal Logo" className="h-10 w-auto object-contain" />
             </div>
@@ -52,9 +57,12 @@ const Footer = () => {
           <div className="lg:col-span-2">
             <h4 className={`${titleColor} font-bold text-sm uppercase tracking-widest mb-6 border-b-2 border-[#ffaa00] inline-block pb-1`}>Explore</h4>
             <ul className="space-y-3 text-sm font-medium">
-              {['Home', 'Menu', 'Services', 'About Us'].map((item) => (
+              {['Home', 'Menu', 'Services', 'About Us', 'Contact Us'].map((item) => (
                 <li key={item}>
-                  <Link to={item === 'Home' ? '/dashboard' : item === 'Menu' ? '/restaurants' : `/${item.toLowerCase().replace(/\s+/g, '-')}`} className="hover:text-[#ffaa00] transition-all hover:translate-x-1 inline-flex items-center gap-2 group">
+                  <Link 
+                    to={getPath(item)} // Uses the fixed helper function
+                    className="hover:text-[#ffaa00] transition-all hover:translate-x-1 inline-flex items-center gap-2 group"
+                  >
                     <span className={`w-1.5 h-1.5 rounded-full group-hover:bg-[#ffaa00] transition-colors ${theme === 'dark' ? 'bg-gray-700' : 'bg-gray-300'}`}></span>
                     {item}
                   </Link>
@@ -92,7 +100,7 @@ const Footer = () => {
                     placeholder="Email address" 
                     className={`w-full px-5 py-4 rounded-xl border focus:border-[#ffaa00] focus:outline-none transition-all text-xs font-bold tracking-wide uppercase shadow-inner ${inputBg}`}
                 />
-                <button className="absolute right-2 top-2 bottom-2 bg-[#ffaa00] text-black px-3 rounded-lg hover:bg-orange-600 hover:text-white transition-colors shadow-lg flex items-center justify-center">
+                <button className="absolute right-2 top-2 bottom-2 bg-[#ffaa00] text-black px-3 rounded-lg hover:bg-orange-600 transition-colors shadow-lg flex items-center justify-center">
                     <FaPaperPlane className="text-xs" />
                 </button>
             </form>
