@@ -3,8 +3,9 @@ import { useState, useEffect } from 'react';
 import axios from 'axios';
 import jwtDecode from 'jwt-decode';
 import { useCart } from '../context/CartContext';
-import { FaPlus, FaStar, FaMapMarkerAlt, FaUtensils, FaArrowLeft, FaChevronRight, FaSearch } from 'react-icons/fa';
+import { FaPlus, FaStar, FaMapMarkerAlt, FaUtensils, FaArrowLeft } from 'react-icons/fa';
 import PageLoader from '../components/PageLoader';
+import { useTheme } from '../context/ThemeContext'; // Import Theme
 
 const RestaurantDetails = () => {
   const { id } = useParams();
@@ -14,15 +15,10 @@ const RestaurantDetails = () => {
   const [loading, setLoading] = useState(true);
   const [userRole, setUserRole] = useState(null);
   const [groupedMenu, setGroupedMenu] = useState({});
-  const [activeCategory, setActiveCategory] = useState(null);
-
+  
   const { cartItems } = useCart();
-
-  // --- FIX: Robust ID Generator ---
-  // Removes spaces/special chars to ensure valid HTML IDs (e.g. "Fried Rice" -> "cat-fried-rice")
-  const generateId = (name) => {
-    return `cat-${name.toLowerCase().replace(/[^a-z0-9]/g, '-')}`;
-  };
+  const { theme } = useTheme(); // Use Theme
+  const isDark = theme === 'dark';
 
   useEffect(() => {
     const fetchDetails = async () => {
@@ -50,9 +46,6 @@ const RestaurantDetails = () => {
             }, {});
             setGroupedMenu(newGroupedMenu);
             
-            if (Object.keys(newGroupedMenu).length > 0) {
-                setActiveCategory(Object.keys(newGroupedMenu)[0]);
-            }
             setLoading(false);
         }, 1000);
       } catch (err) {
@@ -67,30 +60,23 @@ const RestaurantDetails = () => {
     navigate(`/restaurant/${id}/menu/${item._id}`, { state: { item, restaurant } });
   };
 
-  // --- FIX: Scroll Handler ---
-  const scrollToCategory = (category) => {
-    setActiveCategory(category);
-    const elementId = generateId(category);
-    const element = document.getElementById(elementId);
-    
-    if (element) {
-      // 'scroll-mt-[180px]' in the render method handles the offset automatically
-      element.scrollIntoView({ behavior: 'smooth', block: 'start' });
-    }
-  };
-
   if (loading) return <PageLoader />;
-  if (error) return <div className="p-20 text-center text-red-600 font-bold">{error}</div>;
-  if (!restaurant) return <div className="p-20 text-center text-gray-600">Restaurant not found</div>;
+  if (error) return <div className={`p-20 text-center font-bold ${isDark ? 'text-red-400' : 'text-red-600'}`}>{error}</div>;
+  if (!restaurant) return <div className={`p-20 text-center ${isDark ? 'text-gray-400' : 'text-gray-600'}`}>Restaurant not found</div>;
 
   const categories = Object.keys(groupedMenu);
 
+  // Theme Styles
+  const pageBg = isDark ? 'bg-[#0f0f0f]' : 'bg-[#f8f9fa]';
+  const cardBg = isDark ? 'bg-[#1a1a1a] border-white/5 hover:border-white/10' : 'bg-white border-gray-100 hover:border-gray-200';
+  const textMain = isDark ? 'text-white' : 'text-gray-900';
+  const textSub = isDark ? 'text-gray-400' : 'text-gray-500';
+
   return (
-    <div className="min-h-screen bg-[#f8f9fa] pb-20">
+    <div className={`min-h-screen pb-20 transition-colors duration-500 ${pageBg}`}>
       
-      {/* 1. Hero Section */}
+      {/* Hero Section */}
       <div className="relative h-[350px] md:h-[400px] w-full overflow-hidden group">
-        {/* Back Button */}
         <button 
             onClick={() => navigate(-1)}
             className="absolute top-6 left-6 z-50 w-12 h-12 rounded-full bg-white/10 backdrop-blur-md border border-white/20 flex items-center justify-center text-white hover:bg-white hover:text-black transition-all duration-300 shadow-lg"
@@ -111,8 +97,7 @@ const RestaurantDetails = () => {
 
         <div className="absolute bottom-0 left-0 w-full px-4 sm:px-6 lg:px-8 pb-10">
             <div className="max-w-7xl mx-auto flex flex-col md:flex-row items-end gap-6">
-                {/* Main Logo */}
-                <div className="w-28 h-28 md:w-36 md:h-36 rounded-[2rem] border-4 border-white/10 shadow-2xl overflow-hidden bg-white flex-shrink-0 -mb-4 backdrop-blur-sm">
+                <div className={`w-28 h-28 md:w-36 md:h-36 rounded-[2rem] border-4 border-white/10 shadow-2xl overflow-hidden flex-shrink-0 -mb-4 backdrop-blur-sm ${isDark ? 'bg-[#1a1a1a]' : 'bg-white'}`}>
                     {restaurant.imageUrl ? (
                         <img src={`http://localhost:3003/uploads/${restaurant.imageUrl}`} className="w-full h-full object-cover" alt="Logo"/>
                     ) : (
@@ -120,7 +105,6 @@ const RestaurantDetails = () => {
                     )}
                 </div>
                 
-                {/* Info */}
                 <div className="text-white mb-1 flex-1">
                     <h1 className="text-3xl md:text-5xl font-black tracking-tight mb-2">{restaurant.name}</h1>
                     <p className="flex items-center text-gray-300 text-sm md:text-base font-medium mb-4 opacity-90">
@@ -141,46 +125,19 @@ const RestaurantDetails = () => {
         </div>
       </div>
 
-      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 mt-10 flex flex-col lg:flex-row gap-10">
+      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 mt-10">
         
-        {/* 2. Sticky Categories Sidebar */}
-        <div className="w-full lg:w-1/4 lg:block">
-            <div className="sticky top-24 bg-white rounded-3xl shadow-xl shadow-gray-100/50 border border-gray-100 p-2 overflow-x-auto lg:overflow-visible whitespace-nowrap lg:whitespace-normal flex lg:block gap-2 z-30">
-                {categories.map(category => (
-                    <button
-                        key={category}
-                        onClick={() => scrollToCategory(category)}
-                        className={`px-5 py-3.5 lg:w-full lg:text-left rounded-2xl text-sm font-bold transition-all duration-300 flex-shrink-0 lg:flex-shrink lg:flex justify-between items-center ${
-                            activeCategory === category 
-                            ? 'bg-gray-900 text-white shadow-lg transform scale-100' 
-                            : 'text-gray-500 hover:bg-gray-50 hover:text-gray-900'
-                        }`}
-                    >
-                        {category}
-                        {activeCategory === category && <FaChevronRight className="hidden lg:block text-xs text-gray-500" />}
-                    </button>
-                ))}
-            </div>
-        </div>
-
-        {/* 3. Menu Grid */}
-        <div className="w-full lg:w-3/4">
+        {/* Menu Grid (Full Width now) */}
+        <div className="w-full">
             {categories.length > 0 ? (
                 <div className="space-y-16">
                     {categories.map(category => (
-                        // --- SCROLL TARGET ---
-                        // The 'scroll-mt-[180px]' class is CRITICAL. It pushes the scroll stop point down 
-                        // so the title isn't hidden behind the sticky header.
-                        <div 
-                            key={category} 
-                            id={generateId(category)} 
-                            className="scroll-mt-[180px]"
-                        >
-                            <h3 className="text-2xl font-black text-gray-900 mb-6 flex items-center tracking-tight border-b border-gray-200 pb-4">
+                        <div key={category}>
+                            <h3 className={`text-2xl font-black mb-6 flex items-center tracking-tight border-b pb-4 ${textMain} ${isDark ? 'border-white/10' : 'border-gray-200'}`}>
                                 {category}
                             </h3>
                             
-                            <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
                                 {(groupedMenu[category] || []).map((item) => {
                                     if (!item) return null;
                                     
@@ -193,16 +150,16 @@ const RestaurantDetails = () => {
                                             key={item._id}
                                             onClick={() => handleItemClick(item)}
                                             className={`
-                                                bg-white p-4 rounded-[2rem] shadow-sm border transition-all duration-300 cursor-pointer group flex gap-5 items-center
-                                                ${isInCart ? 'border-[#ffaa00] ring-2 ring-[#ffaa00]/10' : 'border-gray-100 hover:shadow-xl hover:border-gray-200 hover:-translate-y-1'}
+                                                p-4 rounded-[2rem] shadow-sm border transition-all duration-300 cursor-pointer group flex gap-5 items-center
+                                                ${cardBg} ${isInCart ? 'border-[#ffaa00] ring-1 ring-[#ffaa00]/20' : 'hover:shadow-xl hover:-translate-y-1'}
                                             `}
                                         >
                                             {/* Image */}
-                                            <div className="w-28 h-28 rounded-2xl overflow-hidden flex-shrink-0 bg-gray-100 relative shadow-inner">
+                                            <div className={`w-24 h-24 rounded-2xl overflow-hidden flex-shrink-0 relative shadow-inner ${isDark ? 'bg-white/5' : 'bg-gray-100'}`}>
                                                 {item.imageUrl ? (
                                                     <img src={`http://localhost:3003/uploads/${item.imageUrl}`} className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-500" alt={item.name} />
                                                 ) : (
-                                                    <div className="w-full h-full flex items-center justify-center text-gray-300"><FaUtensils size={30}/></div>
+                                                    <div className="w-full h-full flex items-center justify-center text-gray-300"><FaUtensils size={24}/></div>
                                                 )}
                                                 {isInCart && (
                                                     <div className="absolute inset-0 bg-black/60 flex items-center justify-center backdrop-blur-[1px]">
@@ -213,11 +170,11 @@ const RestaurantDetails = () => {
 
                                             {/* Content */}
                                             <div className="flex-grow min-w-0">
-                                                <h4 className="text-lg font-bold text-gray-900 group-hover:text-[#ffaa00] transition-colors truncate">{item.name}</h4>
-                                                <p className="text-gray-400 text-xs font-semibold uppercase tracking-wider mt-1 mb-3">{item.category}</p>
+                                                <h4 className={`text-lg font-bold mb-1 group-hover:text-[#ffaa00] transition-colors truncate ${textMain}`}>{item.name}</h4>
+                                                <p className={`text-xs font-semibold uppercase tracking-wider mt-1 mb-3 ${textSub}`}>{item.category}</p>
                                                 
                                                 <div className="flex items-center justify-between">
-                                                    <div className="text-gray-900 font-black text-lg">
+                                                    <div className={`font-black text-lg ${textMain}`}>
                                                         Rs. {item.normalPrice}
                                                     </div>
                                                     
@@ -225,7 +182,7 @@ const RestaurantDetails = () => {
                                                         <button
                                                             className={`
                                                                 w-9 h-9 rounded-full flex items-center justify-center transition-all shadow-sm
-                                                                ${isInCart ? 'bg-gray-900 text-white' : 'bg-gray-100 text-gray-400 group-hover:bg-[#ffaa00] group-hover:text-white'}
+                                                                ${isInCart ? 'bg-[#ffaa00] text-white' : (isDark ? 'bg-white/10 text-gray-300 group-hover:bg-[#ffaa00] group-hover:text-white' : 'bg-gray-100 text-gray-400 group-hover:bg-[#ffaa00] group-hover:text-white')}
                                                             `}
                                                         >
                                                             <FaPlus size={10} />
@@ -242,7 +199,7 @@ const RestaurantDetails = () => {
                 </div>
             ) : (
                 <div className="text-center py-20">
-                    <p className="text-gray-500 text-lg">No menu items available.</p>
+                    <p className={`text-lg ${textSub}`}>No menu items available.</p>
                 </div>
             )}
         </div>
