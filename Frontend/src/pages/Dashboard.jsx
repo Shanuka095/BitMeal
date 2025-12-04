@@ -138,8 +138,6 @@ const Dashboard = () => {
           <FaIceCream className={`absolute text-5xl animate-drift-fast top-[40%] right-[15%] ${isDark ? 'text-white/5' : 'text-pink-500/10'}`} style={{ animationDelay: '2s' }} />
           {/* Donut (Bottom Left) */}
           <GiDonut className={`absolute text-8xl animate-drift-slow bottom-[15%] left-[8%] ${isDark ? 'text-white/5' : 'text-purple-500/10'}`} style={{ animationDelay: '3s' }} />
-          {/* Chicken (Top Right) */}
-          <GiChickenLeg className={`absolute text-7xl animate-drift-medium top-32 right-[25%] ${isDark ? 'text-white/5' : 'text-red-500/10'}`} style={{ animationDelay: '4s' }} />
           {/* Leaf (Centerish) */}
           <FaLeaf className={`absolute text-4xl animate-drift-fast top-[20%] left-[35%] ${isDark ? 'text-white/5' : 'text-green-500/10'}`} style={{ animationDelay: '0.5s' }} />
           {/* Pepper (Middle Left) */}
@@ -189,7 +187,7 @@ const Dashboard = () => {
         </div>
       </div>
 
-      {/* 2. Categories Filter */}
+      {/* 2. Categories Filter - Updated Hover Color */}
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 relative z-20 -mt-24 md:-mt-28 mb-20">
           <div className="flex justify-between items-center md:justify-center space-x-4 md:space-x-8 overflow-x-auto pb-8 pt-4 px-2 hide-scrollbar w-full snap-x">
             {categories.map((cat, index) => (
@@ -202,11 +200,14 @@ const Dashboard = () => {
                       rounded-[2rem] shadow-xl border transition-all duration-500 ease-out
                       transform hover:-translate-y-3 snap-center backdrop-blur-md
                       outline-none focus:outline-none focus:ring-0 active:ring-0
-                      /* --- UPDATED HOVER SHADOW TO YELLOW --- */
-                      hover:shadow-yellow-400/40 hover:border-yellow-200
+                      
+                      /* CHANGED HOVER SHADOW TO DARKER YELLOW HERE */
+                      hover:shadow-yellow-600/40 hover:shadow-2xl
+
                       ${isDark 
                         ? 'bg-[#1a1a1a]/90 border-white/10 shadow-black/50' 
-                        : 'bg-white/90 shadow-orange-500/5 border-white'}
+                        : 'bg-white/90 shadow-orange-500/5 border-white hover:border-orange-100'}
+                      
                       ${selectedCategory === cat.name 
                         ? `ring-4 ${isDark ? 'ring-[#ffaa00]/40' : 'ring-[#ffaa00]/30'} scale-105 z-10` 
                         : 'hover:scale-105'}
@@ -300,7 +301,7 @@ const Dashboard = () => {
 
         {/* Results Grid */}
         {displayedRestaurants.length > 0 ? (
-          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-8 md:gap-10 pb-24 animate-fade-in-up" style={{ animationDelay: '0.4s' }}>
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-8 md:gap-10 pb-24 animate-fade-in-up" style={{ animationDelay: '0.4s' }}>
             {displayedRestaurants.map((restaurant) => (
               <div 
                 key={restaurant._id}
@@ -338,7 +339,7 @@ const Dashboard = () => {
                 <div className="p-8 flex flex-col flex-grow">
                     <div className="mb-6">
                         <h3 className={`text-2xl font-extrabold mb-2 group-hover:text-[#ffaa00] transition-colors duration-300 line-clamp-1 ${textMain}`}>{restaurant.name}</h3>
-                        <p className={`text-sm mb-4 line-clamp-1 flex items-center transition-colors duration-500 ${isDark ? 'text-gray-400' : 'text-gray-500'}`}>
+                        <p className={`text-sm mb-4 line-clamp-1 flex items-center transition-colors duration-500 ${textSub}`}>
                             <FaSearch className="mr-2 text-gray-300 text-xs" />
                             {restaurant.address}
                         </p>
@@ -365,12 +366,13 @@ const Dashboard = () => {
             ))}
           </div>
         ) : (
+            // Professional "Not Found" State
             <div className={`text-center py-32 rounded-[3rem] border shadow-sm animate-fade-in-up transition-all duration-500 ${isDark ? 'bg-[#1a1a1a] border-white/10' : 'bg-white border-gray-100'}`}>
                 <div className={`w-32 h-32 rounded-full flex items-center justify-center mx-auto mb-6 text-[#ffaa00] text-5xl shadow-inner animate-bounce ${isDark ? 'bg-white/5' : 'bg-orange-50'}`}>
                     <FaSearch />
                 </div>
                 <h3 className={`text-4xl font-black mb-3 transition-colors duration-500 ${isDark ? 'text-white' : 'text-gray-900'}`}>No restaurants found</h3>
-                <p className={`max-w-md mx-auto text-lg mb-10 transition-colors duration-500 ${isDark ? 'text-gray-400' : 'text-gray-500'}`}>We couldn't find any matches for "<strong>{searchTerm}</strong>" with your current filters.</p>
+                <p className={`max-w-md mx-auto text-lg mb-10 transition-colors duration-500 ${textSub}`}>We couldn't find any matches for "<strong>{searchTerm}</strong>" with your current filters.</p>
                 <button 
                     onClick={() => { setSelectedCategory('All'); setSearchTerm(''); setMinRating(0); }}
                     className={`px-12 py-5 rounded-full font-bold text-lg hover:bg-[#e59400] transition-all shadow-xl hover:shadow-orange-500/30 transform hover:-translate-y-1 outline-none focus:outline-none focus:ring-0 ${isDark ? 'bg-white text-black hover:text-white' : 'bg-gray-900 text-white'}`}
