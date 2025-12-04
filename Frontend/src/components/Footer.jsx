@@ -6,22 +6,25 @@ import logoDark from '../assets/BitMeal7.png';
 
 const Footer = () => {
   const { theme } = useTheme();
-  const currentLogo = theme === 'dark' ? logoDark : logoLight;
+  const isDark = theme === 'dark';
+  const currentLogo = isDark ? logoDark : logoLight;
   
-  const footerBg = theme === 'dark' ? 'bg-[#0a0a0a] border-white/5' : 'bg-white border-gray-200';
-  const textColor = theme === 'dark' ? 'text-gray-400' : 'text-gray-600';
-  const titleColor = theme === 'dark' ? 'text-white' : 'text-gray-900';
-  const inputBg = theme === 'dark' ? 'bg-white/5 text-white border-white/10 focus:bg-black' : 'bg-gray-100 text-gray-800 border-gray-200 focus:bg-white';
-  const glowOpacity = theme === 'dark' ? 'opacity-[0.04]' : 'opacity-[0.4]';
+  const footerBg = isDark ? 'bg-[#0a0a0a] border-white/5' : 'bg-white border-gray-200';
+  const textColor = isDark ? 'text-gray-400' : 'text-gray-600';
+  const titleColor = isDark ? 'text-white' : 'text-gray-900';
+  const inputBg = isDark ? 'bg-white/5 text-white border-white/10 focus:bg-black' : 'bg-gray-100 text-gray-800 border-gray-200 focus:bg-white';
+  
+  // FIX: Increased opacity for Light Mode visibility
+  const glowOpacity = isDark ? 'opacity-[0.04]' : 'opacity-[0.15] mix-blend-multiply'; 
 
   // Helper to get correct path
   const getPath = (item) => {
     switch (item) {
-      case 'Home': return '/dashboard'; // or '/' if public
+      case 'Home': return '/dashboard'; 
       case 'Menu': return '/restaurants';
       case 'Services': return '/services';
-      case 'About Us': return '/about';     // <--- FIXED: Points to /about
-      case 'Contact Us': return '/contact'; // <--- FIXED: Points to /contact
+      case 'About Us': return '/about';     
+      case 'Contact Us': return '/contact'; 
       default: return '/';
     }
   };
@@ -29,7 +32,7 @@ const Footer = () => {
   return (
     <footer className={`${footerBg} ${textColor} pt-24 pb-10 relative overflow-hidden border-t font-sans transition-colors duration-500`}>
       
-      {/* Animated Background Mesh */}
+      {/* Animated Background Mesh - VISIBLE IN BOTH MODES */}
       <div className={`absolute top-0 left-1/4 w-96 h-96 bg-[#ffaa00] rounded-full blur-[120px] pointer-events-none animate-pulse ${glowOpacity}`}></div>
       <div className={`absolute bottom-0 right-0 w-80 h-80 bg-blue-600 rounded-full blur-[100px] pointer-events-none animate-pulse delay-1000 ${glowOpacity}`}></div>
 
@@ -38,7 +41,7 @@ const Footer = () => {
           
           {/* 1. Brand Column */}
           <div className="lg:col-span-4 space-y-6">
-            <div className={`p-3 rounded-2xl inline-block shadow-lg transition-all ${theme === 'dark' ? 'bg-white/5 border border-white/10' : 'bg-white border border-gray-100'}`}>
+            <div className={`p-3 rounded-2xl inline-block shadow-lg transition-all transform hover:scale-105 duration-300 ${isDark ? 'bg-white/5 border border-white/10' : 'bg-white border border-gray-100'}`}>
                 <img src={currentLogo} alt="BitMeal Logo" className="h-10 w-auto object-contain" />
             </div>
             <p className={`text-sm leading-7 font-medium max-w-xs opacity-90 ${textColor}`}>
@@ -46,7 +49,7 @@ const Footer = () => {
             </p>
             <div className="flex space-x-3 pt-2">
               {[FaFacebookF, FaTwitter, FaInstagram].map((Icon, i) => (
-                <a key={i} href="#" className={`w-10 h-10 rounded-full flex items-center justify-center transition-all duration-300 hover:scale-110 hover:bg-[#ffaa00] hover:text-white ${theme === 'dark' ? 'bg-white/5 text-white border-white/10' : 'bg-gray-100 text-gray-600 border-gray-200'}`}>
+                <a key={i} href="#" className={`w-10 h-10 rounded-full flex items-center justify-center transition-all duration-300 hover:scale-110 hover:bg-[#ffaa00] hover:text-white shadow-sm ${isDark ? 'bg-white/5 text-white border-white/10' : 'bg-gray-100 text-gray-600 border-gray-200 hover:shadow-md'}`}>
                   <Icon size={16} />
                 </a>
               ))}
@@ -60,10 +63,10 @@ const Footer = () => {
               {['Home', 'Menu', 'Services', 'About Us', 'Contact Us'].map((item) => (
                 <li key={item}>
                   <Link 
-                    to={getPath(item)} // Uses the fixed helper function
+                    to={getPath(item)} 
                     className="hover:text-[#ffaa00] transition-all hover:translate-x-1 inline-flex items-center gap-2 group"
                   >
-                    <span className={`w-1.5 h-1.5 rounded-full group-hover:bg-[#ffaa00] transition-colors ${theme === 'dark' ? 'bg-gray-700' : 'bg-gray-300'}`}></span>
+                    <span className={`w-1.5 h-1.5 rounded-full group-hover:bg-[#ffaa00] transition-colors ${isDark ? 'bg-gray-700' : 'bg-gray-300'}`}></span>
                     {item}
                   </Link>
                 </li>
@@ -79,11 +82,11 @@ const Footer = () => {
                 <FaMapMarkerAlt className="text-[#ffaa00] mt-1 text-base shrink-0" />
                 <span>123 Tech Avenue, <br/>Colombo 07, Sri Lanka</span>
               </li>
-              <li className="flex items-center gap-3 group cursor-pointer">
+              <li className="flex items-center gap-3 group cursor-pointer transition-all hover:translate-x-1">
                 <FaPhoneAlt className="text-[#ffaa00] shrink-0 group-hover:animate-pulse" />
                 <span className={`group-hover:${titleColor} transition`}>+94 77 123 4567</span>
               </li>
-              <li className="flex items-center gap-3 group cursor-pointer">
+              <li className="flex items-center gap-3 group cursor-pointer transition-all hover:translate-x-1">
                 <FaEnvelope className="text-[#ffaa00] shrink-0 group-hover:animate-bounce" />
                 <span className={`group-hover:${titleColor} transition`}>support@bitmeal.com</span>
               </li>
@@ -100,7 +103,7 @@ const Footer = () => {
                     placeholder="Email address" 
                     className={`w-full px-5 py-4 rounded-xl border focus:border-[#ffaa00] focus:outline-none transition-all text-xs font-bold tracking-wide uppercase shadow-inner ${inputBg}`}
                 />
-                <button className="absolute right-2 top-2 bottom-2 bg-[#ffaa00] text-black px-3 rounded-lg hover:bg-orange-600 transition-colors shadow-lg flex items-center justify-center">
+                <button className="absolute right-2 top-2 bottom-2 bg-[#ffaa00] text-black px-3 rounded-lg hover:bg-orange-600 transition-colors shadow-lg flex items-center justify-center transform active:scale-95">
                     <FaPaperPlane className="text-xs" />
                 </button>
             </form>
@@ -109,14 +112,14 @@ const Footer = () => {
         </div>
         
         {/* Copyright */}
-        <div className={`border-t pt-8 flex flex-col md:flex-row justify-between items-center gap-4 text-center md:text-left ${theme === 'dark' ? 'border-white/5' : 'border-gray-200'}`}>
+        <div className={`border-t pt-8 flex flex-col md:flex-row justify-between items-center gap-4 text-center md:text-left ${isDark ? 'border-white/5' : 'border-gray-200'}`}>
           <p className="text-xs font-bold tracking-wide uppercase opacity-70">
             © {new Date().getFullYear()} BitMeal Technologies. All rights reserved.
           </p>
           <div className="flex gap-8 text-[10px] font-black uppercase tracking-widest opacity-70">
-            <Link to="#" className={`hover:${titleColor} transition hover:underline decoration-[#ffaa00]`}>Terms</Link>
-            <Link to="#" className={`hover:${titleColor} transition hover:underline decoration-[#ffaa00]`}>Privacy</Link>
-            <Link to="#" className={`hover:${titleColor} transition hover:underline decoration-[#ffaa00]`}>Cookies</Link>
+            <Link to="#" className={`hover:${titleColor} transition hover:underline decoration-[#ffaa00] decoration-2 underline-offset-4`}>Terms</Link>
+            <Link to="#" className={`hover:${titleColor} transition hover:underline decoration-[#ffaa00] decoration-2 underline-offset-4`}>Privacy</Link>
+            <Link to="#" className={`hover:${titleColor} transition hover:underline decoration-[#ffaa00] decoration-2 underline-offset-4`}>Cookies</Link>
           </div>
         </div>
       </div>
