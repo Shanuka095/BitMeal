@@ -5,10 +5,9 @@ import {
   FaMapMarkerAlt, FaCalendarAlt, FaReceipt, FaCheck, 
   FaUtensils, FaStar, FaTimesCircle, FaSearch, FaArrowRight, 
   FaBoxOpen, FaClock, FaCheckCircle, FaShoppingBag, FaBan,
-  // NEW: Imported background icons
+  // Background icons preserved
   FaPizzaSlice, FaHamburger, FaIceCream, FaLeaf, FaPepperHot
 } from 'react-icons/fa';
-// NEW: Imported GI icons
 import { GiDonut, GiChickenLeg } from 'react-icons/gi';
 import { useModal } from '../context/ModalContext';
 import { Link, useNavigate } from 'react-router-dom';
@@ -130,10 +129,42 @@ const CustomerOrders = () => {
     if (loading) return <PageLoader />;
     if (error) return <div className={`min-h-screen flex items-center justify-center p-4 ${isDark ? 'bg-[#0f0f0f]' : 'bg-[#f8f9fa]'}`}><div className={`p-10 rounded-[2rem] shadow-xl text-center max-w-md border ${isDark ? 'bg-[#1a1a1a] border-white/10' : 'bg-white border-gray-100'}`}><p className={`font-medium ${isDark ? 'text-gray-400' : 'text-gray-500'}`}>{error}</p></div></div>;
 
+    // --- STATS CONFIGURATION (With Advanced Hover Effects) ---
+    const statsData = [
+        { 
+            label: 'Total', count: totalOrders, icon: <FaBoxOpen />, 
+            color: 'text-blue-500', bg: isDark ? 'bg-blue-500/10' : 'bg-blue-50', 
+            hoverClasses: isDark 
+                ? 'hover:border-blue-500/50 hover:shadow-[0_0_25px_rgba(59,130,246,0.2)] hover:bg-blue-500/5' 
+                : 'hover:border-blue-200 hover:shadow-lg hover:shadow-blue-100'
+        },
+        { 
+            label: 'Active', count: activeCount, icon: <FaClock />, 
+            color: 'text-[#ffaa00]', bg: isDark ? 'bg-orange-500/10' : 'bg-orange-50',
+            hoverClasses: isDark
+                ? 'hover:border-orange-500/50 hover:shadow-[0_0_25px_rgba(255,170,0,0.2)] hover:bg-orange-500/5'
+                : 'hover:border-orange-200 hover:shadow-lg hover:shadow-orange-100'
+        },
+        { 
+            label: 'Done', count: completedCount, icon: <FaCheckCircle />, 
+            color: 'text-green-500', bg: isDark ? 'bg-green-500/10' : 'bg-green-50',
+            hoverClasses: isDark
+                ? 'hover:border-green-500/50 hover:shadow-[0_0_25px_rgba(34,197,94,0.2)] hover:bg-green-500/5'
+                : 'hover:border-green-200 hover:shadow-lg hover:shadow-green-100'
+        },
+        { 
+            label: 'Void', count: cancelledCount, icon: <FaBan />, 
+            color: 'text-red-500', bg: isDark ? 'bg-red-500/10' : 'bg-red-50',
+            hoverClasses: isDark
+                ? 'hover:border-red-500/50 hover:shadow-[0_0_25px_rgba(239,68,68,0.2)] hover:bg-red-500/5'
+                : 'hover:border-red-200 hover:shadow-lg hover:shadow-red-100'
+        }
+    ];
+
     return (
         <div className={`min-h-screen pt-28 pb-20 px-4 sm:px-6 lg:px-8 transition-colors duration-500 relative overflow-x-hidden ${isDark ? 'bg-[#0f0f0f]' : 'bg-[#fafafa]'}`}>
             
-            {/* --- NEW: BACKGROUND ANIMATION --- */}
+            {/* --- BACKGROUND ANIMATION (PRESERVED) --- */}
             <style>{`
                 @keyframes drift {
                 0% { transform: translate(0, 0) rotate(0deg); }
@@ -167,19 +198,21 @@ const CustomerOrders = () => {
                         <p className={`font-medium transition-colors ${isDark ? 'text-gray-400' : 'text-gray-500'}`}>Track ongoing deliveries and order history.</p>
                     </div>
                     
-                    {/* Stats */}
-                    <div className="flex space-x-3 w-full lg:w-auto overflow-x-auto pb-4 lg:pb-0 hide-scrollbar">
-                        {[
-                            { label: 'Total', count: totalOrders, icon: <FaBoxOpen />, color: 'text-blue-500', bg: isDark ? 'bg-blue-500/10' : 'bg-blue-50' },
-                            { label: 'Active', count: activeCount, icon: <FaClock />, color: 'text-[#ffaa00]', bg: isDark ? 'bg-orange-500/10' : 'bg-orange-50' },
-                            { label: 'Done', count: completedCount, icon: <FaCheckCircle />, color: 'text-green-500', bg: isDark ? 'bg-green-500/10' : 'bg-green-50' },
-                            { label: 'Void', count: cancelledCount, icon: <FaBan />, color: 'text-red-500', bg: isDark ? 'bg-red-500/10' : 'bg-red-50' }
-                        ].map((stat, i) => (
-                            <div key={i} className={`p-4 rounded-2xl shadow-sm border flex items-center space-x-3 min-w-[130px] group hover:shadow-lg transition-all duration-300 hover:-translate-y-1 cursor-default ${isDark ? 'bg-[#1a1a1a]/80 border-white/5 backdrop-blur-sm' : 'bg-white/90 border-gray-100'}`}>
-                                <div className={`${stat.bg} p-3 rounded-xl ${stat.color} group-hover:scale-110 transition-transform`}>{stat.icon}</div>
+                    {/* --- FIXED: INCREASED PADDING TO PREVENT CLIPPING --- */}
+                    <div className="flex space-x-3 w-full lg:w-auto overflow-x-auto pb-8 pt-4 px-2 lg:pb-4 hide-scrollbar">
+                        {statsData.map((stat, i) => (
+                            <div 
+                                key={i} 
+                                className={`
+                                    p-4 rounded-2xl shadow-sm border flex items-center space-x-3 min-w-[130px] cursor-default group transition-all duration-500 ease-out
+                                    ${isDark ? 'bg-[#1a1a1a]/80 border-white/5 backdrop-blur-sm' : 'bg-white/90 border-gray-100'}
+                                    hover:-translate-y-2 ${stat.hoverClasses}
+                                `}
+                            >
+                                <div className={`${stat.bg} p-3 rounded-xl ${stat.color} group-hover:scale-110 transition-transform duration-300`}>{stat.icon}</div>
                                 <div>
                                     <p className={`text-[10px] font-bold uppercase tracking-wider ${isDark ? 'text-gray-500' : 'text-gray-400'}`}>{stat.label}</p>
-                                    <p className={`text-xl font-black ${isDark ? 'text-white' : 'text-gray-800'}`}>{stat.count}</p>
+                                    <p className={`text-xl font-black transition-colors duration-300 ${isDark ? 'text-white group-hover:text-gray-100' : 'text-gray-800 group-hover:text-black'}`}>{stat.count}</p>
                                 </div>
                             </div>
                         ))}
@@ -228,9 +261,17 @@ const CustomerOrders = () => {
                             <div 
                                 key={order._id} 
                                 style={{ animationDelay: `${index * 0.1}s` }}
-                                className={`rounded-[2.5rem] p-6 md:p-8 shadow-sm hover:shadow-[0_20px_50px_-12px_rgba(0,0,0,0.1)] hover:scale-[1.01] transition-all duration-500 border group relative overflow-hidden animate-fade-in-up ${isDark ? 'bg-[#1a1a1a]/90 border-white/5 hover:border-white/10 backdrop-blur-sm' : 'bg-white/90 border-gray-100'}`}
+                                // --- UPDATED: ULTRA-PREMIUM ORDER CARD HOVER ---
+                                className={`
+                                    rounded-[2.5rem] p-6 md:p-8 shadow-sm transition-all duration-500 border group relative overflow-hidden animate-fade-in-up
+                                    hover:-translate-y-2 hover:scale-[1.01]
+                                    ${isDark 
+                                        ? 'bg-[#1a1a1a]/90 border-white/5 hover:border-[#ffaa00]/30 hover:shadow-[0_15px_40px_-10px_rgba(255,170,0,0.15)] backdrop-blur-sm' 
+                                        : 'bg-white/90 border-gray-100 hover:border-orange-200 hover:shadow-2xl hover:shadow-orange-100'}
+                                `}
                             >
-                                <div className={`absolute left-0 top-0 bottom-0 w-1.5 ${order.status === 'delivered' ? 'bg-green-500' : order.status === 'cancelled' ? 'bg-red-500' : 'bg-[#ffaa00]'}`} />
+                                {/* Status Bar Accent - Glows on Hover */}
+                                <div className={`absolute left-0 top-0 bottom-0 w-1.5 transition-all duration-300 group-hover:w-2 ${order.status === 'delivered' ? 'bg-green-500' : order.status === 'cancelled' ? 'bg-red-500' : 'bg-[#ffaa00]'}`} />
                                 
                                 <div className="flex flex-col md:flex-row justify-between md:items-center gap-6 pl-3">
                                     <div className="flex-1">
@@ -270,14 +311,14 @@ const CustomerOrders = () => {
                                         </div>
 
                                         <div className="flex flex-row gap-3 w-full">
-                                            {/* RATE BUTTON LOGIC */}
+                                            {/* RATE BUTTON */}
                                             {order.status === 'delivered' && (
                                                 !order.restaurantRated || (order.deliveryPersonId && !order.driverRated) ? (
                                                     <button
                                                         onClick={() => navigate(`/rate-order/${order._id}`, { state: { order } })}
-                                                        className="flex-1 group px-4 py-3 bg-[#ffaa00] text-white rounded-xl font-bold text-xs uppercase tracking-wide shadow-lg transition-all duration-300 transform hover:-translate-y-1 hover:shadow-orange-500/40 flex justify-center items-center gap-2 outline-none focus:outline-none"
+                                                        className="flex-1 group/btn px-4 py-3 bg-[#ffaa00] text-white rounded-xl font-bold text-xs uppercase tracking-wide shadow-lg transition-all duration-300 transform hover:-translate-y-1 hover:shadow-orange-500/40 flex justify-center items-center gap-2 outline-none focus:outline-none"
                                                     >
-                                                        <FaStar className="text-white group-hover:rotate-[360deg] transition-transform duration-500" /> Rate
+                                                        <FaStar className="text-white group-hover/btn:rotate-[360deg] transition-transform duration-500" /> Rate
                                                     </button>
                                                 ) : (
                                                     <div className={`flex-1 px-4 py-2.5 rounded-xl font-bold text-xs uppercase tracking-wide border flex justify-center items-center shadow-sm ${isDark ? 'bg-green-500/10 text-green-400 border-green-500/20' : 'bg-green-50 text-green-700 border-green-100'}`}>
@@ -286,7 +327,7 @@ const CustomerOrders = () => {
                                                 )
                                             )}
                                             
-                                            {/* VIEW MENU BUTTON LOGIC */}
+                                            {/* VIEW MENU BUTTON */}
                                             {order.status !== 'cancelled' && (
                                                 <button 
                                                     className={`flex-1 px-4 py-3 border-2 rounded-xl font-bold text-xs uppercase tracking-wide transition-all transform hover:-translate-y-0.5 active:scale-95 flex justify-center items-center ${isDark ? 'bg-transparent text-gray-300 border-white/10 hover:border-[#ffaa00] hover:text-[#ffaa00]' : 'bg-white text-gray-600 border-gray-200 hover:border-[#ffaa00] hover:text-[#ffaa00]'}`}
