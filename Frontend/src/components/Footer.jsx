@@ -14,7 +14,6 @@ const Footer = () => {
   const titleColor = isDark ? 'text-white' : 'text-gray-900';
   const inputBg = isDark ? 'bg-white/5 text-white border-white/10 focus:bg-black' : 'bg-gray-100 text-gray-800 border-gray-200 focus:bg-white';
   
-  // FIX: Increased opacity for Light Mode visibility
   const glowOpacity = isDark ? 'opacity-[0.04]' : 'opacity-[0.15] mix-blend-multiply'; 
 
   // Helper to get correct path
@@ -29,10 +28,27 @@ const Footer = () => {
     }
   };
 
+  // Social Media Data with "Real Brand" Hover Effects
+  const socialLinks = [
+    { 
+      icon: FaFacebookF, 
+      hoverClass: "hover:bg-[#1877F2] hover:border-[#1877F2] hover:text-white hover:shadow-[0_0_20px_rgba(24,119,242,0.5)]" 
+    },
+    { 
+      icon: FaTwitter, 
+      hoverClass: "hover:bg-[#1DA1F2] hover:border-[#1DA1F2] hover:text-white hover:shadow-[0_0_20px_rgba(29,161,242,0.5)]" 
+    },
+    { 
+      icon: FaInstagram, 
+      // Instagram Gradient Effect
+      hoverClass: "hover:bg-gradient-to-tr hover:from-[#f09433] hover:via-[#dc2743] hover:to-[#bc1888] hover:text-white hover:border-transparent hover:shadow-[0_0_20px_rgba(220,39,67,0.5)]" 
+    }
+  ];
+
   return (
     <footer className={`${footerBg} ${textColor} pt-24 pb-10 relative overflow-hidden border-t font-sans transition-colors duration-500`}>
       
-      {/* Animated Background Mesh - VISIBLE IN BOTH MODES */}
+      {/* Animated Background Mesh */}
       <div className={`absolute top-0 left-1/4 w-96 h-96 bg-[#ffaa00] rounded-full blur-[120px] pointer-events-none animate-pulse ${glowOpacity}`}></div>
       <div className={`absolute bottom-0 right-0 w-80 h-80 bg-blue-600 rounded-full blur-[100px] pointer-events-none animate-pulse delay-1000 ${glowOpacity}`}></div>
 
@@ -47,10 +63,20 @@ const Footer = () => {
             <p className={`text-sm leading-7 font-medium max-w-xs opacity-90 ${textColor}`}>
               The smartest way to order food. <br/> Fresh ingredients, fast delivery, and fair prices for everyone.
             </p>
+            
+            {/* Social Icons with Brand Colors */}
             <div className="flex space-x-3 pt-2">
-              {[FaFacebookF, FaTwitter, FaInstagram].map((Icon, i) => (
-                <a key={i} href="#" className={`w-10 h-10 rounded-full flex items-center justify-center transition-all duration-300 hover:scale-110 hover:bg-[#ffaa00] hover:text-white shadow-sm ${isDark ? 'bg-white/5 text-white border-white/10' : 'bg-gray-100 text-gray-600 border-gray-200 hover:shadow-md'}`}>
-                  <Icon size={16} />
+              {socialLinks.map((item, i) => (
+                <a 
+                  key={i} 
+                  href="#" 
+                  className={`
+                    w-10 h-10 rounded-full flex items-center justify-center border transition-all duration-300 transform hover:scale-110 hover:-translate-y-1
+                    ${isDark ? 'bg-white/5 text-white border-white/10' : 'bg-gray-100 text-gray-600 border-gray-200 shadow-sm'}
+                    ${item.hoverClass}
+                  `}
+                >
+                  <item.icon size={16} />
                 </a>
               ))}
             </div>

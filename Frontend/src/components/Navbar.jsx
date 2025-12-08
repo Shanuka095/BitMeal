@@ -125,7 +125,7 @@ const Navbar = () => {
         {/* 3. Right Side Icons */}
         <div className="flex items-center space-x-4 z-50">
           
-          {/* PROFESSIONAL THEME TOGGLE */}
+          {/* Theme Toggle */}
           <button 
             onClick={toggleTheme} 
             className={`
@@ -133,7 +133,6 @@ const Navbar = () => {
                 ${isDark ? 'bg-gray-800 border border-white/10' : 'bg-gray-100 border border-gray-200'}
             `}
           >
-            {/* The Moving Circle */}
             <div className={`
                 w-6 h-6 rounded-full shadow-md transform transition-transform duration-500 flex items-center justify-center
                 ${isDark ? 'translate-x-6 bg-[#1a1a1a] text-yellow-400' : 'translate-x-0 bg-white text-orange-500'}
@@ -149,8 +148,18 @@ const Navbar = () => {
                 className={`relative p-2.5 rounded-full transition-all duration-300 group ${textClass} hover:bg-orange-50/10`}
             >
               <FaShoppingCart size={20} className="group-hover:text-[#ffaa00] transition-colors" />
+              
+              {/* UPDATED: Professional Cart Count Badge */}
               {getTotalItemsInCart() > 0 && (
-                <span className="absolute -top-0.5 -right-0.5 bg-red-500 text-white text-[10px] font-bold h-4 w-4 flex items-center justify-center rounded-full shadow-sm border-2 border-white animate-bounce">
+                <span className={`
+                    absolute -top-1 -right-1 
+                    flex items-center justify-center 
+                    min-w-[18px] h-[18px] px-1
+                    bg-red-600 text-white text-[9px] font-extrabold 
+                    rounded-full shadow-md 
+                    border-[2px] transition-all duration-300
+                    ${isDark ? 'border-[#0a0a0a]' : 'border-white'}
+                `}>
                   {getTotalItemsInCart()}
                 </span>
               )}

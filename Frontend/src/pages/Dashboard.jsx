@@ -130,17 +130,11 @@ const Dashboard = () => {
 
       {/* --- COLORFUL FLOATING BACKGROUND --- */}
       <div className="fixed inset-0 pointer-events-none z-0 overflow-hidden">
-          {/* Pizza (Top Left) */}
           <FaPizzaSlice className={`absolute text-6xl animate-drift-slow top-24 left-[5%] ${isDark ? 'text-white/5' : 'text-orange-500/10'}`} />
-          {/* Burger (Bottom Right) */}
           <FaHamburger className={`absolute text-9xl animate-drift-medium bottom-10 right-[5%] ${isDark ? 'text-white/5' : 'text-[#ffaa00]/10'}`} style={{ animationDelay: '1s' }} />
-          {/* Ice Cream (Middle Right) */}
           <FaIceCream className={`absolute text-5xl animate-drift-fast top-[40%] right-[15%] ${isDark ? 'text-white/5' : 'text-pink-500/10'}`} style={{ animationDelay: '2s' }} />
-          {/* Donut (Bottom Left) */}
           <GiDonut className={`absolute text-8xl animate-drift-slow bottom-[15%] left-[8%] ${isDark ? 'text-white/5' : 'text-purple-500/10'}`} style={{ animationDelay: '3s' }} />
-          {/* Leaf (Centerish) */}
-          <FaLeaf className={`absolute text-4xl animate-drift-fast top-[20%] left-[35%] ${isDark ? 'text-white/5' : 'text-green-500/10'}`} style={{ animationDelay: '0.5s' }} />
-          {/* Pepper (Middle Left) */}
+          <FaLeaf className={`absolute text-4xl animate-drift-fast top-[15%] right-[40%] ${isDark ? 'text-white/5' : 'text-green-500/10'}`} style={{ animationDelay: '0.5s' }} />
           <FaPepperHot className={`absolute text-6xl animate-drift-slow top-[50%] left-[2%] ${isDark ? 'text-white/5' : 'text-red-600/10'}`} style={{ animationDelay: '1.5s' }} />
       </div>
 
@@ -187,7 +181,7 @@ const Dashboard = () => {
         </div>
       </div>
 
-      {/* 2. Categories Filter - Updated Hover Color */}
+      {/* 2. Categories Filter */}
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 relative z-20 -mt-24 md:-mt-28 mb-20">
           <div className="flex justify-between items-center md:justify-center space-x-4 md:space-x-8 overflow-x-auto pb-8 pt-4 px-2 hide-scrollbar w-full snap-x">
             {categories.map((cat, index) => (
@@ -201,7 +195,6 @@ const Dashboard = () => {
                       transform hover:-translate-y-3 snap-center backdrop-blur-md
                       outline-none focus:outline-none focus:ring-0 active:ring-0
                       
-                      /* CHANGED HOVER SHADOW TO DARKER YELLOW HERE */
                       hover:shadow-yellow-600/40 hover:shadow-2xl
 
                       ${isDark 
@@ -232,12 +225,18 @@ const Dashboard = () => {
 
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 mt-8 relative z-10">
         
-        {/* 3. Promotional Banners */}
+        {/* 3. Promotional Banners (UPDATED SHADOWS) */}
         <div className="grid grid-cols-1 md:grid-cols-2 gap-8 mb-24 animate-fade-in-up" style={{ animationDelay: '0.2s' }}>
+          
+          {/* FREE DELIVERY: ORANGE GLOW */}
           <div 
             onClick={handleFreeDeliveryClick}
-            className={`rounded-[2.5rem] p-8 md:p-10 flex items-center justify-between shadow-lg hover:shadow-2xl transition-all duration-500 cursor-pointer border group transform hover:-translate-y-2 relative overflow-hidden outline-none 
-              ${isDark ? 'bg-gradient-to-br from-[#1a1a1a] to-[#222] border-white/10 hover:shadow-orange-500/10' : 'bg-gradient-to-br from-[#fff7e6] to-[#fff0e0] border-orange-100'}`}
+            className={`
+                rounded-[2.5rem] p-8 md:p-10 flex items-center justify-between shadow-lg transition-all duration-500 cursor-pointer border group transform hover:-translate-y-2 relative overflow-hidden outline-none 
+                ${isDark 
+                    ? 'bg-gradient-to-br from-[#1a1a1a] to-[#222] border-white/10 hover:shadow-orange-500/30' // Dark Mode: Orange Glow
+                    : 'bg-gradient-to-br from-[#fff7e6] to-[#fff0e0] border-orange-100 hover:shadow-orange-500/40'} // Light Mode: Orange Glow
+            `}
           >
             <div className={`absolute -right-10 -top-10 w-48 h-48 ${isDark ? 'bg-orange-500/10' : 'bg-[#ffaa00]'} opacity-10 rounded-full transition-transform group-hover:scale-150 duration-700`}></div>
             <div className="relative z-10">
@@ -251,10 +250,15 @@ const Dashboard = () => {
             <FaMotorcycle className="text-8xl md:text-9xl text-orange-300 opacity-80 group-hover:scale-110 group-hover:rotate-[-8deg] group-hover:-translate-x-4 transition-transform duration-500 relative z-10" />
           </div>
 
+          {/* TOP RATED: BLUE GLOW */}
           <div 
             onClick={handleTopRatedClick}
-            className={`rounded-[2.5rem] p-8 md:p-10 flex items-center justify-between shadow-lg hover:shadow-2xl transition-all duration-500 cursor-pointer border group transform hover:-translate-y-2 relative overflow-hidden outline-none 
-              ${isDark ? 'bg-gradient-to-br from-[#1a1a1a] to-[#222] border-white/10 hover:shadow-blue-500/10' : 'bg-gradient-to-br from-[#e6f7ff] to-[#dff4ff] border-blue-100'}`}
+            className={`
+                rounded-[2.5rem] p-8 md:p-10 flex items-center justify-between shadow-lg transition-all duration-500 cursor-pointer border group transform hover:-translate-y-2 relative overflow-hidden outline-none 
+                ${isDark 
+                    ? 'bg-gradient-to-br from-[#1a1a1a] to-[#222] border-white/10 hover:shadow-blue-500/30' // Dark Mode: Blue Glow
+                    : 'bg-gradient-to-br from-[#e6f7ff] to-[#dff4ff] border-blue-100 hover:shadow-blue-500/40'} // Light Mode: Blue Glow
+            `}
           >
              <div className="absolute -right-10 -top-10 w-48 h-48 bg-blue-500 opacity-10 rounded-full transition-transform group-hover:scale-150 duration-700"></div>
              <div className="relative z-10">
@@ -323,7 +327,6 @@ const Dashboard = () => {
                    )}
                    <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-transparent to-transparent opacity-70 group-hover:opacity-50 transition-opacity duration-500"></div>
                    
-                   {/* Badges */}
                    <div className="absolute bottom-5 right-5 bg-white/95 backdrop-blur-md px-4 py-2 rounded-2xl shadow-lg flex items-center text-sm font-bold text-gray-900">
                      <FaStar className="text-yellow-500 mr-1.5" size={14} />
                      {restaurant.averageRating ? restaurant.averageRating.toFixed(1) : "New"}

@@ -126,6 +126,24 @@ const CustomerOrders = () => {
         }
     };
 
+    // --- Helper to determine Card Hover Styles based on Status ---
+    const getCardHoverStyles = (status) => {
+        if (status === 'cancelled') {
+            return isDark 
+                ? 'hover:shadow-[0_15px_40px_-10px_rgba(239,68,68,0.3)] hover:border-red-500/40' 
+                : 'hover:shadow-[0_20px_40px_-10px_rgba(239,68,68,0.25)] hover:border-red-200';
+        }
+        if (status === 'delivered') {
+            return isDark 
+                ? 'hover:shadow-[0_15px_40px_-10px_rgba(34,197,94,0.3)] hover:border-green-500/40' 
+                : 'hover:shadow-[0_20px_40px_-10px_rgba(34,197,94,0.25)] hover:border-green-200';
+        }
+        // Active (Pending, Preparing, etc.) - Yellow/Gold
+        return isDark 
+            ? 'hover:shadow-[0_15px_40px_-10px_rgba(234,179,8,0.3)] hover:border-yellow-500/40' 
+            : 'hover:shadow-[0_20px_40px_-10px_rgba(234,179,8,0.25)] hover:border-yellow-200';
+    };
+
     if (loading) return <PageLoader />;
     if (error) return <div className={`min-h-screen flex items-center justify-center p-4 ${isDark ? 'bg-[#0f0f0f]' : 'bg-[#f8f9fa]'}`}><div className={`p-10 rounded-[2rem] shadow-xl text-center max-w-md border ${isDark ? 'bg-[#1a1a1a] border-white/10' : 'bg-white border-gray-100'}`}><p className={`font-medium ${isDark ? 'text-gray-400' : 'text-gray-500'}`}>{error}</p></div></div>;
 
@@ -198,7 +216,7 @@ const CustomerOrders = () => {
                         <p className={`font-medium transition-colors ${isDark ? 'text-gray-400' : 'text-gray-500'}`}>Track ongoing deliveries and order history.</p>
                     </div>
                     
-                    {/* --- FIXED: INCREASED PADDING TO PREVENT CLIPPING --- */}
+                    {/* Stats Row */}
                     <div className="flex space-x-3 w-full lg:w-auto overflow-x-auto pb-8 pt-4 px-2 lg:pb-4 hide-scrollbar">
                         {statsData.map((stat, i) => (
                             <div 
@@ -257,90 +275,91 @@ const CustomerOrders = () => {
                     </div>
                 ) : (
                     <div className="space-y-6">
-                        {filteredOrders.map((order, index) => (
-                            <div 
-                                key={order._id} 
-                                style={{ animationDelay: `${index * 0.1}s` }}
-                                // --- UPDATED: ULTRA-PREMIUM ORDER CARD HOVER ---
-                                className={`
-                                    rounded-[2.5rem] p-6 md:p-8 shadow-sm transition-all duration-500 border group relative overflow-hidden animate-fade-in-up
-                                    hover:-translate-y-2 hover:scale-[1.01]
-                                    ${isDark 
-                                        ? 'bg-[#1a1a1a]/90 border-white/5 hover:border-[#ffaa00]/30 hover:shadow-[0_15px_40px_-10px_rgba(255,170,0,0.15)] backdrop-blur-sm' 
-                                        : 'bg-white/90 border-gray-100 hover:border-orange-200 hover:shadow-2xl hover:shadow-orange-100'}
-                                `}
-                            >
-                                {/* Status Bar Accent - Glows on Hover */}
-                                <div className={`absolute left-0 top-0 bottom-0 w-1.5 transition-all duration-300 group-hover:w-2 ${order.status === 'delivered' ? 'bg-green-500' : order.status === 'cancelled' ? 'bg-red-500' : 'bg-[#ffaa00]'}`} />
-                                
-                                <div className="flex flex-col md:flex-row justify-between md:items-center gap-6 pl-3">
-                                    <div className="flex-1">
-                                        <div className="flex flex-wrap items-center gap-3 mb-4">
-                                            <StatusBadge status={order.status} />
-                                            <span className={`text-[10px] font-bold uppercase tracking-widest ${isDark ? 'text-gray-500' : 'text-gray-400'}`}>#{order._id.substring(0, 8)}</span>
-                                        </div>
-                                        
-                                        <div className="flex items-start space-x-4 mb-5">
-                                            <div className={`p-3.5 rounded-2xl text-[#ffaa00] hidden sm:block group-hover:scale-110 transition-transform duration-500 ${isDark ? 'bg-white/5' : 'bg-gray-50'}`}>
-                                                <FaReceipt size={20} />
+                        {filteredOrders.map((order, index) => {
+                            const cardHoverStyle = getCardHoverStyles(order.status);
+                            
+                            return (
+                                <div 
+                                    key={order._id} 
+                                    style={{ animationDelay: `${index * 0.1}s` }}
+                                    className={`
+                                        rounded-[2.5rem] p-6 md:p-8 shadow-sm transition-all duration-500 border group relative overflow-hidden animate-fade-in-up
+                                        hover:-translate-y-2 hover:scale-[1.01] ${cardHoverStyle}
+                                        ${isDark ? 'bg-[#1a1a1a]/90 border-white/5 backdrop-blur-sm' : 'bg-white/90 border-gray-100'}
+                                    `}
+                                >
+                                    {/* Status Bar Accent */}
+                                    <div className={`absolute left-0 top-0 bottom-0 w-1.5 transition-all duration-300 group-hover:w-2 ${order.status === 'delivered' ? 'bg-green-500' : order.status === 'cancelled' ? 'bg-red-500' : 'bg-[#ffaa00]'}`} />
+                                    
+                                    <div className="flex flex-col md:flex-row justify-between md:items-center gap-6 pl-3">
+                                        <div className="flex-1">
+                                            <div className="flex flex-wrap items-center gap-3 mb-4">
+                                                <StatusBadge status={order.status} />
+                                                <span className={`text-[10px] font-bold uppercase tracking-widest ${isDark ? 'text-gray-500' : 'text-gray-400'}`}>#{order._id.substring(0, 8)}</span>
                                             </div>
-                                            <div>
-                                                <h3 className={`text-lg font-black mb-1 group-hover:text-[#ffaa00] transition-colors duration-300 ${isDark ? 'text-white' : 'text-gray-900'}`}>
-                                                    {order.restaurantDetails?.name || 'Restaurant Order'}
-                                                </h3>
-                                                <div className={`text-xs font-bold uppercase tracking-wide flex items-center ${isDark ? 'text-gray-500' : 'text-gray-500'}`}>
-                                                    <FaCalendarAlt className="mr-2" />
-                                                    {format(new Date(order.orderDate), 'MMM d, yyyy')} • {format(new Date(order.orderDate), 'h:mm a')}
+                                            
+                                            <div className="flex items-start space-x-4 mb-5">
+                                                <div className={`p-3.5 rounded-2xl text-[#ffaa00] hidden sm:block group-hover:scale-110 transition-transform duration-500 ${isDark ? 'bg-white/5' : 'bg-gray-50'}`}>
+                                                    <FaReceipt size={20} />
+                                                </div>
+                                                <div>
+                                                    <h3 className={`text-lg font-black mb-1 group-hover:text-[#ffaa00] transition-colors duration-300 ${isDark ? 'text-white' : 'text-gray-900'}`}>
+                                                        {order.restaurantDetails?.name || 'Restaurant Order'}
+                                                    </h3>
+                                                    <div className={`text-xs font-bold uppercase tracking-wide flex items-center ${isDark ? 'text-gray-500' : 'text-gray-500'}`}>
+                                                        <FaCalendarAlt className="mr-2 text-gray-300" />
+                                                        {format(new Date(order.orderDate), 'MMM d, yyyy')} • {format(new Date(order.orderDate), 'h:mm a')}
+                                                    </div>
                                                 </div>
                                             </div>
+
+                                            <div className="flex flex-wrap gap-2">
+                                                {order.items.map((item, i) => (
+                                                    <span key={i} className={`inline-flex items-center px-3 py-1.5 rounded-lg text-xs font-bold border transition-colors ${isDark ? 'bg-white/5 text-gray-300 border-white/5 group-hover:border-white/10' : 'bg-gray-50 text-gray-600 border-gray-100 group-hover:border-gray-200'}`}>
+                                                        <span className="text-[#ffaa00] mr-1.5">{item.quantity}x</span> {item.name}
+                                                    </span>
+                                                ))}
+                                            </div>
                                         </div>
 
-                                        <div className="flex flex-wrap gap-2">
-                                            {order.items.map((item, i) => (
-                                                <span key={i} className={`inline-flex items-center px-3 py-1.5 rounded-lg text-xs font-bold border transition-colors ${isDark ? 'bg-white/5 text-gray-300 border-white/5 group-hover:border-white/10' : 'bg-gray-50 text-gray-600 border-gray-100 group-hover:border-gray-200'}`}>
-                                                    <span className="text-[#ffaa00] mr-1.5">{item.quantity}x</span> {item.name}
-                                                </span>
-                                            ))}
-                                        </div>
-                                    </div>
+                                        <div className={`flex flex-col gap-4 border-t md:border-t-0 pt-5 md:pt-0 min-w-[200px] ${isDark ? 'border-white/5' : 'border-gray-100'}`}>
+                                            <div className="flex flex-row md:flex-col justify-between md:justify-center items-center md:items-end w-full">
+                                                <p className={`text-[10px] font-bold uppercase tracking-wider mb-0 md:mb-1 ${isDark ? 'text-gray-500' : 'text-gray-400'}`}>Total Amount</p>
+                                                <p className={`text-xl md:text-2xl font-black ${isDark ? 'text-white' : 'text-gray-900'}`}>Rs. {order.totalAmount.toFixed(2)}</p>
+                                            </div>
 
-                                    <div className={`flex flex-col gap-4 border-t md:border-t-0 pt-5 md:pt-0 min-w-[200px] ${isDark ? 'border-white/5' : 'border-gray-100'}`}>
-                                        <div className="flex flex-row md:flex-col justify-between md:justify-center items-center md:items-end w-full">
-                                            <p className={`text-[10px] font-bold uppercase tracking-wider mb-0 md:mb-1 ${isDark ? 'text-gray-500' : 'text-gray-400'}`}>Total Amount</p>
-                                            <p className={`text-xl md:text-2xl font-black ${isDark ? 'text-white' : 'text-gray-900'}`}>Rs. {order.totalAmount.toFixed(2)}</p>
-                                        </div>
-
-                                        <div className="flex flex-row gap-3 w-full">
-                                            {/* RATE BUTTON */}
-                                            {order.status === 'delivered' && (
-                                                !order.restaurantRated || (order.deliveryPersonId && !order.driverRated) ? (
-                                                    <button
-                                                        onClick={() => navigate(`/rate-order/${order._id}`, { state: { order } })}
-                                                        className="flex-1 group/btn px-4 py-3 bg-[#ffaa00] text-white rounded-xl font-bold text-xs uppercase tracking-wide shadow-lg transition-all duration-300 transform hover:-translate-y-1 hover:shadow-orange-500/40 flex justify-center items-center gap-2 outline-none focus:outline-none"
+                                            <div className="flex flex-row gap-3 w-full">
+                                                {/* RATE BUTTON */}
+                                                {order.status === 'delivered' && (
+                                                    !order.restaurantRated || (order.deliveryPersonId && !order.driverRated) ? (
+                                                        <button
+                                                            onClick={() => navigate(`/rate-order/${order._id}`, { state: { order } })}
+                                                            className="flex-1 group/btn px-4 py-3 bg-[#ffaa00] text-white rounded-xl font-bold text-xs uppercase tracking-wide shadow-lg transition-all duration-300 transform hover:-translate-y-1 hover:shadow-orange-500/40 flex justify-center items-center gap-2 outline-none focus:outline-none"
+                                                        >
+                                                            <FaStar className="text-white group-hover/btn:rotate-[360deg] transition-transform duration-500" /> Rate
+                                                        </button>
+                                                    ) : (
+                                                        <div className={`flex-1 px-4 py-2.5 rounded-xl font-bold text-xs uppercase tracking-wide border flex justify-center items-center shadow-sm ${isDark ? 'bg-green-500/10 text-green-400 border-green-500/20' : 'bg-green-50 text-green-700 border-green-100'}`}>
+                                                            <FaCheck className="mr-2" size={14} /> Rated
+                                                        </div>
+                                                    )
+                                                )}
+                                                
+                                                {/* VIEW MENU BUTTON */}
+                                                {order.status !== 'cancelled' && (
+                                                    <button 
+                                                        className={`flex-1 px-4 py-3 border-2 rounded-xl font-bold text-xs uppercase tracking-wide transition-all transform hover:-translate-y-0.5 active:scale-95 flex justify-center items-center ${isDark ? 'bg-transparent text-gray-300 border-white/10 hover:border-[#ffaa00] hover:text-[#ffaa00]' : 'bg-white text-gray-600 border-gray-200 hover:border-[#ffaa00] hover:text-[#ffaa00]'}`}
+                                                        onClick={() => navigate(`/restaurant/${order.restaurantId}`)}
                                                     >
-                                                        <FaStar className="text-white group-hover/btn:rotate-[360deg] transition-transform duration-500" /> Rate
+                                                        View Menu
                                                     </button>
-                                                ) : (
-                                                    <div className={`flex-1 px-4 py-2.5 rounded-xl font-bold text-xs uppercase tracking-wide border flex justify-center items-center shadow-sm ${isDark ? 'bg-green-500/10 text-green-400 border-green-500/20' : 'bg-green-50 text-green-700 border-green-100'}`}>
-                                                        <FaCheck className="mr-2" size={14} /> Rated
-                                                    </div>
-                                                )
-                                            )}
-                                            
-                                            {/* VIEW MENU BUTTON */}
-                                            {order.status !== 'cancelled' && (
-                                                <button 
-                                                    className={`flex-1 px-4 py-3 border-2 rounded-xl font-bold text-xs uppercase tracking-wide transition-all transform hover:-translate-y-0.5 active:scale-95 flex justify-center items-center ${isDark ? 'bg-transparent text-gray-300 border-white/10 hover:border-[#ffaa00] hover:text-[#ffaa00]' : 'bg-white text-gray-600 border-gray-200 hover:border-[#ffaa00] hover:text-[#ffaa00]'}`}
-                                                    onClick={() => navigate(`/restaurant/${order.restaurantId}`)}
-                                                >
-                                                    View Menu
-                                                </button>
-                                            )}
+                                                )}
+                                            </div>
                                         </div>
                                     </div>
                                 </div>
-                            </div>
-                        ))}
+                            );
+                        })}
                     </div>
                 )}
             </div>
