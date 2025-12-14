@@ -1,14 +1,14 @@
 import React, { useState } from 'react';
 import { BrowserRouter as Router, Route, Routes, Navigate, Outlet } from 'react-router-dom';
-
 // Layouts
 import Navbar from './components/Navbar';
 import Footer from './components/Footer';
 import ActiveOrderBanner from './components/ActiveOrderBanner';
-import AdminLayout from './components/AdminLayout';
+import AdminLayout from './components/AdminLayout'; 
+import SuperAdminLayout from './components/SuperAdminLayout'; // NEW LAYOUT
 import DeliveryPersonnelLayout from './components/DeliveryPersonnelLayout';
 
-// Pages
+// Pages (Standard)
 import Dashboard from './pages/Dashboard';
 import Restaurants from './pages/Restaurants';
 import RestaurantDetails from './pages/RestaurantDetails';
@@ -24,8 +24,9 @@ import VerifyOTP from './pages/VerifyOTP';
 import Services from './pages/Services';
 import AboutUs from './pages/AboutUs';
 import ContactUs from './pages/ContactUs';
+import Profile from './pages/Profile';
 
-// Admin Pages
+// Restaurant Admin Pages
 import RestaurantAdmin from './pages/RestaurantAdmin';
 import CreateRestaurant from './pages/CreateRestaurant';
 import UpdateRestaurant from './pages/UpdateRestaurant';
@@ -35,11 +36,15 @@ import UpdateMenuItem from './pages/UpdateMenuItem';
 import AdminOrders from './pages/AdminOrders';
 import ManageDeliveryPersonnel from './pages/ManageDeliveryPersonnel';
 
+// Super Admin Pages
+import SuperAdminDashboard from './pages/SuperAdminDashboard';
+import ManagePendingRestaurants from './pages/ManagePendingRestaurants';
+
 // Delivery Pages
 import DeliveryDashboard from './pages/DeliveryDashboard';
 import MyDeliveries from './pages/MyDeliveries';
 
-// Components & Context
+// Context & Components
 import ProtectedRoute from './components/ProtectedRoute';
 import { CartProvider } from './context/CartContext';
 import AlertDialog from './components/AlertDialog';
@@ -48,12 +53,12 @@ import PromptModal from './components/PromptModal';
 import { ModalProvider } from './context/ModalContext';
 import { ThemeProvider } from './context/ThemeContext';
 
-// --- CUSTOMER LAYOUT (Only for Public/Customer users) ---
+// --- CUSTOMER LAYOUT ---
 const CustomerLayout = () => (
   <div className="flex flex-col min-h-screen">
     <Navbar />
     <ActiveOrderBanner />
-    <div className="main-content-wrapper flex-grow">
+    <div className="main-content-wrapper flex-grow min-h-[calc(100vh-112px)]">
       <Outlet />
     </div>
     <Footer />
@@ -66,19 +71,11 @@ function App() {
   const [promptInfo, setPromptInfo] = useState(null);
 
   const showAlert = (message) => setAlertInfo({ message });
-  const showConfirm = (message, onConfirmCallback, onCancelCallback) => {
-    setConfirmInfo({
-      message,
-      onConfirm: () => { onConfirmCallback(); setConfirmInfo(null); },
-      onCancel: () => { onCancelCallback(); setConfirmInfo(null); },
-    });
+  const showConfirm = (message, onConfirm, onCancel) => {
+    setConfirmInfo({ message, onConfirm: () => { onConfirm(); setConfirmInfo(null); }, onCancel: () => { onCancel(); setConfirmInfo(null); } });
   };
-  const showPrompt = (title, message, placeholder, onConfirmCallback, onCancelCallback) => {
-    setPromptInfo({
-      title, message, placeholder,
-      onConfirm: (value) => { onConfirmCallback(value); setPromptInfo(null); },
-      onCancel: () => { onCancelCallback(); setPromptInfo(null); },
-    });
+  const showPrompt = (title, message, placeholder, onConfirm, onCancel) => {
+    setPromptInfo({ title, message, placeholder, onConfirm: (val) => { onConfirm(val); setPromptInfo(null); }, onCancel: () => { onCancel(); setPromptInfo(null); } });
   };
 
   return (
@@ -91,10 +88,8 @@ function App() {
             {promptInfo && <PromptModal {...promptInfo} />}
 
             <Routes>
-              
-              {/* --- CUSTOMER / PUBLIC ROUTES --- */}
+              {/* --- PUBLIC & CUSTOMER ROUTES --- */}
               <Route element={<CustomerLayout />}>
-                {/* Public */}
                 <Route path="/" element={<Home />} />
                 <Route path="/login" element={<Login />} />
                 <Route path="/register" element={<Register />} />
@@ -102,8 +97,8 @@ function App() {
                 <Route path="/services" element={<Services />} />
                 <Route path="/about" element={<AboutUs />} />
                 <Route path="/contact" element={<ContactUs />} />
-
-                {/* Protected Customer */}
+                
+                {/* Protected Customer Routes */}
                 <Route path="/dashboard" element={<ProtectedRoute><Dashboard /></ProtectedRoute>} />
                 <Route path="/restaurants" element={<ProtectedRoute><Restaurants standalone={true} /></ProtectedRoute>} />
                 <Route path="/restaurant/:id" element={<ProtectedRoute><RestaurantDetails /></ProtectedRoute>} />
@@ -112,9 +107,10 @@ function App() {
                 <Route path="/cart" element={<ProtectedRoute><CartPage /></ProtectedRoute>} />
                 <Route path="/my-active-order" element={<ProtectedRoute><ActiveOrderPage /></ProtectedRoute>} />
                 <Route path="/rate-order/:orderId" element={<ProtectedRoute><RateOrder /></ProtectedRoute>} />
+                <Route path="/profile" element={<ProtectedRoute><Profile /></ProtectedRoute>} />
               </Route>
 
-              {/* --- ADMIN ROUTES (No Navbar/Footer) --- */}
+              {/* --- RESTAURANT ADMIN ROUTES --- */}
               <Route path="/admin/*" element={<ProtectedRoute><AdminLayout /></ProtectedRoute>}>
                 <Route index element={<RestaurantAdmin />} />
                 <Route path="create-restaurant" element={<CreateRestaurant />} />
@@ -126,14 +122,20 @@ function App() {
                 <Route path="delivery-personnel" element={<ManageDeliveryPersonnel />} />
               </Route>
 
-              {/* --- DELIVERY ROUTES (No Navbar/Footer) --- */}
+              {/* --- SUPER ADMIN ROUTES --- */}
+              <Route path="/super-admin/*" element={<ProtectedRoute><SuperAdminLayout /></ProtectedRoute>}>
+                 <Route index element={<SuperAdminDashboard />} />
+                 <Route path="pending-restaurants" element={<ManagePendingRestaurants />} />
+              </Route>
+
+              {/* --- DELIVERY PERSONNEL ROUTES --- */}
               <Route path="/delivery-personnel/*" element={<ProtectedRoute><DeliveryPersonnelLayout /></ProtectedRoute>}>
                 <Route index element={<DeliveryDashboard />} />
                 <Route path="my-deliveries" element={<MyDeliveries />} />
+                <Route path="profile" element={<Profile />} />
               </Route>
 
               <Route path="*" element={<Navigate to="/login" replace />} />
-              
             </Routes>
           </ModalProvider>
         </CartProvider>
