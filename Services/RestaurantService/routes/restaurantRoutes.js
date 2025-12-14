@@ -13,6 +13,8 @@ const {
   updateMenuItem,
   deleteMenuItem,
   submitRating,
+  getAllRestaurants,      // Added
+  updateRestaurantStatus  // Added
 } = require('../controllers/restaurantController');
 const { authenticate, restrictTo } = require('../middleware/restrictAccess');
 const multer = require('multer');
@@ -33,23 +35,28 @@ const storage = multer.diskStorage({
 });
 const upload = multer({ storage });
 
-// Debug: Log the upload instance
-console.log('Upload instance in restaurantRoutes.js:', upload);
-
-// Customer: Public access
+// --- PUBLIC ROUTES ---
 router.get('/public', getPublicRestaurants);
 router.get('/public/:id', getPublicRestaurantDetails);
 
-// Route for submitting restaurant ratings
+// --- CUSTOMER ROUTES ---
 router.post('/:id/rate', authenticate, restrictTo('customer'), submitRating);
 
-// Admin: Protected routes
+// --- MAIN ADMIN ROUTES (Must be before /:id routes) ---
+router.get('/admin/all', authenticate, restrictTo('super_admin'), getAllRestaurants);
+router.patch('/admin/:id/status', authenticate, restrictTo('super_admin'), updateRestaurantStatus);
+
+// --- RESTAURANT ADMIN ROUTES ---
 router.get('/', authenticate, restrictTo('restaurant_admin'), getAdminRestaurants);
-router.get('/:id', authenticate, restrictTo('restaurant_admin'), getRestaurantDetails);
-router.get('/:id/menu/:menuId', authenticate, restrictTo('restaurant_admin'), getMenuItem);
+
+// Specific ID routes must come last to avoid conflicts
+router.get('/:id', authenticate, restrictTo('restaurant_admin', 'super_admin'), getRestaurantDetails);
+router.get('/:id/menu/:menuId', authenticate, restrictTo('restaurant_admin', 'super_admin'), getMenuItem);
+
 router.post('/', authenticate, restrictTo('restaurant_admin'), upload.single('image'), createRestaurant);
-router.put('/:id', authenticate, restrictTo('restaurant_admin'), upload.single('image'), updateRestaurant);
-router.delete('/:id', authenticate, restrictTo('restaurant_admin'), deleteRestaurant);
+router.put('/:id', authenticate, restrictTo('restaurant_admin', 'super_admin'), upload.single('image'), updateRestaurant);
+router.delete('/:id', authenticate, restrictTo('restaurant_admin', 'super_admin'), deleteRestaurant);
+
 router.post('/:id/menu', authenticate, restrictTo('restaurant_admin'), upload.single('image'), addMenuItem);
 router.put('/:id/menu/:menuId', authenticate, restrictTo('restaurant_admin'), upload.single('image'), updateMenuItem);
 router.delete('/:id/menu/:menuId', authenticate, restrictTo('restaurant_admin'), deleteMenuItem);
