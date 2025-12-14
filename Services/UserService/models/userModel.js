@@ -3,8 +3,13 @@ const mongoose = require('mongoose');
 const userSchema = new mongoose.Schema({
   _id: { type: mongoose.Schema.Types.ObjectId, required: true },
   email: { type: String, required: true, unique: true },
-  password: { type: String, required: false }, // Password is not required here as AuthService handles it
-  role: { type: String, enum: ['customer', 'restaurant_admin', 'delivery_personnel'], default: 'customer' }, // Updated enum
+  password: { type: String, required: false }, 
+  // FIX: Added 'super_admin' to the enum
+  role: { 
+    type: String, 
+    enum: ['customer', 'restaurant_admin', 'delivery_personnel', 'super_admin'], 
+    default: 'customer' 
+  }, 
   isVerified: { type: Boolean, default: false },
   verificationToken: { type: String },
 
