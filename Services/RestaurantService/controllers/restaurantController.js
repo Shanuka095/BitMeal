@@ -1,11 +1,9 @@
 const Restaurant = require('../models/restaurantModel');
 const Joi = require('joi');
-const axios = require('axios');
+// axios is not used in this controller currently, but kept if you extend features later
+// const axios = require('axios'); 
 
-// Base URL for the RestaurantService (can be an environment variable in production)
-const RESTAURANT_SERVICE_URL = 'http://localhost:3003/api/restaurants';
-
-// Validation Schemas
+// --- Validation Schemas ---
 const restaurantSchema = Joi.object({
   name: Joi.string().min(3).max(100).required(),
   address: Joi.string().min(5).max(200).required(),
@@ -20,17 +18,25 @@ const menuItemSchema = Joi.object({
   imageUrl: Joi.string().optional().allow(''),
 });
 
-// Schema for rating submission
 const ratingSchema = Joi.object({
   rating: Joi.number().integer().min(1).max(5).required(),
   likeStatus: Joi.string().valid('liked', 'disliked').optional().allow(null),
 });
 
-// Customer: Get all restaurants (Public access)
+// --- PUBLIC ROUTES (No Token Needed) ---
+
+// Get ALL Approved Restaurants (For Customers)
 const getPublicRestaurants = async (req, res) => {
   try {
-    console.log('getPublicRestaurants: Fetching all restaurants (public access) and sorting by rating.');
-    const restaurants = await Restaurant.find().sort({ averageRating: -1, totalRatings: -1 }).lean();
+    const restaurants = await Restaurant.find({ 
+        $or: [
+            { status: 'approved' },
+            { status: { $exists: false } } // Handles legacy data
+        ]
+    })
+    .sort({ averageRating: -1, totalRatings: -1 })
+    .lean();
+    
     if (!restaurants.length) {
       return res.json({ message: 'No restaurants available', data: [] });
     }
@@ -41,327 +47,274 @@ const getPublicRestaurants = async (req, res) => {
   }
 };
 
-// Customer: Get specific restaurant details (Public access)
+// Get Specific Restaurant Details (Public)
 const getPublicRestaurantDetails = async (req, res) => {
   try {
-    const restaurant = await Restaurant.findById(req.params.id).lean();
+    const restaurant = await Restaurant.findOne({ 
+        _id: req.params.id, 
+        $or: [
+            { status: 'approved' },
+            { status: { $exists: false } } 
+        ]
+    }).lean();
+
     if (!restaurant) return res.status(404).json({ error: 'Restaurant not found' });
-    console.log('Fetched public details for restaurant:', restaurant._id);
     res.json(restaurant);
   } catch (err) {
-    console.error('Error in getPublicRestaurantDetails:', err);
     res.status(500).json({ error: 'Failed to fetch restaurant details' });
   }
 };
 
-// Admin: Get restaurants owned by the logged-in admin
+// --- RESTAURANT ADMIN ROUTES (Protected) ---
+
+// Get "My" Restaurants
 const getAdminRestaurants = async (req, res) => {
   try {
-    console.log('getAdminRestaurants - req.user:', req.user);
-    if (!req.user || !req.user.userId) {
-      console.warn('getAdminRestaurants called without req.user.userId.');
-      return res.status(401).json({ error: 'Unauthorized' });
-    }
-    console.log('Fetching restaurants for userId:', req.user.userId);
+    if (!req.user || !req.user.userId) return res.status(401).json({ error: 'Unauthorized' });
     const restaurants = await Restaurant.find({ owner: req.user.userId }).lean();
-    if (!restaurants.length) {
-      return res.json({ message: 'No restaurants found for this admin', data: [] });
-    }
     res.json(restaurants);
   } catch (err) {
-    console.error('Error in getAdminRestaurants:', err);
     res.status(500).json({ error: 'Failed to fetch restaurants' });
   }
 };
 
-// Admin: Get a specific menu item
-const getMenuItem = async (req, res) => {
-  try {
-    if (!req.user || !req.user.userId) {
-      console.warn('getMenuItem called without req.user.userId.');
-      return res.status(401).json({ error: 'Unauthorized' });
-    }
-
-    const restaurant = await Restaurant.findOne({ _id: req.params.id, owner: req.user.userId });
-    if (!restaurant) return res.status(404).json({ error: 'Restaurant not found or not owned by user' });
-
-    const menuItem = restaurant.menu.id(req.params.menuId);
-    if (!menuItem) return res.status(404).json({ error: 'Menu item not found' });
-
-    console.log('Fetched menu item:', menuItem.name, 'for restaurant:', restaurant._id);
-    res.json(menuItem);
-  } catch (err) {
-    console.error('Error in getMenuItem:', err);
-    res.status(500).json({ error: 'Failed to fetch menu item' });
-  }
-};
-
-// Admin: Create a restaurant
+// Create New Restaurant
 const createRestaurant = async (req, res) => {
   try {
     const { name, address } = req.body;
     const imageUrl = req.file ? req.file.filename : '';
     const { error } = restaurantSchema.validate({ name, address, imageUrl });
-    if (error) {
-      console.error('CreateRestaurant validation error:', error.details[0].message);
-      return res.status(400).json({ error: error.details[0].message });
-    }
-
-    if (!req.user || !req.user.userId) {
-      console.warn('CreateRestaurant called without req.user.userId.');
-      return res.status(401).json({ error: 'Unauthorized' });
-    }
+    if (error) return res.status(400).json({ error: error.details[0].message });
 
     const restaurant = new Restaurant({
       name,
       address,
       imageUrl,
       owner: req.user.userId,
+      status: 'pending', // Default to Pending
     });
     await restaurant.save();
-    console.log('Restaurant created:', name, 'by owner:', req.user.userId, 'with imageUrl:', imageUrl);
     res.status(201).json(restaurant);
   } catch (err) {
-    console.error('Error in createRestaurant:', err);
     res.status(500).json({ error: 'Failed to create restaurant' });
   }
 };
 
-// Admin: Update a restaurant (including image)
+// Update Restaurant
 const updateRestaurant = async (req, res) => {
   try {
     const { name, address } = req.body;
-    // Only include fields that are provided in the request
     const updateFields = {};
     if (name) updateFields.name = name;
     if (address) updateFields.address = address;
     if (req.file) updateFields.imageUrl = req.file.filename;
 
-    const { error } = restaurantSchema.validate(updateFields, { stripUnknown: true, abortEarly: false });
-    if (error) {
-      console.error('UpdateRestaurant validation error:', error.details[0].message);
-      return res.status(400).json({ error: error.details[0].message });
-    }
-
-    if (!req.user || !req.user.userId) {
-      console.warn('UpdateRestaurant called without req.user.userId.');
-      return res.status(401).json({ error: 'Unauthorized' });
+    const query = { _id: req.params.id };
+    // Allow Super Admin to update ANY restaurant, otherwise only Owner
+    if (req.user.role !== 'super_admin') {
+        query.owner = req.user.userId;
     }
 
     const restaurant = await Restaurant.findOneAndUpdate(
-      { _id: req.params.id, owner: req.user.userId },
+      query,
       { $set: updateFields },
       { new: true, runValidators: true }
     );
-    if (!restaurant) return res.status(404).json({ error: 'Restaurant not found or not owned by user' });
-    console.log('Restaurant updated:', restaurant._id);
+    if (!restaurant) return res.status(404).json({ error: 'Restaurant not found or unauthorized' });
     res.json(restaurant);
   } catch (err) {
-    console.error('Error in updateRestaurant:', err);
     res.status(500).json({ error: 'Failed to update restaurant' });
   }
 };
 
-// Admin: Delete a restaurant
+// Delete Restaurant
 const deleteRestaurant = async (req, res) => {
   try {
-    if (!req.user || !req.user.userId) {
-      console.warn('DeleteRestaurant called without req.user.userId.');
-      return res.status(401).json({ error: 'Unauthorized' });
+    const query = { _id: req.params.id };
+    if (req.user.role !== 'super_admin') {
+        query.owner = req.user.userId;
     }
-    const restaurant = await Restaurant.findOneAndDelete({ _id: req.params.id, owner: req.user.userId });
-    if (!restaurant) return res.status(404).json({ error: 'Restaurant not found or not owned by user' });
-    console.log('Restaurant deleted:', restaurant._id);
+
+    const restaurant = await Restaurant.findOneAndDelete(query);
+    if (!restaurant) return res.status(404).json({ error: 'Restaurant not found or unauthorized' });
     res.json({ message: 'Restaurant deleted' });
   } catch (err) {
-    console.error('Error in deleteRestaurant:', err);
     res.status(500).json({ error: 'Failed to delete restaurant' });
   }
 };
 
-// Admin: Add a menu item (including image)
+// Add Menu Item
 const addMenuItem = async (req, res) => {
   try {
     const { name, normalPrice, extraPriceForFull, category } = req.body;
     const imageUrl = req.file ? req.file.filename : '';
-
-    const parsedNormalPrice = Number(normalPrice);
-    const parsedExtraPriceForFull = Number(extraPriceForFull || 0);
-
     const { error } = menuItemSchema.validate({
-      name,
-      normalPrice: parsedNormalPrice,
-      extraPriceForFull: parsedExtraPriceForFull,
-      category,
-      imageUrl
+      name, normalPrice: Number(normalPrice), extraPriceForFull: Number(extraPriceForFull || 0), category, imageUrl
     });
-
-    if (error) {
-      console.error('AddMenuItem validation error:', error.details[0].message);
-      return res.status(400).json({ error: error.details[0].message });
-    }
-
-    if (!req.user || !req.user.userId) {
-      console.warn('AddMenuItem called without req.user.userId.');
-      return res.status(401).json({ error: 'Unauthorized' });
-    }
+    if (error) return res.status(400).json({ error: error.details[0].message });
 
     const restaurant = await Restaurant.findOne({ _id: req.params.id, owner: req.user.userId });
-    if (!restaurant) {
-      console.warn(`AddMenuItem: Restaurant with ID ${req.params.id} not found or not owned by user ${req.user.userId}.`);
-      return res.status(404).json({ error: 'Restaurant not found or not owned by this admin.' });
+    if (!restaurant) return res.status(404).json({ error: 'Restaurant not found' });
+
+    // Check Approval Status
+    if (restaurant.status && restaurant.status !== 'approved') {
+        return res.status(403).json({ error: 'You cannot add menu items until your restaurant is approved.' });
     }
 
     restaurant.menu.push({
       name,
-      normalPrice: parsedNormalPrice,
-      extraPriceForFull: parsedExtraPriceForFull,
+      normalPrice: Number(normalPrice),
+      extraPriceForFull: Number(extraPriceForFull || 0),
       category,
       imageUrl
     });
     await restaurant.save();
-    console.log('Menu item added to restaurant:', restaurant._id);
     res.status(201).json(restaurant.menu[restaurant.menu.length - 1]);
   } catch (err) {
-    console.error('Error in addMenuItem:', err);
     res.status(500).json({ error: 'Failed to add menu item' });
   }
 };
 
-// Admin: Get restaurant details (including menu)
+// --- SUPER ADMIN ROUTES ---
+
+// Get ALL Restaurants (Filtered by Status)
+const getAllRestaurants = async (req, res) => {
+    try {
+        const { status } = req.query;
+        let query = {};
+        
+        if (status === 'pending') {
+            query.status = 'pending';
+        } else if (status === 'approved') {
+            query = { $or: [{ status: 'approved' }, { status: { $exists: false } }] };
+        } else if (status === 'rejected') {
+            query.status = 'rejected';
+        }
+        
+        // If no status query is provided, it returns ALL (useful for Dashboard counts)
+        const restaurants = await Restaurant.find(query).sort({ createdAt: -1 });
+        res.json(restaurants);
+    } catch (err) {
+        console.error("Super Admin Fetch Error:", err);
+        res.status(500).json({ error: 'Failed to fetch restaurants' });
+    }
+};
+
+// Approve/Reject Restaurant
+const updateRestaurantStatus = async (req, res) => {
+    try {
+        const { status } = req.body;
+        if (!['pending', 'approved', 'rejected'].includes(status)) {
+            return res.status(400).json({ error: 'Invalid status' });
+        }
+
+        const restaurant = await Restaurant.findByIdAndUpdate(
+            req.params.id,
+            { status: status },
+            { new: true }
+        );
+
+        if (!restaurant) return res.status(404).json({ error: 'Restaurant not found' });
+        res.json(restaurant);
+    } catch (err) {
+        res.status(500).json({ error: 'Failed to update status' });
+    }
+};
+
+// --- COMMON HELPERS ---
+
 const getRestaurantDetails = async (req, res) => {
   try {
-    if (!req.user || !req.user.userId) {
-      console.warn('getRestaurantDetails called without req.user.userId.');
-      return res.status(401).json({ error: 'Unauthorized' });
-    }
-    const restaurant = await Restaurant.findOne({ _id: req.params.id, owner: req.user.userId }).lean();
-    if (!restaurant) return res.status(404).json({ error: 'Restaurant not found or not owned by user' });
-    console.log('Fetched details for restaurant:', restaurant._id);
+    const query = { _id: req.params.id };
+    if (req.user.role !== 'super_admin') query.owner = req.user.userId;
+    
+    const restaurant = await Restaurant.findOne(query).lean();
+    if (!restaurant) return res.status(404).json({ error: 'Restaurant not found' });
     res.json(restaurant);
   } catch (err) {
-    console.error('Error in getRestaurantDetails:', err);
-    res.status(500).json({ error: 'Failed to fetch restaurant details' });
+    res.status(500).json({ error: 'Failed to fetch details' });
   }
 };
 
-// Admin: Update a menu item (including image)
+const getMenuItem = async (req, res) => {
+  try {
+    const query = { _id: req.params.id };
+    if (req.user.role !== 'super_admin') query.owner = req.user.userId;
+
+    const restaurant = await Restaurant.findOne(query);
+    if (!restaurant) return res.status(404).json({ error: 'Restaurant not found' });
+
+    const menuItem = restaurant.menu.id(req.params.menuId);
+    if (!menuItem) return res.status(404).json({ error: 'Menu item not found' });
+    res.json(menuItem);
+  } catch (err) {
+    res.status(500).json({ error: 'Failed to fetch menu item' });
+  }
+};
+
 const updateMenuItem = async (req, res) => {
   try {
-    const { name, normalPrice, extraPriceForFull, category } = req.body;
-    const imageUrl = req.file ? req.file.filename : req.body.imageUrl || '';
-
-    const parsedNormalPrice = Number(normalPrice);
-    const parsedExtraPriceForFull = Number(extraPriceForFull || 0);
-
-    const { error } = menuItemSchema.validate({
-      name,
-      normalPrice: parsedNormalPrice,
-      extraPriceForFull: parsedExtraPriceForFull,
-      category,
-      imageUrl
-    });
-    if (error) {
-      console.error('UpdateMenuItem validation error:', error.details[0].message);
-      return res.status(400).json({ error: error.details[0].message });
-    }
-
-    if (!req.user || !req.user.userId) {
-      console.warn('UpdateMenuItem called without req.user.userId.');
-      return res.status(401).json({ error: 'Unauthorized' });
-    }
-
-    const restaurant = await Restaurant.findOne({ _id: req.params.id, owner: req.user.userId });
-    if (!restaurant) return res.status(404).json({ error: 'Restaurant not found or not owned by user' });
+    const query = { _id: req.params.id };
+    if (req.user.role !== 'super_admin') query.owner = req.user.userId;
+    
+    const restaurant = await Restaurant.findOne(query);
+    if (!restaurant) return res.status(404).json({ error: 'Restaurant not found' });
 
     const menuItem = restaurant.menu.id(req.params.menuId);
     if (!menuItem) return res.status(404).json({ error: 'Menu item not found' });
 
-    Object.assign(menuItem, {
-      name,
-      normalPrice: parsedNormalPrice,
-      extraPriceForFull: parsedExtraPriceForFull,
-      category,
-      imageUrl
-    });
+    // Update fields
+    if (req.body.name) menuItem.name = req.body.name;
+    if (req.body.normalPrice) menuItem.normalPrice = Number(req.body.normalPrice);
+    if (req.body.extraPriceForFull !== undefined) menuItem.extraPriceForFull = Number(req.body.extraPriceForFull);
+    if (req.body.category) menuItem.category = req.body.category;
+    if (req.file) menuItem.imageUrl = req.file.filename;
+
     await restaurant.save();
-    console.log('Menu item updated:', req.params.menuId, 'for restaurant:', restaurant._id);
     res.json(menuItem);
   } catch (err) {
-    console.error('Error in updateMenuItem:', err);
     res.status(500).json({ error: 'Failed to update menu item' });
   }
 };
 
-// Admin: Delete a menu item
 const deleteMenuItem = async (req, res) => {
   try {
-    if (!req.user || !req.user.userId) {
-      console.warn('DeleteMenuItem called without req.user.userId.');
-      return res.status(401).json({ error: 'Unauthorized' });
-    }
+    const query = { _id: req.params.id };
+    if (req.user.role !== 'super_admin') query.owner = req.user.userId;
 
-    const restaurant = await Restaurant.findOne({ _id: req.params.id, owner: req.user.userId });
-    if (!restaurant) return res.status(404).json({ error: 'Restaurant not found or not owned by user' });
+    const restaurant = await Restaurant.findOne(query);
+    if (!restaurant) return res.status(404).json({ error: 'Restaurant not found' });
 
-    const menuItem = restaurant.menu.id(req.params.menuId);
-    if (!menuItem) return res.status(404).json({ error: 'Menu item not found' });
-
-    menuItem.deleteOne();
+    restaurant.menu.pull(req.params.menuId);
     await restaurant.save();
-    console.log('Menu item deleted:', req.params.menuId, 'from restaurant:', restaurant._id);
     res.json({ message: 'Menu item deleted' });
   } catch (err) {
-    console.error('Error in deleteMenuItem:', err);
     res.status(500).json({ error: 'Failed to delete menu item' });
   }
 };
 
-// Submit a rating for a restaurant
 const submitRating = async (req, res) => {
   try {
-    const { id } = req.params; // Restaurant ID
-    const { rating, likeStatus } = req.body; // The submitted rating (1-5) and likeStatus
-    const userId = req.user.userId; // Customer's user ID from token
-
-    // Validate the incoming rating (and optional likeStatus)
+    const { id } = req.params;
+    const { rating, likeStatus } = req.body;
     const { error } = ratingSchema.validate({ rating, likeStatus });
-    if (error) {
-      return res.status(400).json({ error: error.details[0].message });
-    }
+    if (error) return res.status(400).json({ error: error.details[0].message });
 
     const restaurant = await Restaurant.findById(id);
-    if (!restaurant) {
-      return res.status(404).json({ error: 'Restaurant not found.' });
-    }
+    if (!restaurant) return res.status(404).json({ error: 'Restaurant not found.' });
 
-    // Calculate new average rating
     const currentTotalScore = restaurant.averageRating * restaurant.totalRatings;
     const newTotalRatings = restaurant.totalRatings + 1;
-    const newAverageRating = (currentTotalScore + rating) / newTotalRatings;
-
-    restaurant.averageRating = newAverageRating;
+    restaurant.averageRating = (currentTotalScore + rating) / newTotalRatings;
     restaurant.totalRatings = newTotalRatings;
 
-    // Update likes/dislikes
-    if (likeStatus === 'liked') {
-      restaurant.totalLikes += 1;
-    } else if (likeStatus === 'disliked') {
-      restaurant.totalDislikes += 1;
-    }
+    if (likeStatus === 'liked') restaurant.totalLikes += 1;
+    else if (likeStatus === 'disliked') restaurant.totalDislikes += 1;
 
     await restaurant.save();
-    console.log(`Restaurant ${id} rated ${rating} (likeStatus: ${likeStatus}) by user ${userId}. New average: ${newAverageRating.toFixed(2)}`);
-    res.json({
-      message: 'Rating submitted successfully',
-      averageRating: restaurant.averageRating,
-      totalRatings: restaurant.totalRatings,
-      totalLikes: restaurant.totalLikes,
-      totalDislikes: restaurant.totalDislikes,
-    });
+    res.json({ message: 'Rating submitted successfully' });
   } catch (err) {
-    console.error('Error submitting rating:', err);
-    res.status(500).json({ error: err.message || 'Failed to submit rating' });
+    res.status(500).json({ error: 'Failed to submit rating' });
   }
 };
 
@@ -378,4 +331,6 @@ module.exports = {
   updateMenuItem,
   deleteMenuItem,
   submitRating,
+  getAllRestaurants,      // REQUIRED for Super Admin Dashboard
+  updateRestaurantStatus  // REQUIRED for Approval Logic
 };
