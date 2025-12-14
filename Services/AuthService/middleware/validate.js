@@ -20,14 +20,18 @@ const registerSchema = Joi.object({
     .pattern(/^(07|(\+94)?)(\d{8})$/)
     .required()
     .messages({
-      'string.pattern.base': '"phone" number must be 10 digits and start with "07" or "+947" (e.g., 0712345678 or +94712345678)',
+      'string.pattern.base': '"phone" number must be 10 digits and start with "07" or "+947"',
       'any.required': '"phone" number is required',
     }),
-  name: Joi.string().min(2).max(100).required().messages({ // <-- ADD THIS LINE
+  name: Joi.string().min(2).max(100).required().messages({
     'string.min': '"name" must be at least 2 characters long',
     'string.max': '"name" cannot exceed 100 characters',
     'any.required': '"name" is required',
   }),
+  // --- UPDATED: Allow role and driver specific fields ---
+  role: Joi.string().valid('customer', 'restaurant_admin', 'delivery_personnel').optional(),
+  vehicleType: Joi.string().optional().allow(''),
+  licensePlate: Joi.string().optional().allow('')
 });
 
 const loginSchema = Joi.object({
@@ -44,6 +48,7 @@ const loginSchema = Joi.object({
 const validate = (schema) => (req, res, next) => {
   const { error } = schema.validate(req.body, { abortEarly: false });
   if (error) {
+    console.error("Validation Error:", error.details[0].message); // Debug log
     return res.status(400).json({ error: error.details[0].message });
   }
   next();
