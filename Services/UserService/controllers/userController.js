@@ -1,111 +1,90 @@
 const jwt = require('jsonwebtoken');
 const User = require('../models/userModel');
 
-// New: Create a basic user profile when notified by AuthService
+// --- INTERNAL: Create Profile ---
 const createProfile = async (req, res) => {
-  const { userId, email, name, phone } = req.body;
-  console.log(`UserService (createProfile) - Received request for userId: ${userId}`);
+  const { userId, email, name, phone, role } = req.body;
+  
   try {
-    // Check if profile already exists to prevent duplicates
-    const existingProfile = await User.findById(userId);
-    if (existingProfile) {
-      console.warn(`UserService (createProfile) - Profile for userId ${userId} already exists. Skipping creation.`);
-      return res.status(200).json({ message: 'Profile already exists' });
-    }
+    const existing = await User.findById(userId);
+    if (existing) return res.status(200).json({ message: 'Profile exists' });
 
-    // Create a new User document in UserService's DB
-    // Use the userId from AuthService as the _id for consistency
-    const newUserProfile = new User({
-      _id: userId, // Set _id to match the userId from AuthService
-      email: email,
-      name: name,
-      phone: phone,
-      // Default values for other fields will be set by the schema
+    const newUser = new User({
+      _id: userId,
+      email,
+      name,
+      phone,
+      role: role || 'customer'
     });
-    await newUserProfile.save();
-    console.log(`UserService (createProfile) - New profile successfully created for userId: ${userId}`);
-    res.status(201).json(newUserProfile);
+    
+    await newUser.save();
+    res.status(201).json(newUser);
   } catch (error) {
-    console.error(`UserService (createProfile) - Error creating basic profile for userId ${userId}:`, error.message);
-    res.status(500).json({ error: error.message || 'Failed to create basic user profile' });
+    console.error('UserService Error:', error.message);
+    res.status(500).json({ error: 'Failed to create profile' });
   }
 };
 
-
+// --- PUBLIC: Get Profile ---
 const getProfile = async (req, res) => {
   try {
     const token = req.headers.authorization?.split(' ')[1];
-    console.log('UserService (getProfile) - Request received to fetch profile.');
-    console.log('UserService (getProfile) - Authorization header present:', !!req.headers.authorization);
+    if (!token) return res.status(401).json({ error: 'No token' });
 
-    if (!token) {
-      console.log('UserService (getProfile) - No token provided in header.');
-      return res.status(401).json({ error: 'No token provided' });
-    }
-
-    let decoded;
-    try {
-        decoded = jwt.verify(token, process.env.JWT_SECRET);
-        console.log('UserService (getProfile) - Token decoded successfully. userId:', decoded.userId);
-    } catch (jwtError) {
-        console.error('UserService (getProfile) - JWT verification failed:', jwtError.message);
-        return res.status(401).json({ error: 'Invalid or expired token' });
-    }
-
-    // Use decoded.userId to find the user in UserService's DB
+    const decoded = jwt.verify(token, process.env.JWT_SECRET);
     const user = await User.findById(decoded.userId).select('-password -verificationToken');
-    console.log(`UserService (getProfile) - Database query for userId: ${decoded.userId}`);
+    
+    if (!user) return res.status(404).json({ error: 'Profile not found' });
 
-    if (!user) {
-      console.warn(`UserService (getProfile) - User NOT found in database for userId: ${decoded.userId}`);
-      return res.status(404).json({ error: 'User not found' });
-    }
-
-    console.log(`UserService (getProfile) - User found in database: ${user.email}`);
     res.json({
-      name: user.name || '',
-      phone: user.phone || '',
+      name: user.name,
+      email: user.email,
+      phone: user.phone,
+      role: user.role,
       address: user.profile?.address || '',
       profileImageUrl: user.profile?.profileImageUrl || '',
       createdAt: user.createdAt,
-      updatedAt: user.updatedAt,
     });
   } catch (error) {
-    // This catch block would typically only hit if there's an unexpected error
-    // after successful JWT verification, or if the initial token check fails.
-    console.error('UserService (getProfile) - Unexpected error fetching profile:', error);
-    res.status(500).json({ error: error.message || 'Failed to fetch profile' });
+    res.status(500).json({ error: 'Server error' });
   }
 };
 
+// --- PUBLIC: Update Profile (Fix applied here) ---
 const updateProfile = async (req, res) => {
   try {
     const token = req.headers.authorization?.split(' ')[1];
-    if (!token) return res.status(401).json({ error: 'No token provided' });
+    if (!token) return res.status(401).json({ error: 'No token' });
 
     const decoded = jwt.verify(token, process.env.JWT_SECRET);
+    
+    // Destructure text fields
     const { name, phone, address } = req.body;
-    const profileImageUrl = req.file ? req.file.filename : req.body.profileImageUrl || '';
+    
+    // Build update object dynamically
+    const updateData = {};
+    if (name) updateData.name = name;
+    if (phone) updateData.phone = phone;
+    if (address) updateData['profile.address'] = address; // Optional if you have address
 
-    const updateFields = {
-      name: name,
-      phone: phone,
-      'profile.address': address,
-      'profile.profileImageUrl': profileImageUrl,
-    };
+    // Only update image if a new file is uploaded
+    if (req.file) {
+        updateData['profile.profileImageUrl'] = req.file.filename;
+    }
 
     const user = await User.findByIdAndUpdate(
       decoded.userId,
-      updateFields,
+      { $set: updateData },
       { new: true, runValidators: true }
-    ).select('-password -verificationToken');
+    ).select('-password');
 
     if (!user) return res.status(404).json({ error: 'User not found' });
+    
     res.json(user);
   } catch (error) {
-    console.error('UserService (updateProfile) - Error updating profile:', error);
-    res.status(500).json({ error: error.message || 'Failed to update profile' });
+    console.error('Update Profile Error:', error);
+    res.status(500).json({ error: error.message });
   }
 };
 
-module.exports = { getProfile, updateProfile, createProfile };
+module.exports = { createProfile, getProfile, updateProfile };
