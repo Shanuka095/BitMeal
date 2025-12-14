@@ -23,14 +23,18 @@ const Login = () => {
     e.preventDefault();
     setLoading(true);
     try {
-      const response = await axios.post('http://localhost:3000/api/auth/login', { email, password });
+      const response = await axios.post('http://localhost:3001/api/auth/login', { email, password });
       const { token, role } = response.data;
       const sessionKey = `token_${Date.now()}`;
       sessionStorage.setItem(sessionKey, token);
       setError('');
+
+      // --- FIX: Logic to handle Super Admin Redirect ---
       if (role === 'customer') navigate('/dashboard');
       else if (role === 'restaurant_admin') navigate('/admin');
       else if (role === 'delivery_personnel') navigate('/delivery-personnel');
+      else if (role === 'super_admin') navigate('/super-admin'); // <--- NEW
+
     } catch (err) {
       setError(err.response?.data?.error || 'Login failed');
     } finally {
@@ -40,23 +44,20 @@ const Login = () => {
 
   if (pageLoading) return <PageLoader />;
 
-  // Premium Theme Classes
+  // Theme Classes
   const bgClass = isDark ? 'bg-[#0f0f0f]' : 'bg-[#f8f9fa]';
   const cardBg = isDark 
     ? 'bg-[#1a1a1a] border-white/5 shadow-black/50' 
-    : 'bg-white/80 border-white/60 shadow-2xl shadow-orange-500/5 backdrop-blur-xl'; // Enhanced Light Card
+    : 'bg-white/80 border-white/60 shadow-2xl shadow-orange-500/5 backdrop-blur-xl';
   
   const textMain = isDark ? 'text-white' : 'text-gray-900';
   const textSub = isDark ? 'text-gray-400' : 'text-gray-500';
-  
   const inputBg = isDark 
     ? 'bg-white/5 text-white border-transparent focus:bg-black' 
-    : 'bg-gray-50 text-gray-900 border-transparent focus:bg-white focus:shadow-md'; // Enhanced Light Input
+    : 'bg-gray-50 text-gray-900 border-transparent focus:bg-white focus:shadow-md';
 
   return (
     <div className={`min-h-screen flex ${bgClass} transition-colors duration-500`}>
-      
-      {/* Left Side - Image */}
       <div className="hidden lg:flex w-1/2 bg-gray-900 relative overflow-hidden items-center justify-center">
         <img 
             src="https://images.unsplash.com/photo-1565299507177-b0ac66763828?ixlib=rb-1.2.1&auto=format&fit=crop&w=1000&q=80" 
@@ -71,13 +72,10 @@ const Login = () => {
         </div>
       </div>
 
-      {/* Right Side - Form */}
       <div className="w-full lg:w-1/2 flex items-center justify-center p-6 pt-32 relative">
-        {/* Light Mode Background Decor */}
         {!isDark && <div className="absolute top-0 right-0 w-full h-full bg-gradient-to-bl from-orange-50 via-white to-white -z-10"></div>}
 
         <div className={`w-full max-w-md rounded-[2.5rem] p-10 md:p-12 border relative overflow-hidden animate-fade-in-up ${cardBg}`}>
-            
             <div className="text-center mb-10">
                 <h2 className={`text-4xl font-black mb-3 tracking-tight ${textMain}`}>Welcome Back</h2>
                 <p className={`font-medium text-sm md:text-base ${textSub}`}>Sign in to continue your journey</p>
