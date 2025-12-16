@@ -1,11 +1,10 @@
 import { useState, useEffect } from 'react';
 import axios from 'axios';
 import { format } from 'date-fns';
-import { FaSyncAlt, FaMotorcycle, FaCheckCircle } from 'react-icons/fa';
+import { FaCheckCircle, FaClock, FaMapMarkerAlt, FaBox } from 'react-icons/fa';
 import { useModal } from '../context/ModalContext';
-
-// NEW: Import a modal component for assigning delivery person
-import AssignDeliveryModal from '../components/AssignDeliveryModal';
+import { useTheme } from '../context/ThemeContext';
+import PageLoader from '../components/PageLoader';
 
 const AdminOrders = () => {
   const [restaurants, setRestaurants] = useState([]);
@@ -13,27 +12,21 @@ const AdminOrders = () => {
   const [orders, setOrders] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');
-  const { showAlert, showConfirm } = useModal();
+  
+  const { showAlert } = useModal();
+  const { theme } = useTheme();
+  const isDark = theme === 'dark';
 
-  // NEW state for the assignment modal
-  const [isAssignModalOpen, setIsAssignModalOpen] = useState(false);
-  const [orderToAssign, setOrderToAssign] = useState(null);
-  const [availableDrivers, setAvailableDrivers] = useState([]);
-
-  // Fetch admin restaurants
+  // Fetch Admin Restaurants
   useEffect(() => {
     const fetchAdminRestaurants = async () => {
       setLoading(true);
-      setError('');
       const sessionKey = Object.keys(sessionStorage).find(key => key.startsWith('token_'));
       const token = sessionKey ? sessionStorage.getItem(sessionKey) : null;
-      if (!token) {
-        showAlert('No authentication token found. Please log in.');
-        setLoading(false);
-        return;
-      }
+      if (!token) return;
+
       try {
-        const response = await axios.get('http://localhost:3000/api/restaurants', {
+        const response = await axios.get('http://localhost:3003/api/restaurants', {
           headers: { Authorization: `Bearer ${token}` },
         });
         const data = response.data.data || response.data;
@@ -42,10 +35,7 @@ const AdminOrders = () => {
           setSelectedRestaurantId(data[0]._id);
         }
       } catch (err) {
-        const errorMessage = err.response?.data?.error || 'Failed to fetch your restaurants.';
-        setError(errorMessage);
-        showAlert(`Error: ${errorMessage}`);
-        console.error('Frontend (AdminOrders) - Fetch restaurants error:', err.response ? err.response.data : err);
+        setError('Failed to fetch restaurants.');
       } finally {
         setLoading(false);
       }
@@ -53,32 +43,20 @@ const AdminOrders = () => {
     fetchAdminRestaurants();
   }, []);
 
-  // Fetch orders when restaurant changes or on refresh
+  // Fetch Orders
   const fetchOrders = async () => {
-    if (!selectedRestaurantId) {
-      setOrders([]);
-      return;
-    }
-
+    if (!selectedRestaurantId) return;
     setLoading(true);
-    setError('');
     const sessionKey = Object.keys(sessionStorage).find(key => key.startsWith('token_'));
     const token = sessionKey ? sessionStorage.getItem(sessionKey) : null;
-    if (!token) {
-      showAlert('No authentication token found. Please log in.');
-      setLoading(false);
-      return;
-    }
+
     try {
       const response = await axios.get(`http://localhost:3000/api/orders/restaurant/${selectedRestaurantId}`, {
         headers: { Authorization: `Bearer ${token}` },
       });
       setOrders(response.data);
     } catch (err) {
-      const errorMessage = err.response?.data?.error || 'Failed to fetch orders for this restaurant.';
-      setError(errorMessage);
-      showAlert(`Error: ${errorMessage}`);
-      console.error('Frontend (AdminOrders) - Fetch orders error:', err.response ? err.response.data : err);
+      console.error(err);
     } finally {
       setLoading(false);
     }
@@ -88,190 +66,142 @@ const AdminOrders = () => {
     fetchOrders();
   }, [selectedRestaurantId]);
 
-  // NEW: Fetch available drivers for assignment
-  const fetchAvailableDrivers = async () => {
-    try {
-      const sessionKey = Object.keys(sessionStorage).find(key => key.startsWith('token_'));
-      const token = sessionKey ? sessionStorage.getItem(sessionKey) : null;
-      if (!token) {
-        showAlert('Authentication required to fetch drivers.');
-        return;
-      }
-      const response = await axios.get('http://localhost:3000/api/delivery', {
-        headers: { Authorization: `Bearer ${token}` },
-        params: { status: 'available' } // Optional: filter by status
-      });
-      setAvailableDrivers(response.data);
-    } catch (err) {
-      showAlert('Error fetching available drivers.');
-      console.error('Frontend (AdminOrders) - Fetch drivers error:', err.response?.data || err);
-    }
-  };
-
   const handleStatusChange = async (orderId, newStatus) => {
     try {
       const sessionKey = Object.keys(sessionStorage).find(key => key.startsWith('token_'));
       const token = sessionKey ? sessionStorage.getItem(sessionKey) : null;
-      if (!token) {
-        showAlert('Error: No authentication token.');
-        return;
-      }
-
       await axios.put(`http://localhost:3000/api/orders/${orderId}/status`, { status: newStatus }, {
         headers: { Authorization: `Bearer ${token}` },
       });
-
-      showAlert('Order status updated successfully!');
+      showAlert('Status updated successfully!');
       fetchOrders();
     } catch (err) {
-      const msg = err.response?.data?.error || 'Failed to update order status.';
-      showAlert(`Error: ${msg}`);
-      console.error('Frontend (AdminOrders) - Status update error:', err.response ? err.response.data : err);
+      showAlert('Failed to update status.');
     }
   };
 
-  // NEW: Handle assignment modal open
-  const handleOpenAssignModal = (order) => {
-    fetchAvailableDrivers();
-    setOrderToAssign(order);
-    setIsAssignModalOpen(true);
-  };
+  // Theme Classes
+  const textMain = isDark ? 'text-white' : 'text-gray-900';
+  const textSub = isDark ? 'text-gray-400' : 'text-gray-500';
+  const cardBg = isDark ? 'bg-[#1a1a1a] border-white/5' : 'bg-white border-gray-100';
+  const selectBg = isDark ? 'bg-[#2a2a2a] text-white border-white/10' : 'bg-white text-gray-900 border-gray-300';
 
-  // NEW: Handle order assignment submission
-  const handleAssignDriver = async (deliveryPersonId) => {
-    if (!orderToAssign || !deliveryPersonId) {
-      showAlert('Invalid order or delivery person selected.');
-      return;
-    }
-
-    try {
-      const sessionKey = Object.keys(sessionStorage).find(key => key.startsWith('token_'));
-      const token = sessionKey ? sessionStorage.getItem(sessionKey) : null;
-      if (!token) {
-        showAlert('Authentication required.');
-        return;
-      }
-      
-      await axios.put(`http://localhost:3000/api/orders/${orderToAssign._id}/assign-delivery`, { deliveryPersonId }, {
-        headers: { Authorization: `Bearer ${token}` }
-      });
-
-      showAlert(`Order ${orderToAssign._id.substring(0, 8)} successfully assigned!`);
-      setIsAssignModalOpen(false);
-      setOrderToAssign(null);
-      fetchOrders(); // Refresh order list
-    } catch (err) {
-      const msg = err.response?.data?.error || 'Failed to assign delivery person.';
-      showAlert(`Error: ${msg}`);
-      console.error('Frontend (AdminOrders) - Assign driver error:', err.response ? err.response.data : err);
-    }
-  };
-
-  if (loading && restaurants.length === 0 && !error) {
-    return <div className="p-6 text-center"><p className="text-gray-600 text-lg">Loading admin data...</p></div>;
-  }
-
-  if (error) return <div className="p-6 text-center"><p className="text-red-600 font-semibold">{error}</p></div>;
+  if (loading && restaurants.length === 0) return <PageLoader />;
 
   return (
-    <div className="p-8 bg-white rounded-xl shadow-2xl">
-      <h1 className="text-3xl font-bold text-gray-800 mb-6">Manage Orders</h1>
+    <div className="w-full">
+      <div className="flex flex-col md:flex-row justify-between items-start md:items-center mb-8 gap-4">
+        <div>
+            <h1 className={`text-3xl font-black ${textMain}`}>Manage Orders</h1>
+            <p className={`text-sm ${textSub}`}>Update order status to notify drivers.</p>
+        </div>
+        
+        {restaurants.length > 0 && (
+          <div className="w-full md:w-auto">
+            <select
+              value={selectedRestaurantId}
+              onChange={(e) => setSelectedRestaurantId(e.target.value)}
+              className={`w-full md:w-64 p-3 rounded-xl border focus:outline-none focus:ring-2 focus:ring-[#ffaa00] font-bold text-sm ${selectBg}`}
+            >
+              {restaurants.map(r => <option key={r._id} value={r._id}>{r.name}</option>)}
+            </select>
+          </div>
+        )}
+      </div>
 
-      {restaurants.length > 0 ? (
-        <div className="mb-6 flex items-center space-x-4">
-          <label htmlFor="restaurant-select" className="block text-lg font-medium text-gray-700 mb-2">
-            Select Restaurant:
-          </label>
-          <select
-            id="restaurant-select"
-            value={selectedRestaurantId}
-            onChange={(e) => setSelectedRestaurantId(e.target.value)}
-            className="w-full md:w-1/2 p-3 border border-gray-300 rounded-lg shadow-sm focus:outline-none focus:ring-2 focus:ring-[#ffaa00] text-gray-700"
-          >
-            {restaurants.map(restaurant => (
-              <option key={restaurant._id} value={restaurant._id}>
-                {restaurant.name}
-              </option>
-            ))}
-          </select>
+      {orders.length === 0 ? (
+        <div className={`p-16 rounded-[2.5rem] text-center border-2 border-dashed ${isDark ? 'border-white/10' : 'border-gray-200'}`}>
+            <div className={`w-20 h-20 rounded-full flex items-center justify-center mx-auto mb-4 text-3xl ${isDark ? 'bg-white/5 text-gray-600' : 'bg-gray-100 text-gray-400'}`}>
+                <FaBox />
+            </div>
+            <h3 className={`text-lg font-bold ${textMain}`}>No Orders Found</h3>
         </div>
       ) : (
-        <p className="text-gray-600 mb-6">You don't have any restaurants to manage orders for. Please create one first.</p>
-      )}
-
-      {loading ? (
-        <div className="flex justify-center"><p className="text-gray-600 text-lg">Loading orders...</p></div>
-      ) : orders.length === 0 ? (
-        <p className="text-gray-600 text-center text-lg">No orders found for this restaurant.</p>
-      ) : (
-        <div className="space-y-6">
+        <div className="grid grid-cols-1 xl:grid-cols-2 gap-6">
           {orders.map((order) => (
-            <div key={order._id} className="bg-gray-50 rounded-lg shadow-md p-5 border border-gray-100">
-              <div className="flex flex-wrap justify-between items-center mb-3">
-                <h3 className="text-xl font-bold text-gray-800">Order #{order._id.substring(0, 8)}</h3>
-                <span className={`px-3 py-1 rounded-full text-sm font-semibold
-                  ${order.status === 'delivered' ? 'bg-green-100 text-green-800' :
-                    order.status === 'cancelled' ? 'bg-red-100 text-red-800' :
-                    'bg-yellow-100 text-yellow-800'}`}>
-                  {order.status.replace(/_/g, ' ')}
-                </span>
+            <div key={order._id} className={`p-6 rounded-[2rem] border shadow-sm ${cardBg}`}>
+              
+              {/* Card Header */}
+              <div className="flex flex-wrap justify-between items-start gap-4 mb-6 pb-6 border-b border-dashed border-gray-200 dark:border-white/10">
+                <div>
+                    <div className="flex items-center gap-3 mb-1">
+                        <span className="px-3 py-1 rounded-lg bg-[#ffaa00]/10 text-[#ffaa00] text-[10px] font-bold uppercase tracking-wider">
+                            #{order._id.substring(0, 8)}
+                        </span>
+                        <span className="text-xs font-bold text-gray-400 flex items-center gap-1">
+                            <FaClock size={10} /> {format(new Date(order.orderDate), 'MMM d, h:mm a')}
+                        </span>
+                    </div>
+                    <h3 className={`text-lg font-bold ${textMain}`}>Rs. {order.totalAmount.toFixed(2)}</h3>
+                </div>
+                
+                {/* Status Badge */}
+                <div className={`px-4 py-2 rounded-xl text-xs font-bold uppercase tracking-wider flex items-center gap-2
+                    ${order.status === 'delivered' ? 'bg-green-100 text-green-700' : 
+                      order.status === 'cancelled' ? 'bg-red-100 text-red-700' : 
+                      'bg-blue-100 text-blue-700'}`}>
+                    {order.status === 'delivered' ? <FaCheckCircle /> : <FaClock />}
+                    {order.status.replace(/_/g, ' ')}
+                </div>
               </div>
-              <p className="text-gray-700 mb-1"><strong>User ID:</strong> {order.userId}</p>
-              <p className="text-gray-700 mb-1"><strong>Order Date:</strong> {format(new Date(order.orderDate), 'PPP p')}</p>
-              <p className="text-gray-700 mb-3"><strong>Delivery Address:</strong> {order.deliveryAddress}</p>
-              {order.deliveryPersonId && (
-                <p className="text-gray-700 mb-3"><strong>Assigned to:</strong> {order.deliveryPersonId}</p>
+
+              {/* Items List */}
+              <div className="space-y-3 mb-6">
+                {order.items.map((item, idx) => (
+                    <div key={idx} className="flex justify-between items-center text-sm">
+                        <div className={`flex items-center gap-3 ${textMain}`}>
+                            <span className="font-bold text-[#ffaa00]">{item.quantity}x</span>
+                            <span>{item.name} <span className={`text-xs ${textSub}`}>{item.size === 'full' ? '(Full)' : ''}</span></span>
+                        </div>
+                        <span className={`font-bold ${textSub}`}>Rs. {item.price}</span>
+                    </div>
+                ))}
+              </div>
+
+              {/* Delivery Info */}
+              <div className={`p-4 rounded-xl mb-6 flex items-start gap-3 ${isDark ? 'bg-black/20' : 'bg-gray-50'}`}>
+                <FaMapMarkerAlt className="text-red-500 mt-1 flex-shrink-0" />
+                <div>
+                    <p className={`text-xs font-bold uppercase tracking-wider mb-1 ${textSub}`}>Delivery To</p>
+                    <p className={`text-sm font-bold ${textMain} line-clamp-2`}>{order.deliveryAddress}</p>
+                </div>
+              </div>
+
+              {/* Actions Footer */}
+              <div className="flex flex-col sm:flex-row gap-3">
+                <div className="flex-1">
+                    <label className={`block text-xs font-bold uppercase tracking-widest mb-2 ${textSub}`}>Update Status</label>
+                    <select
+                        value={order.status}
+                        onChange={(e) => handleStatusChange(order._id, e.target.value)}
+                        className={`w-full p-3 rounded-xl border font-bold text-sm focus:outline-none focus:ring-2 focus:ring-[#ffaa00] ${selectBg}`}
+                    >
+                        <option value="pending">Pending</option>
+                        <option value="confirmed">Confirmed</option>
+                        <option value="preparing">Preparing</option>
+                        <option value="ready_for_pickup">Ready for Pickup</option>
+                        <option value="out_for_delivery">Out for Delivery</option>
+                        <option value="delivered">Delivered</option>
+                        <option value="cancelled">Cancelled</option>
+                    </select>
+                </div>
+              </div>
+
+              {/* Assigned Driver Info */}
+              {order.deliveryPersonId ? (
+                  <div className="mt-4 flex items-center gap-2 text-xs font-bold text-green-500">
+                      <FaCheckCircle /> Driver Accepted
+                  </div>
+              ) : (
+                  <div className="mt-4 flex items-center gap-2 text-xs font-bold text-[#ffaa00]">
+                      <FaClock /> Waiting for Driver
+                  </div>
               )}
 
-              <h4 className="text-lg font-semibold text-gray-800 mb-2">Items:</h4>
-              <ul className="list-disc pl-5 space-y-1 mb-4">
-                {order.items.map((item, index) => (
-                  <li key={index} className="text-gray-600">
-                    {item.name} (x{item.quantity}) - <span className="font-semibold">Rs. {item.price}</span>
-                    {item.size && <span className="text-sm text-gray-500 ml-2">({item.size === 'full' ? 'Full Size' : 'Normal Size'})</span>}
-                  </li>
-                ))}
-              </ul>
-              <div className="flex justify-between items-center border-t pt-3 mt-4">
-                <div className="text-xl font-bold text-gray-900">
-                  Total: Rs. {order.totalAmount.toFixed(2)}
-                </div>
-                <div className="flex items-center space-x-2">
-                  {order.status === 'confirmed' && !order.deliveryPersonId && (
-                    <button
-                      onClick={() => handleOpenAssignModal(order)}
-                      className="bg-purple-600 text-white px-4 py-2 rounded-lg hover:bg-purple-700 flex items-center text-sm transition shadow-sm"
-                    >
-                      <FaCheckCircle className="mr-2" /> Assign Delivery
-                    </button>
-                  )}
-                  <select
-                    value={order.status}
-                    onChange={(e) => handleStatusChange(order._id, e.target.value)}
-                    className="p-2 border border-gray-300 rounded-lg bg-white focus:outline-none focus:ring-2 focus:ring-blue-500"
-                  >
-                    <option value="pending">Pending</option>
-                    <option value="confirmed">Confirmed</option>
-                    <option value="preparing">Preparing</option>
-                    <option value="out_for_delivery">Out for Delivery</option>
-                    <option value="delivered">Delivered</option>
-                    <option value="cancelled">Cancelled</option>
-                  </select>
-                </div>
-              </div>
             </div>
           ))}
         </div>
       )}
-      
-      {/* NEW: Render the assignment modal */}
-      <AssignDeliveryModal
-        isOpen={isAssignModalOpen}
-        onClose={() => setIsAssignModalOpen(false)}
-        onAssign={handleAssignDriver}
-        order={orderToAssign}
-        drivers={availableDrivers}
-      />
     </div>
   );
 };
