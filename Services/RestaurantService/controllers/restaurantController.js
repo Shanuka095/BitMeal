@@ -1,7 +1,5 @@
 const Restaurant = require('../models/restaurantModel');
 const Joi = require('joi');
-// axios is not used in this controller currently, but kept if you extend features later
-// const axios = require('axios'); 
 
 // --- Validation Schemas ---
 const restaurantSchema = Joi.object({
@@ -23,7 +21,7 @@ const ratingSchema = Joi.object({
   likeStatus: Joi.string().valid('liked', 'disliked').optional().allow(null),
 });
 
-// --- PUBLIC ROUTES (No Token Needed) ---
+// --- PUBLIC ROUTES ---
 
 // Get ALL Approved Restaurants (For Customers)
 const getPublicRestaurants = async (req, res) => {
@@ -31,10 +29,10 @@ const getPublicRestaurants = async (req, res) => {
     const restaurants = await Restaurant.find({ 
         $or: [
             { status: 'approved' },
-            { status: { $exists: false } } // Handles legacy data
+            { status: { $exists: false } } // Handle legacy data
         ]
     })
-    .sort({ averageRating: -1, totalRatings: -1 })
+    .sort({ averageRating: -1, totalRatings: -1 }) // Best rated first
     .lean();
     
     if (!restaurants.length) {
@@ -65,13 +63,18 @@ const getPublicRestaurantDetails = async (req, res) => {
   }
 };
 
-// --- RESTAURANT ADMIN ROUTES (Protected) ---
+// --- RESTAURANT ADMIN ROUTES ---
 
-// Get "My" Restaurants
+// Get "My" Restaurants (UPDATED: Added Sorting)
 const getAdminRestaurants = async (req, res) => {
   try {
     if (!req.user || !req.user.userId) return res.status(401).json({ error: 'Unauthorized' });
-    const restaurants = await Restaurant.find({ owner: req.user.userId }).lean();
+    
+    // Sort by newest first
+    const restaurants = await Restaurant.find({ owner: req.user.userId })
+      .sort({ createdAt: -1 }) 
+      .lean();
+      
     res.json(restaurants);
   } catch (err) {
     res.status(500).json({ error: 'Failed to fetch restaurants' });
@@ -91,7 +94,7 @@ const createRestaurant = async (req, res) => {
       address,
       imageUrl,
       owner: req.user.userId,
-      status: 'pending', // Default to Pending
+      status: 'pending', // Default to Pending for Super Admin approval
     });
     await restaurant.save();
     res.status(201).json(restaurant);
@@ -110,7 +113,7 @@ const updateRestaurant = async (req, res) => {
     if (req.file) updateFields.imageUrl = req.file.filename;
 
     const query = { _id: req.params.id };
-    // Allow Super Admin to update ANY restaurant, otherwise only Owner
+    // Allow Super Admin to update ANY, otherwise only Owner
     if (req.user.role !== 'super_admin') {
         query.owner = req.user.userId;
     }
@@ -148,15 +151,21 @@ const addMenuItem = async (req, res) => {
   try {
     const { name, normalPrice, extraPriceForFull, category } = req.body;
     const imageUrl = req.file ? req.file.filename : '';
+    
+    // Validate
     const { error } = menuItemSchema.validate({
-      name, normalPrice: Number(normalPrice), extraPriceForFull: Number(extraPriceForFull || 0), category, imageUrl
+      name, 
+      normalPrice: Number(normalPrice), 
+      extraPriceForFull: Number(extraPriceForFull || 0), 
+      category, 
+      imageUrl
     });
     if (error) return res.status(400).json({ error: error.details[0].message });
 
     const restaurant = await Restaurant.findOne({ _id: req.params.id, owner: req.user.userId });
     if (!restaurant) return res.status(404).json({ error: 'Restaurant not found' });
 
-    // Check Approval Status
+    // Check Approval Status (Optional: can be disabled if you want admins to build menu while pending)
     if (restaurant.status && restaurant.status !== 'approved') {
         return res.status(403).json({ error: 'You cannot add menu items until your restaurant is approved.' });
     }
@@ -177,7 +186,6 @@ const addMenuItem = async (req, res) => {
 
 // --- SUPER ADMIN ROUTES ---
 
-// Get ALL Restaurants (Filtered by Status)
 const getAllRestaurants = async (req, res) => {
     try {
         const { status } = req.query;
@@ -191,7 +199,6 @@ const getAllRestaurants = async (req, res) => {
             query.status = 'rejected';
         }
         
-        // If no status query is provided, it returns ALL (useful for Dashboard counts)
         const restaurants = await Restaurant.find(query).sort({ createdAt: -1 });
         res.json(restaurants);
     } catch (err) {
@@ -200,7 +207,6 @@ const getAllRestaurants = async (req, res) => {
     }
 };
 
-// Approve/Reject Restaurant
 const updateRestaurantStatus = async (req, res) => {
     try {
         const { status } = req.body;
@@ -263,7 +269,6 @@ const updateMenuItem = async (req, res) => {
     const menuItem = restaurant.menu.id(req.params.menuId);
     if (!menuItem) return res.status(404).json({ error: 'Menu item not found' });
 
-    // Update fields
     if (req.body.name) menuItem.name = req.body.name;
     if (req.body.normalPrice) menuItem.normalPrice = Number(req.body.normalPrice);
     if (req.body.extraPriceForFull !== undefined) menuItem.extraPriceForFull = Number(req.body.extraPriceForFull);
@@ -331,6 +336,6 @@ module.exports = {
   updateMenuItem,
   deleteMenuItem,
   submitRating,
-  getAllRestaurants,      // REQUIRED for Super Admin Dashboard
-  updateRestaurantStatus  // REQUIRED for Approval Logic
+  getAllRestaurants,
+  updateRestaurantStatus
 };

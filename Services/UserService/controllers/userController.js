@@ -4,19 +4,13 @@ const User = require('../models/userModel');
 // --- INTERNAL: Create Profile ---
 const createProfile = async (req, res) => {
   const { userId, email, name, phone, role } = req.body;
-  
   try {
     const existing = await User.findById(userId);
     if (existing) return res.status(200).json({ message: 'Profile exists' });
 
     const newUser = new User({
-      _id: userId,
-      email,
-      name,
-      phone,
-      role: role || 'customer'
+      _id: userId, email, name, phone, role: role || 'customer'
     });
-    
     await newUser.save();
     res.status(201).json(newUser);
   } catch (error) {
@@ -42,6 +36,8 @@ const getProfile = async (req, res) => {
       phone: user.phone,
       role: user.role,
       address: user.profile?.address || '',
+      vehicleType: user.profile?.vehicleType || '',     // NEW
+      licensePlate: user.profile?.licensePlate || '',   // NEW
       profileImageUrl: user.profile?.profileImageUrl || '',
       createdAt: user.createdAt,
     });
@@ -50,7 +46,7 @@ const getProfile = async (req, res) => {
   }
 };
 
-// --- PUBLIC: Update Profile (Fix applied here) ---
+// --- PUBLIC: Update Profile ---
 const updateProfile = async (req, res) => {
   try {
     const token = req.headers.authorization?.split(' ')[1];
@@ -58,16 +54,19 @@ const updateProfile = async (req, res) => {
 
     const decoded = jwt.verify(token, process.env.JWT_SECRET);
     
-    // Destructure text fields
-    const { name, phone, address } = req.body;
+    // Destructure all possible fields
+    const { name, phone, address, vehicleType, licensePlate } = req.body;
     
     // Build update object dynamically
     const updateData = {};
     if (name) updateData.name = name;
     if (phone) updateData.phone = phone;
-    if (address) updateData['profile.address'] = address; // Optional if you have address
+    
+    // Profile sub-document updates
+    if (address) updateData['profile.address'] = address;
+    if (vehicleType) updateData['profile.vehicleType'] = vehicleType;     // NEW
+    if (licensePlate) updateData['profile.licensePlate'] = licensePlate;   // NEW
 
-    // Only update image if a new file is uploaded
     if (req.file) {
         updateData['profile.profileImageUrl'] = req.file.filename;
     }
@@ -87,4 +86,22 @@ const updateProfile = async (req, res) => {
   }
 };
 
-module.exports = { createProfile, getProfile, updateProfile };
+// --- INTERNAL: Delete Profile ---
+const deleteProfile = async (req, res) => {
+    try {
+        const { id } = req.params;
+        const deletedUser = await User.findByIdAndDelete(id);
+        
+        if (!deletedUser) {
+            console.warn(`UserService: Attempted to delete non-existent profile ${id}`);
+            return res.status(404).json({ error: 'Profile not found' });
+        }
+        console.log(`UserService: Profile ${id} deleted successfully.`);
+        res.json({ message: 'Profile deleted' });
+    } catch (error) {
+        console.error("Delete Profile Error:", error);
+        res.status(500).json({ error: 'Failed to delete profile' });
+    }
+};
+
+module.exports = { createProfile, getProfile, updateProfile, deleteProfile };
