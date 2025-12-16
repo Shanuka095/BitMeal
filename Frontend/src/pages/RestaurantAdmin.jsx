@@ -1,16 +1,19 @@
 import { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import axios from 'axios';
-import { FaTrash, FaEye } from 'react-icons/fa';
-import jwtDecode from 'jwt-decode';
-import { useModal } from '../context/ModalContext'; // Import useModal
+import { FaTrash, FaEye, FaPlus, FaStoreAlt, FaMapMarkerAlt } from 'react-icons/fa';
+import { useModal } from '../context/ModalContext';
+import { useTheme } from '../context/ThemeContext';
+import PageLoader from '../components/PageLoader';
 
-const RestaurantAdmin = () => { // Removed showAlert, showConfirm from props
+const RestaurantAdmin = () => {
   const navigate = useNavigate();
   const [restaurants, setRestaurants] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');
-  const { showAlert, showConfirm } = useModal(); // Use useModal hook
+  const { showAlert, showConfirm } = useModal();
+  const { theme } = useTheme();
+  const isDark = theme === 'dark';
 
   useEffect(() => {
     const fetchRestaurants = async () => {
@@ -20,38 +23,19 @@ const RestaurantAdmin = () => { // Removed showAlert, showConfirm from props
       const token = sessionKey ? sessionStorage.getItem(sessionKey) : null;
 
       if (!token) {
-        console.error('Frontend (RestaurantAdmin) - No authentication token found.');
-        setError('No authentication token');
+        setError('No authentication token found.');
         setLoading(false);
         return;
       }
 
-      console.log('Frontend (RestaurantAdmin) - Fetching with token (first 10 chars):', token.substring(0, 10) + '...');
       try {
         const response = await axios.get('http://localhost:3003/api/restaurants', {
           headers: { Authorization: `Bearer ${token}` },
         });
-        console.log('Frontend (RestaurantAdmin) - API Response:', response.data);
         const data = response.data.data || response.data;
-        if (Array.isArray(data)) {
-          setRestaurants(data);
-          if (data.length === 0) {
-            console.log('Frontend (RestaurantAdmin) - No restaurants found.');
-            setError('No restaurants found. Create one to get started.');
-          }
-        } else {
-          console.warn('Frontend (RestaurantAdmin) - Expected an array of restaurants, got:', data);
-          setRestaurants([]);
-        }
+        setRestaurants(Array.isArray(data) ? data : []);
       } catch (err) {
-        const errorMessage = err.response?.data?.error || err.message || 'Failed to load restaurants';
-        setError(errorMessage);
-        console.error('Frontend (RestaurantAdmin) - Fetch error:', err.response ? err.response.data : err);
-        if (err.response?.status === 403) {
-          console.log('Frontend (RestaurantAdmin): 403 Error - Access denied.');
-        } else if (err.response?.status === 401) {
-          console.log('Frontend (RestaurantAdmin): 401 Error - Unauthorized.');
-        }
+        setError(err.response?.data?.error || 'Failed to load restaurants');
       } finally {
         setLoading(false);
       }
@@ -61,72 +45,110 @@ const RestaurantAdmin = () => { // Removed showAlert, showConfirm from props
 
   const handleDeleteRestaurant = (id, name) => {
     showConfirm(
-      `Are you sure you want to delete "${name}"? This action cannot be undone.`,
+      `Delete "${name}"? This cannot be undone.`,
       async () => {
         const sessionKey = Object.keys(sessionStorage).find(key => key.startsWith('token_'));
         const token = sessionKey ? sessionStorage.getItem(sessionKey) : null;
-        if (!token) {
-          showAlert('No authentication token found. Please log in.');
-          return;
-        }
         try {
           await axios.delete(`http://localhost:3003/api/restaurants/${id}`, {
             headers: { Authorization: `Bearer ${token}` },
           });
           setRestaurants(restaurants.filter(r => r._id !== id));
-          showAlert(`Restaurant "${name}" deleted successfully.`);
-          console.log(`Frontend (RestaurantAdmin) - Restaurant ${name} deleted successfully.`);
+          showAlert(`Deleted "${name}" successfully.`);
         } catch (err) {
           showAlert(err.response?.data?.error || 'Failed to delete restaurant');
-          console.error('Frontend (RestaurantAdmin) - Delete error:', err.response ? err.response.data : err);
         }
       },
-      () => {
-        console.log('Delete cancelled.');
-      }
+      () => {}
     );
   };
 
-  const handleViewDetails = (id) => navigate(`/admin/restaurant/${id}`);
+  // Theme Classes
+  const cardBg = isDark ? 'bg-[#1a1a1a] border-white/5' : 'bg-white border-gray-100';
+  const textMain = isDark ? 'text-white' : 'text-gray-900';
+  const textSub = isDark ? 'text-gray-400' : 'text-gray-500';
+
+  if (loading) return <PageLoader />;
 
   return (
-    <section className="bg-white rounded-xl shadow-md p-6">
-      <div className="flex justify-between items-center mb-4 border-b pb-2">
-        <h2 className="text-2xl font-bold text-gray-800">My Restaurants</h2>
+    <section>
+      {/* Header */}
+      <div className="flex flex-col md:flex-row justify-between items-start md:items-center mb-10 gap-4">
+        <div>
+            <h1 className={`text-3xl font-black ${textMain}`}>My Restaurants</h1>
+            <p className={`text-sm ${textSub}`}>Manage your outlets and menus.</p>
+        </div>
+        <button 
+            onClick={() => navigate('/admin/create-restaurant')}
+            className="flex items-center gap-2 bg-[#ffaa00] text-white px-6 py-3 rounded-xl font-bold shadow-lg hover:shadow-orange-500/30 transition-all active:scale-95"
+        >
+            <FaPlus /> Add New Restaurant
+        </button>
       </div>
 
-      {loading ? (
-        <div className="flex justify-center"><p className="text-gray-600">Loading restaurants...</p></div>
-      ) : error ? (
-        <div className="flex justify-center"><p className="text-red-600 font-semibold">{error}</p></div>
-      ) : restaurants.length === 0 ? (
-        <div className="flex justify-center"><p className="text-gray-600">No restaurants found. Create one to get started.</p></div>
+      {error && (
+        <div className="p-6 rounded-2xl bg-red-500/10 border border-red-500/20 text-red-500 text-center font-bold mb-8">
+            {error}
+        </div>
+      )}
+
+      {/* Grid Content */}
+      {restaurants.length === 0 && !error ? (
+        <div className={`p-16 rounded-[2.5rem] text-center border-2 border-dashed ${isDark ? 'border-white/10' : 'border-gray-200'}`}>
+            <div className={`w-24 h-24 rounded-full flex items-center justify-center mx-auto mb-6 text-4xl ${isDark ? 'bg-white/5 text-gray-500' : 'bg-gray-50 text-gray-300'}`}>
+                <FaStoreAlt />
+            </div>
+            <h3 className={`text-xl font-bold ${textMain} mb-2`}>No Restaurants Yet</h3>
+            <p className={`text-sm ${textSub} mb-6`}>Get started by creating your first restaurant.</p>
+            <button onClick={() => navigate('/admin/create-restaurant')} className="text-[#ffaa00] font-bold hover:underline">Create Now</button>
+        </div>
       ) : (
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+        <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-8">
           {restaurants.map((restaurant) => (
-            <div key={restaurant._id} className="bg-gray-50 p-4 rounded-lg shadow hover:shadow-md transition">
-              {restaurant.imageUrl && (
-                <img
-                  src={`http://localhost:3003/uploads/${restaurant.imageUrl}`}
-                  alt={restaurant.name}
-                  className="w-full h-48 object-cover rounded-t-lg mb-2"
-                />
-              )}
-              <h3 className="text-lg font-semibold text-gray-800">{restaurant.name}</h3>
-              <p className="text-sm text-gray-600 mt-1">Address: {restaurant.address}</p>
-              <div className="mt-4 flex space-x-3">
-                <button
-                  onClick={() => handleViewDetails(restaurant._id)}
-                  className="bg-blue-600 text-white px-4 py-2 rounded-lg hover:bg-blue-700 flex items-center text-sm transition"
-                >
-                  <FaEye className="mr-1" /> View Details
-                </button>
-                <button
-                  onClick={() => handleDeleteRestaurant(restaurant._id, restaurant.name)}
-                  className="bg-red-600 text-white px-4 py-2 rounded-lg hover:bg-red-700 flex items-center text-sm transition"
-                >
-                  <FaTrash className="mr-1" /> Delete
-                </button>
+            <div key={restaurant._id} className={`group relative rounded-[2rem] overflow-hidden border shadow-sm hover:shadow-2xl transition-all duration-300 ${cardBg}`}>
+              
+              {/* Image Section */}
+              <div className="relative h-48 overflow-hidden">
+                {restaurant.imageUrl ? (
+                  <img
+                    src={`http://localhost:3003/uploads/${restaurant.imageUrl}`}
+                    alt={restaurant.name}
+                    className="w-full h-full object-cover transition-transform duration-700 group-hover:scale-110"
+                  />
+                ) : (
+                  <div className={`w-full h-full flex items-center justify-center ${isDark ? 'bg-white/5' : 'bg-gray-100'}`}>
+                    <FaStoreAlt className="text-4xl text-gray-300" />
+                  </div>
+                )}
+                
+                {/* Status Badge (if exists in model) */}
+                <div className="absolute top-4 right-4 bg-white/90 backdrop-blur-md px-3 py-1 rounded-full text-[10px] font-bold uppercase tracking-widest text-black shadow-sm">
+                    {restaurant.status || 'Active'}
+                </div>
+              </div>
+
+              {/* Content Section */}
+              <div className="p-6">
+                <h3 className={`text-xl font-black mb-2 line-clamp-1 ${textMain}`}>{restaurant.name}</h3>
+                <div className="flex items-start gap-2 mb-6 min-h-[40px]">
+                    <FaMapMarkerAlt className="text-[#ffaa00] mt-1 flex-shrink-0" />
+                    <p className={`text-sm ${textSub} line-clamp-2`}>{restaurant.address}</p>
+                </div>
+
+                <div className="flex gap-3">
+                    <button
+                        onClick={() => navigate(`/admin/restaurant/${restaurant._id}`)}
+                        className={`flex-1 py-3 rounded-xl font-bold text-sm transition-all ${isDark ? 'bg-white text-black hover:bg-gray-200' : 'bg-black text-white hover:bg-gray-800'}`}
+                    >
+                        <FaEye className="inline mr-2" /> Manage
+                    </button>
+                    <button
+                        onClick={() => handleDeleteRestaurant(restaurant._id, restaurant.name)}
+                        className="w-12 h-12 flex items-center justify-center rounded-xl bg-red-500/10 text-red-500 hover:bg-red-500 hover:text-white transition-all"
+                    >
+                        <FaTrash />
+                    </button>
+                </div>
               </div>
             </div>
           ))}
