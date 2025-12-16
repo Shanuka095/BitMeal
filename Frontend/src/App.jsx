@@ -5,7 +5,7 @@ import Navbar from './components/Navbar';
 import Footer from './components/Footer';
 import ActiveOrderBanner from './components/ActiveOrderBanner';
 import AdminLayout from './components/AdminLayout'; 
-import SuperAdminLayout from './components/SuperAdminLayout'; // NEW LAYOUT
+import SuperAdminLayout from './components/SuperAdminLayout'; 
 import DeliveryPersonnelLayout from './components/DeliveryPersonnelLayout';
 
 // Pages (Standard)
@@ -25,6 +25,11 @@ import Services from './pages/Services';
 import AboutUs from './pages/AboutUs';
 import ContactUs from './pages/ContactUs';
 import Profile from './pages/Profile';
+
+// --- NEW PAGES IMPORT ---
+import ForgotPassword from './pages/ForgotPassword';
+import VerifyResetOTP from './pages/VerifyResetOTP';
+import ResetPassword from './pages/ResetPassword';
 
 // Restaurant Admin Pages
 import RestaurantAdmin from './pages/RestaurantAdmin';
@@ -94,6 +99,12 @@ function App() {
                 <Route path="/login" element={<Login />} />
                 <Route path="/register" element={<Register />} />
                 <Route path="/verify-otp" element={<VerifyOTP />} />
+                
+                {/* --- FORGOT PASSWORD FLOW (NEW) --- */}
+                <Route path="/forgot-password" element={<ForgotPassword />} />
+                <Route path="/verify-reset-otp" element={<VerifyResetOTP />} />
+                <Route path="/reset-password" element={<ResetPassword />} />
+
                 <Route path="/services" element={<Services />} />
                 <Route path="/about" element={<AboutUs />} />
                 <Route path="/contact" element={<ContactUs />} />
