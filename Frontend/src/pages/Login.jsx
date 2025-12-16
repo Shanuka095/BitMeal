@@ -3,11 +3,12 @@ import axios from 'axios';
 import { useNavigate, Link } from 'react-router-dom';
 import { useTheme } from '../context/ThemeContext';
 import PageLoader from '../components/PageLoader';
-import { FaEnvelope, FaLock } from 'react-icons/fa';
+import { FaEnvelope, FaLock, FaEye, FaEyeSlash } from 'react-icons/fa';
 
 const Login = () => {
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
+  const [showPassword, setShowPassword] = useState(false); // New State
   const [error, setError] = useState('');
   const [loading, setLoading] = useState(false);
   const [pageLoading, setPageLoading] = useState(true);
@@ -29,11 +30,10 @@ const Login = () => {
       sessionStorage.setItem(sessionKey, token);
       setError('');
 
-      // --- FIX: Logic to handle Super Admin Redirect ---
       if (role === 'customer') navigate('/dashboard');
       else if (role === 'restaurant_admin') navigate('/admin');
       else if (role === 'delivery_personnel') navigate('/delivery-personnel');
-      else if (role === 'super_admin') navigate('/super-admin'); // <--- NEW
+      else if (role === 'super_admin') navigate('/super-admin');
 
     } catch (err) {
       setError(err.response?.data?.error || 'Login failed');
@@ -49,7 +49,6 @@ const Login = () => {
   const cardBg = isDark 
     ? 'bg-[#1a1a1a] border-white/5 shadow-black/50' 
     : 'bg-white/80 border-white/60 shadow-2xl shadow-orange-500/5 backdrop-blur-xl';
-  
   const textMain = isDark ? 'text-white' : 'text-gray-900';
   const textSub = isDark ? 'text-gray-400' : 'text-gray-500';
   const inputBg = isDark 
@@ -58,6 +57,7 @@ const Login = () => {
 
   return (
     <div className={`min-h-screen flex ${bgClass} transition-colors duration-500`}>
+      {/* Left Side - Image */}
       <div className="hidden lg:flex w-1/2 bg-gray-900 relative overflow-hidden items-center justify-center">
         <img 
             src="https://images.unsplash.com/photo-1565299507177-b0ac66763828?ixlib=rb-1.2.1&auto=format&fit=crop&w=1000&q=80" 
@@ -72,6 +72,7 @@ const Login = () => {
         </div>
       </div>
 
+      {/* Right Side - Form */}
       <div className="w-full lg:w-1/2 flex items-center justify-center p-6 pt-32 relative">
         {!isDark && <div className="absolute top-0 right-0 w-full h-full bg-gradient-to-bl from-orange-50 via-white to-white -z-10"></div>}
 
@@ -95,14 +96,35 @@ const Login = () => {
                 </div>
 
                 <div className="space-y-2">
-                    <label className={`text-xs font-extrabold uppercase tracking-widest ml-1 ${textSub}`}>Password</label>
+                    <div className="flex justify-between items-center ml-1">
+                        <label className={`text-xs font-extrabold uppercase tracking-widest ${textSub}`}>Password</label>
+                    </div>
                     <div className="relative group">
                         <FaLock className="absolute left-5 top-1/2 -translate-y-1/2 text-gray-400 group-focus-within:text-[#ffaa00] transition-colors" />
                         <input 
-                            type="password" value={password} onChange={(e) => setPassword(e.target.value)} required
-                            className={`w-full pl-14 pr-5 py-4 rounded-2xl border-2 focus:border-[#ffaa00] focus:ring-0 outline-none transition-all font-bold text-sm placeholder-gray-400 ${inputBg}`}
+                            type={showPassword ? "text" : "password"} // Toggle Type
+                            value={password} 
+                            onChange={(e) => setPassword(e.target.value)} 
+                            required
+                            className={`w-full pl-14 pr-12 py-4 rounded-2xl border-2 focus:border-[#ffaa00] focus:ring-0 outline-none transition-all font-bold text-sm placeholder-gray-400 ${inputBg}`}
                             placeholder="••••••••"
                         />
+                        {/* Eye Icon Toggle */}
+                        <button 
+                            type="button"
+                            onClick={() => setShowPassword(!showPassword)}
+                            className="absolute right-5 top-1/2 -translate-y-1/2 text-gray-400 hover:text-[#ffaa00] transition-colors"
+                        >
+                            {showPassword ? <FaEyeSlash /> : <FaEye />}
+                        </button>
+                    </div>
+                    <div className="flex justify-end pt-1">
+                        <Link 
+                            to="/forgot-password" 
+                            className={`text-xs font-bold transition-colors ${textSub} hover:text-[#ffaa00] hover:underline`}
+                        >
+                            Forgot Password?
+                        </Link>
                     </div>
                 </div>
 
